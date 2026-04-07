@@ -20,7 +20,7 @@
             border-radius: 20px; 
             box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
             text-align: center; 
-            width: 90%; /* 響應式優化 */
+            width: 90%; 
             max-width: 550px; 
             box-sizing: border-box;
             border-top: 6px solid #2ecc71; 
@@ -47,7 +47,7 @@
             margin-top: 20px; 
             padding-top: 30px; 
             display: none; 
-            animation: fadeIn 0.4s ease-in-out; /* 加入淡入動畫 */
+            animation: fadeIn 0.4s ease-in-out; 
         }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(-10px); }
@@ -72,7 +72,7 @@
             background-color: #27ae60; 
             transform: translateY(-2px); 
         }
-        button:disabled { /* 禁用狀態的樣式 */
+        button:disabled { 
             background-color: #bdc3c7;
             cursor: not-allowed;
             transform: none;
@@ -182,27 +182,25 @@
         const getGCD = (a, b) => b ? getGCD(b, a % b) : a;
         const formatSub = text => text.replace(/([0-9]+)/g, '<sub>$1</sub>');
 
-       // 更新題目畫面 (分離邏輯，方便下拉選單切換時直接呼叫)
-function renderQuestion() {
-    if (!curC || !curA) return;
-    const mode = displayModeEl.value;
-    
-    if (mode === 'symbol') {
-        // 加入 <span> 包覆，讓裡面的 sub 和 sup 恢復正常上下標位置
-        questionEl.innerHTML = `<span>${curC.html} &nbsp;+&nbsp; ${curA.html}</span>`;
-    } else {
-        // 這裡也順便包起來保持一致性
-        questionEl.innerHTML = `<span>${curC.name}<br>+<br>${curA.name}</span>`;
-    }
-}
+        // 更新題目畫面 (加入 span 包覆解決上下標排版問題)
+        function renderQuestion() {
+            if (!curC || !curA) return;
+            const mode = displayModeEl.value;
+            
+            if (mode === 'symbol') {
+                questionEl.innerHTML = `<span>${curC.html} &nbsp;+&nbsp; ${curA.html}</span>`;
+            } else {
+                questionEl.innerHTML = `<span>${curC.name}<br>+<br>${curA.name}</span>`;
+            }
+        }
 
         // 抽取題目事件
         function generateQuestion() {
             curC = cations[Math.floor(Math.random() * cations.length)];
             curA = anions[Math.floor(Math.random() * anions.length)];
             
-            answerAreaEl.style.display = 'none'; // 隱藏答案區
-            btnAnswer.disabled = false;          // 啟用顯示答案按鈕
+            answerAreaEl.style.display = 'none'; 
+            btnAnswer.disabled = false;          
             
             renderQuestion();
         }
@@ -236,13 +234,13 @@ function renderQuestion() {
 
             document.getElementById('ansFormula').innerHTML = cPartHtml + aPartHtml;
             answerAreaEl.style.display = 'block';
-            btnAnswer.disabled = true; // 顯示完答案後禁用按鈕，引導按下一題
+            btnAnswer.disabled = true; 
         }
 
         // 綁定事件監聽器
         btnGenerate.addEventListener('click', generateQuestion);
         btnAnswer.addEventListener('click', showAnswer);
-        displayModeEl.addEventListener('change', renderQuestion); // 切換模式時自動更新當前題目
+        displayModeEl.addEventListener('change', renderQuestion); 
     </script>
 </body>
 </html>
