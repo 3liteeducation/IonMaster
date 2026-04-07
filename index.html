@@ -39,8 +39,12 @@
 
         /* 🎰 抽卡與圖鑑 UI */
         .gallery-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 15px; max-height: 350px; overflow-y: auto; padding: 5px; }
-        .card-item { aspect-ratio: 2/3; background: #eee; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; position: relative; border: 2px solid transparent; color: #999; flex-direction: column; }
-        .card-item.owned { background: #fff; border-color: #ddd; color: #2c3e50; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .card-item { aspect-ratio: 2/3; background: #eee; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; position: relative; border: 2px solid transparent; color: #999; flex-direction: column; transition: 0.2s; }
+        
+        /* 擁有卡片的特效 (可點擊) */
+        .card-item.owned { background: #fff; border-color: #ddd; color: #2c3e50; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1); cursor: pointer; }
+        .card-item.owned:hover { transform: scale(1.05); z-index: 10; }
+        
         .card-item.n { border-color: #bdc3c7; }
         .card-item.r { border-color: var(--secondary); background: #ebf5fb; }
         .card-item.sr { border-color: var(--epic); background: #f5eef8; }
@@ -132,7 +136,7 @@
             <div id="cardName" style="font-size: 18px; font-weight: bold;"></div>
         </div>
         
-        <button class="btn-share" onclick="shareCard()">📤 炫耀我的神抽！</button>
+        <button class="btn-share" onclick="shareCard()">📤 炫耀我的收藏！</button>
         
         <p style="opacity: 0.8; font-size: 14px; margin-top: 25px; cursor: pointer; text-decoration: underline;" onclick="closeGachaResult()">
             點擊這裡關閉
@@ -207,7 +211,7 @@
         let startTime, timerInterval;
         let isAnswered = false;
         let usedQuestions = new Set(); 
-        let currentDrawnCard = null; // 記錄目前抽到的卡片，用來分享
+        let currentDrawnCard = null; // 記錄目前展示的卡片
 
         let coins = parseInt(localStorage.getItem('aaCoins')) || 0;
         let inventory = JSON.parse(localStorage.getItem('aaInventory')) || [];
@@ -420,7 +424,7 @@
         }
 
         // ==========================================
-        // 5. 抽卡系統與圖鑑邏輯 (包含分享功能)
+        // 5. 抽卡系統與圖鑑邏輯 (支援點擊查看與分享)
         // ==========================================
         function showGachaMenu() {
             menuArea.style.display = 'none';
@@ -443,6 +447,8 @@
                 
                 if (isOwned) {
                     item.innerHTML = `<div style="font-size:24px; margin-bottom:5px;">${card.html}</div><div style="font-size:10px; opacity:0.8;">${card.rarity}</div>`;
+                    // 加入點擊事件，可以直接在圖鑑中查看並分享
+                    item.onclick = () => showCardModal(card, false); 
                 } else {
                     item.innerHTML = '?';
                 }
@@ -471,11 +477,13 @@
                 localStorage.setItem('aaInventory', JSON.stringify(inventory));
             }
 
-            showGachaResult(reward);
+            // 觸發抽卡結果彈窗 (isNewDraw = true)
+            showCardModal(reward, true);
         }
 
-        function showGachaResult(card) {
-            currentDrawnCard = card; // 記錄目前抽到的卡片以供分享
+        // 共用的卡片展示函數 (區分「抽到新卡」還是「圖鑑查看」)
+        function showCardModal(card, isNewDraw) {
+            currentDrawnCard = card; 
             
             const modal = document.getElementById('gachaResultModal');
             const revealCard = document.getElementById('revealCard');
@@ -486,7 +494,13 @@
             else if(card.rarity === 'SR') color = '#e056fd';
             else if(card.rarity === 'R') color = '#7ed6df';
 
-            rarityText.innerHTML = `<span style="color:${color};">[${card.rarity}]</span> 發現新元素！`;
+            // 根據是否是剛抽到，動態改變標題
+            if (isNewDraw) {
+                rarityText.innerHTML = `<span style="color:${color};">[${card.rarity}]</span> 發現新元素！`;
+            } else {
+                rarityText.innerHTML = `<span style="color:${color};">[${card.rarity}]</span> 元素卡片`;
+            }
+            
             document.getElementById('cardContent').innerHTML = card.html;
             document.getElementById('cardName').innerText = card.name;
             revealCard.className = `reveal-card show ${card.rarity.toLowerCase()}`;
@@ -500,23 +514,22 @@
             updateGallery();
         }
 
-        // 🌟 新增：分享卡片功能
+        // 🌟 分享卡片功能
         function shareCard() {
             if (!currentDrawnCard) return;
 
-            const shareText = `🧪 我在 A.A. Sir 的化學挑戰中，抽到了 [${currentDrawnCard.rarity}] 級別的「${currentDrawnCard.name}」！\n你能抽到比我更稀有的元素嗎？快來 3lite Education 挑戰：\nhttps://3liteeducation.github.io/IonMaster/`;
+            // 文案調整得更通用：「收集到了」
+            const shareText = `🧪 我在 A.A. Sir 的化學挑戰中，收集到了 [${currentDrawnCard.rarity}] 級別的「${currentDrawnCard.name}」！\n你能收集到比我更稀有的元素嗎？快來 3lite Education 挑戰：\nhttps://3liteeducation.github.io/IonMaster/`;
 
-            // 使用 Web Share API (手機端原生分享)
             if (navigator.share) {
                 navigator.share({
-                    title: 'A.A. Sir Ion Master 神抽炫耀',
+                    title: 'A.A. Sir Ion Master 收藏炫耀',
                     text: shareText,
                     url: 'https://3liteeducation.github.io/IonMaster/'
                 }).catch(err => {
                     console.log('分享被取消或失敗', err);
                 });
             } else {
-                // 如果是在不支援的瀏覽器 (例如部分桌面版瀏覽器)，則使用複製到剪貼簿功能
                 navigator.clipboard.writeText(shareText).then(() => {
                     alert('📝 炫耀文字已複製到剪貼簿！你可以直接貼上給朋友。');
                 }).catch(err => {
