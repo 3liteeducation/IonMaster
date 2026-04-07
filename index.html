@@ -182,7 +182,7 @@
         const getGCD = (a, b) => b ? getGCD(b, a % b) : a;
         const formatSub = text => text.replace(/([0-9]+)/g, '<sub>$1</sub>');
 
-        // 更新題目畫面 (加入 span 包覆解決上下標排版問題)
+        // 更新題目畫面 
         function renderQuestion() {
             if (!curC || !curA) return;
             const mode = displayModeEl.value;
@@ -241,6 +241,34 @@
         btnGenerate.addEventListener('click', generateQuestion);
         btnAnswer.addEventListener('click', showAnswer);
         displayModeEl.addEventListener('change', renderQuestion); 
+
+        // ==========================================
+        // 🛡️ 防禦等級三：基礎防拷貝與開發者工具攔截腳本
+        // ==========================================
+        
+        // 1. 禁用滑鼠右鍵
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        }, false);
+
+        // 2. 禁用文字反白選取
+        document.onselectstart = function() { return false; };
+
+        // 3. 禁用常見的開發者工具快捷鍵
+        document.onkeydown = function(e) {
+            // 禁用 F12
+            if (e.keyCode == 123) {
+                return false;
+            }
+            // 禁用 Ctrl+Shift+I (Windows) / Cmd+Option+I (Mac)
+            if (e.ctrlKey && e.shiftKey && e.keyCode == 73) {
+                return false;
+            }
+            // 禁用 Ctrl+U (Windows) / Cmd+Option+U (Mac) - 檢視原始碼
+            if (e.ctrlKey && e.keyCode == 85) {
+                return false;
+            }
+        };
     </script>
 </body>
 </html>
