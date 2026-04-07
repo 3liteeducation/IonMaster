@@ -60,6 +60,11 @@
         .reveal-card.sr { border: 5px solid var(--epic); background: #f5eef8; }
         .reveal-card.ssr { border: 5px solid var(--rare); background: #fef9e7; box-shadow: 0 0 30px var(--rare); }
         
+        /* 分享按鈕特效 */
+        .btn-share { margin-top: 10px; padding: 12px 25px; background: #2ecc71; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; box-shadow: 0 4px #27ae60; transition: 0.2s; }
+        .btn-share:hover { transform: translateY(-2px); box-shadow: 0 6px #27ae60; }
+        .btn-share:active { transform: translateY(2px); box-shadow: 0 0px #27ae60; }
+        
         sub, sup { font-size: 0.6em; }
     </style>
 </head>
@@ -120,18 +125,23 @@
         </div>
     </div>
 
-    <div id="gachaResultModal" class="modal" onclick="closeGachaResult()">
+    <div id="gachaResultModal" class="modal">
         <div id="rarityText" style="font-size: 28px; font-weight: bold; margin-bottom: 15px; text-shadow: 0 2px 4px rgba(0,0,0,0.5);"></div>
         <div class="reveal-card" id="revealCard">
             <div id="cardContent" style="font-size: 45px; margin-bottom: 15px; font-family: 'Times New Roman', serif;"></div>
             <div id="cardName" style="font-size: 18px; font-weight: bold;"></div>
         </div>
-        <p style="opacity: 0.7; font-size: 14px; margin-top: 20px;">(點擊螢幕任意處繼續)</p>
+        
+        <button class="btn-share" onclick="shareCard()">📤 炫耀我的神抽！</button>
+        
+        <p style="opacity: 0.8; font-size: 14px; margin-top: 25px; cursor: pointer; text-decoration: underline;" onclick="closeGachaResult()">
+            點擊這裡關閉
+        </p>
     </div>
 
     <script>
         // ==========================================
-        // 1. 完整化學數據庫 (依據文件更新)
+        // 1. 完整化學數據庫
         // ==========================================
         const cations = [
             { id: 1, name: "Sodium", formula: "Na", charge: 1, html: "Na<sup>+</sup>", rarity: 'N' },
@@ -155,13 +165,12 @@
             { id: 19, name: "Aluminium", formula: "Al", charge: 3, html: "Al<sup>3+</sup>", rarity: 'SR' },
             { id: 20, name: "Iron(III)", formula: "Fe", charge: 3, html: "Fe<sup>3+</sup>", rarity: 'SR' },
             { id: 21, name: "Chromium(III)", formula: "Cr", charge: 3, html: "Cr<sup>3+</sup>", rarity: 'SR' },
-            // 隱藏版 SSR 閃卡
             { id: 99, name: "A.A. Sir", formula: "AA", charge: 0, html: "🔋", rarity: 'SSR', isSpecial: true } 
         ];
 
         const anions = [
             { id: 22, name: "Hydride", formula: "H", charge: 1, html: "H<sup>-</sup>", rarity: 'R' },
-            { id: 23, name: "Chloride", formula: "Cl", charge: 1, html: "Cl<sup>-</sup>", rarity: 'N' }, // 已修正 CH 為 Cl
+            { id: 23, name: "Chloride", formula: "Cl", charge: 1, html: "Cl<sup>-</sup>", rarity: 'N' }, 
             { id: 24, name: "Bromide", formula: "Br", charge: 1, html: "Br<sup>-</sup>", rarity: 'N' },
             { id: 25, name: "Iodide", formula: "I", charge: 1, html: "I<sup>-</sup>", rarity: 'R' },
             { id: 26, name: "Hydroxide", formula: "OH", charge: 1, html: "OH<sup>-</sup>", poly: true, rarity: 'R' },
@@ -186,10 +195,7 @@
             { id: 45, name: "Phosphate", formula: "PO4", charge: 3, html: "PO<sub>4</sub><sup>3-</sup>", poly: true, rarity: 'SR' }
         ];
 
-        // 圖鑑用完整卡池
         const cardPool = [...cations, ...anions];
-
-        // 供遊戲出題使用的合法離子 (排除 A.A. Sir 等特殊卡)
         const playableCations = cations.filter(c => !c.isSpecial);
         const playableAnions = anions.filter(a => !a.isSpecial);
 
@@ -201,11 +207,11 @@
         let startTime, timerInterval;
         let isAnswered = false;
         let usedQuestions = new Set(); 
+        let currentDrawnCard = null; // 記錄目前抽到的卡片，用來分享
 
         let coins = parseInt(localStorage.getItem('aaCoins')) || 0;
         let inventory = JSON.parse(localStorage.getItem('aaInventory')) || [];
 
-        // DOM 元素
         const menuArea = document.getElementById('menuArea');
         const gameArea = document.getElementById('gameArea');
         const gachaArea = document.getElementById('gachaArea');
@@ -224,14 +230,14 @@
         }
 
         // ==========================================
-        // 3. 核心化學邏輯與生成器
+        // 3. 核心化學邏輯與生成器 (包含 H_H 修正)
         // ==========================================
         function isValidCombination(c, a) {
-            // 擴展黑名單，避免 H+ 與各種陰離子生成酸類或水
             const blacklist = [
                 'NH4_OH', 'H_NO3', 'H_NO2', 'H_Cl', 'H_Br', 'H_I', 
                 'H_SO4', 'H_SO3', 'H_OH', 'H_O', 'H_CO3', 'H_PO4', 
-                'H_CN', 'H_MnO4', 'H_ClO3', 'H_ClO', 'H_CrO4', 'H_Cr2O7'
+                'H_CN', 'H_MnO4', 'H_ClO3', 'H_ClO', 'H_CrO4', 'H_Cr2O7',
+                'H_H' // 修復：禁止 H+ 與 H- 結合
             ];
             return !blacklist.includes(c.formula + '_' + a.formula);
         }
@@ -254,7 +260,7 @@
         }
 
         // ==========================================
-        // 4. 遊戲流程控制 (混合題型)
+        // 4. 遊戲流程控制
         // ==========================================
         function startGame(mode) {
             currentMode = mode;
@@ -414,7 +420,7 @@
         }
 
         // ==========================================
-        // 5. 抽卡系統與圖鑑邏輯 (Gacha & Gallery)
+        // 5. 抽卡系統與圖鑑邏輯 (包含分享功能)
         // ==========================================
         function showGachaMenu() {
             menuArea.style.display = 'none';
@@ -469,6 +475,8 @@
         }
 
         function showGachaResult(card) {
+            currentDrawnCard = card; // 記錄目前抽到的卡片以供分享
+            
             const modal = document.getElementById('gachaResultModal');
             const revealCard = document.getElementById('revealCard');
             const rarityText = document.getElementById('rarityText');
@@ -488,7 +496,33 @@
         function closeGachaResult() {
             document.getElementById('gachaResultModal').style.display = 'none';
             document.getElementById('revealCard').classList.remove('show');
+            currentDrawnCard = null;
             updateGallery();
+        }
+
+        // 🌟 新增：分享卡片功能
+        function shareCard() {
+            if (!currentDrawnCard) return;
+
+            const shareText = `🧪 我在 A.A. Sir 的化學挑戰中，抽到了 [${currentDrawnCard.rarity}] 級別的「${currentDrawnCard.name}」！\n你能抽到比我更稀有的元素嗎？快來 3lite Education 挑戰：\nhttps://3liteeducation.github.io/IonMaster/`;
+
+            // 使用 Web Share API (手機端原生分享)
+            if (navigator.share) {
+                navigator.share({
+                    title: 'A.A. Sir Ion Master 神抽炫耀',
+                    text: shareText,
+                    url: 'https://3liteeducation.github.io/IonMaster/'
+                }).catch(err => {
+                    console.log('分享被取消或失敗', err);
+                });
+            } else {
+                // 如果是在不支援的瀏覽器 (例如部分桌面版瀏覽器)，則使用複製到剪貼簿功能
+                navigator.clipboard.writeText(shareText).then(() => {
+                    alert('📝 炫耀文字已複製到剪貼簿！你可以直接貼上給朋友。');
+                }).catch(err => {
+                    alert('複製失敗，請手動截圖分享吧！');
+                });
+            }
         }
 
         // ==========================================
