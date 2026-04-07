@@ -1,264 +1,248 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
+<!DOCTYPE html>
+<html lang="zh-Hant">
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <meta http-equiv="Content-Style-Type" content="text/css">
-  <title></title>
-  <meta name="Generator" content="Cocoa HTML Writer">
-  <meta name="CocoaVersion" content="2575.7">
-  <style type="text/css">
-    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
-    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3lite Education - 離子組合大挑戰 (專業版)</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            background-color: #f4f7f6; 
+            padding: 20px; 
+            margin: 0;
+        }
+        .card { 
+            background: white; 
+            padding: 40px; 
+            border-radius: 20px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
+            text-align: center; 
+            width: 90%; /* 響應式優化 */
+            max-width: 550px; 
+            box-sizing: border-box;
+            border-top: 6px solid #2ecc71; 
+        }
+        
+        .ion-display { 
+            font-size: 36px; 
+            font-weight: bold; 
+            color: #2c3e50; 
+            margin: 30px 0; 
+            min-height: 120px; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            background: #f9f9f9; 
+            border-radius: 12px; 
+            border: 1px solid #ddd; 
+            line-height: 1.2;
+            font-family: 'Times New Roman', Times, serif; 
+        }
+        
+        .answer-area { 
+            border-top: 2px dashed #2ecc71; 
+            margin-top: 20px; 
+            padding-top: 30px; 
+            display: none; 
+            animation: fadeIn 0.4s ease-in-out; /* 加入淡入動畫 */
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .formula { font-size: 52px; color: #e67e22; font-family: 'Times New Roman', serif; margin-bottom: 15px; }
+        .name { font-size: 28px; color: #2c3e50; font-weight: 600; }
+        
+        button { 
+            background-color: #2ecc71; 
+            color: white; 
+            border: none; 
+            padding: 15px 30px; 
+            font-size: 18px; 
+            border-radius: 10px; 
+            cursor: pointer; 
+            margin: 10px 5px; 
+            transition: all 0.3s; 
+        }
+        button:hover:not(:disabled) { 
+            background-color: #27ae60; 
+            transform: translateY(-2px); 
+        }
+        button:disabled { /* 禁用狀態的樣式 */
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+        }
+        #btn-answer { background-color: #3498db; }
+        #btn-answer:hover:not(:disabled) { background-color: #2980b9; }
+        
+        select { padding: 10px; border-radius: 8px; font-size: 16px; border: 1px solid #ccc; cursor: pointer; }
+        
+        sub, sup { font-size: 0.55em; }
+        sub { vertical-align: sub; }
+        sup { vertical-align: super; }
+    </style>
 </head>
 <body>
-<p class="p1">&lt;!DOCTYPE html&gt;</p>
-<p class="p1">&lt;html lang="zh-Hant"&gt;</p>
-<p class="p1">&lt;head&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;meta charset="UTF-8"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;title&gt;3lite Education - 離子組合大挑戰 (專業版)&lt;/title&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;style&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>body {<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>display: flex;<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>flex-direction: column;<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>align-items: center;<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>background-color: #f4f7f6;<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding: 20px;<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>margin: 0;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.card {<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: white;<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding: 40px;<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 20px;<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>box-shadow: 0 10px 30px rgba(0,0,0,0.1);<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>text-align: center;<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>width: 90%; /* 響應式優化 */</p>
-<p class="p1"><span class="Apple-converted-space">            </span>max-width: 550px;<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>box-sizing: border-box;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-top: 6px solid #2ecc71;<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><span class="Apple-converted-space">        </span></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.ion-display {<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 36px;<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-weight: bold;<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>color: #2c3e50;<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>margin: 30px 0;<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>min-height: 120px;<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>display: flex;<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>justify-content: center;<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>align-items: center;<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: #f9f9f9;<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 12px;<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>border: 1px solid #ddd;<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>line-height: 1.2;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-family: 'Times New Roman', Times, serif;<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><span class="Apple-converted-space">        </span></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.answer-area {<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-top: 2px dashed #2ecc71;<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>margin-top: 20px;<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding-top: 30px;<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>display: none;<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>animation: fadeIn 0.4s ease-in-out; /* 加入淡入動畫 */</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>@keyframes fadeIn {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>from { opacity: 0; transform: translateY(-10px); }</p>
-<p class="p1"><span class="Apple-converted-space">            </span>to { opacity: 1; transform: translateY(0); }</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.formula { font-size: 52px; color: #e67e22; font-family: 'Times New Roman', serif; margin-bottom: 15px; }</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.name { font-size: 28px; color: #2c3e50; font-weight: 600; }</p>
-<p class="p2"><span class="Apple-converted-space">        </span></p>
-<p class="p1"><span class="Apple-converted-space">        </span>button {<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>background-color: #2ecc71;<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>color: white;<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>border: none;<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding: 15px 30px;<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 18px;<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 10px;<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>cursor: pointer;<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>margin: 10px 5px;<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>transition: all 0.3s;<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>button:hover:not(:disabled) {<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>background-color: #27ae60;<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>transform: translateY(-2px);<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>button:disabled { /* 禁用狀態的樣式 */</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background-color: #bdc3c7;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>cursor: not-allowed;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>transform: none;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>#btn-answer { background-color: #3498db; }</p>
-<p class="p1"><span class="Apple-converted-space">        </span>#btn-answer:hover:not(:disabled) { background-color: #2980b9; }</p>
-<p class="p2"><span class="Apple-converted-space">        </span></p>
-<p class="p1"><span class="Apple-converted-space">        </span>select { padding: 10px; border-radius: 8px; font-size: 16px; border: 1px solid #ccc; cursor: pointer; }</p>
-<p class="p2"><span class="Apple-converted-space">        </span></p>
-<p class="p1"><span class="Apple-converted-space">        </span>sub, sup { font-size: 0.55em; }</p>
-<p class="p1"><span class="Apple-converted-space">        </span>sub { vertical-align: sub; }</p>
-<p class="p1"><span class="Apple-converted-space">        </span>sup { vertical-align: super; }</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;/style&gt;</p>
-<p class="p1">&lt;/head&gt;</p>
-<p class="p1">&lt;body&gt;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;h1&gt;🧪 A.A. Sir's Ion Master&lt;/h1&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;p&gt;3lite Education - Chemistry Specialist&lt;/p&gt;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="card"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;div style="margin-bottom: 20px;"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>題目類型：</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;select id="displayMode"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;option value="symbol"&gt;化學符號 (Symbol)&lt;/option&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;option value="name"&gt;化學名稱 (Name)&lt;/option&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;/select&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="ion-display" id="question"&gt;點擊「抽取題目」開始&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;button id="btn-generate"&gt;抽取題目 (Random)&lt;/button&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;button id="btn-answer" disabled&gt;顯示答案 (Show Answer)&lt;/button&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="answer-area" id="answerArea"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="formula" id="ansFormula"&gt;&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="name" id="ansName"&gt;&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;script&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>// 化學數據庫</p>
-<p class="p1"><span class="Apple-converted-space">        </span>const cations = [</p>
-<p class="p1"><span class="Apple-converted-space">            </span>{ name: "Sodium ion", formula: "Na", charge: 1, html: "Na&lt;sup&gt;+&lt;/sup&gt;" },</p>
-<p class="p1"><span class="Apple-converted-space">            </span>{ name: "Potassium ion", formula: "K", charge: 1, html: "K&lt;sup&gt;+&lt;/sup&gt;" },</p>
-<p class="p1"><span class="Apple-converted-space">            </span>{ name: "Copper(I) ion", formula: "Cu", charge: 1, html: "Cu&lt;sup&gt;+&lt;/sup&gt;" },</p>
-<p class="p1"><span class="Apple-converted-space">            </span>{ name: "Silver ion", formula: "Ag", charge: 1, html: "Ag&lt;sup&gt;+&lt;/sup&gt;" },</p>
-<p class="p1"><span class="Apple-converted-space">            </span>{ name: "Mercury(I) ion", formula: "Hg", charge: 1, html: "Hg&lt;sup&gt;+&lt;/sup&gt;" },</p>
-<p class="p1"><span class="Apple-converted-space">            </span>{ name: "Hydrogen ion", formula: "H", charge: 1, html: "H&lt;sup&gt;+&lt;/sup&gt;" },</p>
-<p class="p1"><span class="Apple-converted-space">            </span>{ name: "Ammonium ion", formula: "NH4", charge: 1, html: "NH&lt;sub&gt;4&lt;/sub&gt;&lt;sup&gt;+&lt;/sup&gt;", poly: true },</p>
-<p class="p1"><span class="Apple-converted-space">            </span>{ name: "Magnesium ion", formula: "Mg", charge: 2, html: "Mg&lt;sup&gt;2+&lt;/sup&gt;" },</p>
-<p class="p1"><span class="Apple-converted-space">            </span>{ name: "Calcium ion", formula: "Ca", charge: 2, html: "Ca&lt;sup&gt;2+&lt;/sup&gt;" },</p>
-<p class="p1"><span class="Apple-converted-space">            </span>{ name: "Barium ion", formula: "Ba", charge: 2, html: "Ba&lt;sup&gt;2+&lt;/sup&gt;" },</p>
-<p class="p1"><span class="Apple-converted-space">            </span>{ name: "Lead(II) ion", formula: "Pb", charge: 2, html: "Pb&lt;sup&gt;2+&lt;/sup&gt;" },</p>
-<p class="p1"><span class="Apple-converted-space">            </span>{ name: "Iron(II) ion", formula: "Fe", charge: 2, html: "Fe&lt;sup&gt;2+&lt;/sup&gt;" },</p>
-<p class="p1"><span class="Apple-converted-space">            </span>{ name: "Cobalt(II) ion", formula: "Co", charge: 2, html: "Co&lt;sup&gt;2+&lt;/sup&gt;" },</p>
-<p class="p1"><span class="Apple-converted-space">            </span>{ name: "Nickel(II) ion", formula: "Ni", charge: 2, html: "Ni&lt;sup&gt;2+&lt;/sup&gt;" },</p>
-<p class="p1"><span class="Apple-converted-space">            </span>{ name: "Manganese(II) ion", formula: "Mn", charge: 2, html: "Mn&lt;sup&gt;2+&lt;/sup&gt;" },</p>
-<p class="p1"><span class="Apple-converted-space">            </span>{ name: "Copper(II) ion", formula: "Cu", charge: 2, html: "Cu&lt;sup&gt;2+&lt;/sup&gt;" },</p>
-<p class="p1"><span class="Apple-converted-space">            </span>{ name: "Zinc ion", formula: "Zn", charge: 2, html: "Zn&lt;sup&gt;2+&lt;/sup&gt;" },</p>
-<p class="p1"><span class="Apple-converted-space">            </span>{ name: "Mercury(II) ion", formula: "Hg", charge: 2, html: "Hg&lt;sup&gt;2+&lt;/sup&gt;" },</p>
-<p class="p1"><span class="Apple-converted-space">            </span>{ name: "Aluminium ion", formula: "Al", charge: 3, html: "Al&lt;sup&gt;3+&lt;/sup&gt;" },</p>
-<p class="p1"><span class="Apple-converted-space">            </span>{ name: "Iron(III) ion", formula: "Fe", charge: 3, html: "Fe&lt;sup&gt;3+&lt;/sup&gt;" },</p>
-<p class="p1"><span class="Apple-converted-space">            </span>{ name: "Chromium(III) ion", formula: "Cr", charge: 3, html: "Cr&lt;sup&gt;3+&lt;/sup&gt;" }</p>
-<p class="p1"><span class="Apple-converted-space">        </span>];</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>const anions = [</p>
-<p class="p1"><span class="Apple-converted-space">            </span>{ name: "Hydride ion", formula: "H", charge: 1, html: "H&lt;sup&gt;-&lt;/sup&gt;" },</p>
-<p class="p1"><span class="Apple-converted-space">            </span>{ name: "Chloride ion", formula: "Cl", charge: 1, html: "Cl&lt;sup&gt;-&lt;/sup&gt;" },</p>
-<p class="p1"><span class="Apple-converted-space">            </span>{ name: "Bromide ion", formula: "Br", charge: 1, html: "Br&lt;sup&gt;-&lt;/sup&gt;" },</p>
-<p class="p1"><span class="Apple-converted-space">            </span>{ name: "Iodide ion", formula: "I", charge: 1, html: "I&lt;sup&gt;-&lt;/sup&gt;" },</p>
-<p class="p1"><span class="Apple-converted-space">            </span>{ name: "Hydroxide ion", formula: "OH", charge: 1, html: "OH&lt;sup&gt;-&lt;/sup&gt;", poly: true },</p>
-<p class="p1"><span class="Apple-converted-space">            </span>{ name: "Nitrate ion", formula: "NO3", charge: 1, html: "NO&lt;sub&gt;3&lt;/sub&gt;&lt;sup&gt;-&lt;/sup&gt;", poly: true },</p>
-<p class="p1"><span class="Apple-converted-space">            </span>{ name: "Nitrite ion", formula: "NO2", charge: 1, html: "NO&lt;sub&gt;2&lt;/sub&gt;&lt;sup&gt;-&lt;/sup&gt;", poly: true },</p>
-<p class="p1"><span class="Apple-converted-space">            </span>{ name: "Hydrogencarbonate ion", formula: "HCO3", charge: 1, html: "HCO&lt;sub&gt;3&lt;/sub&gt;&lt;sup&gt;-&lt;/sup&gt;", poly: true },</p>
-<p class="p1"><span class="Apple-converted-space">            </span>{ name: "Hydrogensulphate ion", formula: "HSO4", charge: 1, html: "HSO&lt;sub&gt;4&lt;/sub&gt;&lt;sup&gt;-&lt;/sup&gt;", poly: true },</p>
-<p class="p1"><span class="Apple-converted-space">            </span>{ name: "Cyanide ion", formula: "CN", charge: 1, html: "CN&lt;sup&gt;-&lt;/sup&gt;", poly: true },</p>
-<p class="p1"><span class="Apple-converted-space">            </span>{ name: "Permanganate ion", formula: "MnO4", charge: 1, html: "MnO&lt;sub&gt;4&lt;/sub&gt;&lt;sup&gt;-&lt;/sup&gt;", poly: true },</p>
-<p class="p1"><span class="Apple-converted-space">            </span>{ name: "Chlorate ion", formula: "ClO3", charge: 1, html: "ClO&lt;sub&gt;3&lt;/sub&gt;&lt;sup&gt;-&lt;/sup&gt;", poly: true },</p>
-<p class="p1"><span class="Apple-converted-space">            </span>{ name: "Hypochlorite ion", formula: "ClO", charge: 1, html: "ClO&lt;sup&gt;-&lt;/sup&gt;", poly: true },</p>
-<p class="p1"><span class="Apple-converted-space">            </span>{ name: "Oxide ion", formula: "O", charge: 2, html: "O&lt;sup&gt;2-&lt;/sup&gt;" },</p>
-<p class="p1"><span class="Apple-converted-space">            </span>{ name: "Sulphide ion", formula: "S", charge: 2, html: "S&lt;sup&gt;2-&lt;/sup&gt;" },</p>
-<p class="p1"><span class="Apple-converted-space">            </span>{ name: "Sulphate ion", formula: "SO4", charge: 2, html: "SO&lt;sub&gt;4&lt;/sub&gt;&lt;sup&gt;2-&lt;/sup&gt;", poly: true },</p>
-<p class="p1"><span class="Apple-converted-space">            </span>{ name: "Sulphite ion", formula: "SO3", charge: 2, html: "SO&lt;sub&gt;3&lt;/sub&gt;&lt;sup&gt;2-&lt;/sup&gt;", poly: true },</p>
-<p class="p1"><span class="Apple-converted-space">            </span>{ name: "Silicate ion", formula: "SiO3", charge: 2, html: "SiO&lt;sub&gt;3&lt;/sub&gt;&lt;sup&gt;2-&lt;/sup&gt;", poly: true },</p>
-<p class="p1"><span class="Apple-converted-space">            </span>{ name: "Carbonate ion", formula: "CO3", charge: 2, html: "CO&lt;sub&gt;3&lt;/sub&gt;&lt;sup&gt;2-&lt;/sup&gt;", poly: true },</p>
-<p class="p1"><span class="Apple-converted-space">            </span>{ name: "Chromate ion", formula: "CrO4", charge: 2, html: "CrO&lt;sub&gt;4&lt;/sub&gt;&lt;sup&gt;2-&lt;/sup&gt;", poly: true },</p>
-<p class="p1"><span class="Apple-converted-space">            </span>{ name: "Dichromate ion", formula: "Cr2O7", charge: 2, html: "Cr&lt;sub&gt;2&lt;/sub&gt;O&lt;sub&gt;7&lt;/sub&gt;&lt;sup&gt;2-&lt;/sup&gt;", poly: true },</p>
-<p class="p1"><span class="Apple-converted-space">            </span>{ name: "Nitride ion", formula: "N", charge: 3, html: "N&lt;sup&gt;3-&lt;/sup&gt;" },</p>
-<p class="p1"><span class="Apple-converted-space">            </span>{ name: "Phosphide ion", formula: "P", charge: 3, html: "P&lt;sup&gt;3-&lt;/sup&gt;" },</p>
-<p class="p1"><span class="Apple-converted-space">            </span>{ name: "Phosphate ion", formula: "PO4", charge: 3, html: "PO&lt;sub&gt;4&lt;/sub&gt;&lt;sup&gt;3-&lt;/sup&gt;", poly: true }</p>
-<p class="p1"><span class="Apple-converted-space">        </span>];</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>// 狀態管理</p>
-<p class="p1"><span class="Apple-converted-space">        </span>let curC = null;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>let curA = null;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>// DOM 元素選取</p>
-<p class="p1"><span class="Apple-converted-space">        </span>const questionEl = document.getElementById('question');</p>
-<p class="p1"><span class="Apple-converted-space">        </span>const answerAreaEl = document.getElementById('answerArea');</p>
-<p class="p1"><span class="Apple-converted-space">        </span>const displayModeEl = document.getElementById('displayMode');</p>
-<p class="p1"><span class="Apple-converted-space">        </span>const btnGenerate = document.getElementById('btn-generate');</p>
-<p class="p1"><span class="Apple-converted-space">        </span>const btnAnswer = document.getElementById('btn-answer');</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>// 工具函式</p>
-<p class="p1"><span class="Apple-converted-space">        </span>const getGCD = (a, b) =&gt; b ? getGCD(b, a % b) : a;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>const formatSub = text =&gt; text.replace(/([0-9]+)/g, '&lt;sub&gt;$1&lt;/sub&gt;');</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">       </span>// 更新題目畫面 (分離邏輯，方便下拉選單切換時直接呼叫)</p>
-<p class="p1">function renderQuestion() {</p>
-<p class="p1"><span class="Apple-converted-space">    </span>if (!curC || !curA) return;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>const mode = displayModeEl.value;</p>
-<p class="p2"><span class="Apple-converted-space">    </span></p>
-<p class="p1"><span class="Apple-converted-space">    </span>if (mode === 'symbol') {</p>
-<p class="p1"><span class="Apple-converted-space">        </span>// 加入 &lt;span&gt; 包覆，讓裡面的 sub 和 sup 恢復正常上下標位置</p>
-<p class="p1"><span class="Apple-converted-space">        </span>questionEl.innerHTML = `&lt;span&gt;${curC.html} &amp;nbsp;+&amp;nbsp; ${curA.html}&lt;/span&gt;`;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>} else {</p>
-<p class="p1"><span class="Apple-converted-space">        </span>// 這裡也順便包起來保持一致性</p>
-<p class="p1"><span class="Apple-converted-space">        </span>questionEl.innerHTML = `&lt;span&gt;${curC.name}&lt;br&gt;+&lt;br&gt;${curA.name}&lt;/span&gt;`;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>}</p>
-<p class="p1">}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>// 抽取題目事件</p>
-<p class="p1"><span class="Apple-converted-space">        </span>function generateQuestion() {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>curC = cations[Math.floor(Math.random() * cations.length)];</p>
-<p class="p1"><span class="Apple-converted-space">            </span>curA = anions[Math.floor(Math.random() * anions.length)];</p>
-<p class="p2"><span class="Apple-converted-space">            </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>answerAreaEl.style.display = 'none'; // 隱藏答案區</p>
-<p class="p1"><span class="Apple-converted-space">            </span>btnAnswer.disabled = false;<span class="Apple-converted-space">          </span>// 啟用顯示答案按鈕</p>
-<p class="p2"><span class="Apple-converted-space">            </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>renderQuestion();</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>// 顯示答案事件</p>
-<p class="p1"><span class="Apple-converted-space">        </span>function showAnswer() {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>if(!curC || !curA) return;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">            </span>let cSub = curA.charge;<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>let aSub = curC.charge;<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>let common = getGCD(cSub, aSub);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>cSub /= common;<span class="Apple-converted-space"> </span></p>
-<p class="p1"><span class="Apple-converted-space">            </span>aSub /= common;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">            </span>// 名稱處理</p>
-<p class="p1"><span class="Apple-converted-space">            </span>let cleanCName = curC.name.replace(/ion/i, '').trim();</p>
-<p class="p1"><span class="Apple-converted-space">            </span>let cleanAName = curA.name.replace(/ion/i, '').trim();</p>
-<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('ansName').innerText = `${cleanCName} ${cleanAName.toLowerCase()}`;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">            </span>// 陽離子部分處理</p>
-<p class="p1"><span class="Apple-converted-space">            </span>let cPartHtml = formatSub(curC.formula);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>if (cSub &gt; 1) {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>cPartHtml = curC.poly ? `(${cPartHtml})&lt;sub&gt;${cSub}&lt;/sub&gt;` : `${cPartHtml}&lt;sub&gt;${cSub}&lt;/sub&gt;`;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">            </span>// 陰離子部分處理</p>
-<p class="p1"><span class="Apple-converted-space">            </span>let aPartHtml = formatSub(curA.formula);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>if (aSub &gt; 1) {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>aPartHtml = curA.poly ? `(${aPartHtml})&lt;sub&gt;${aSub}&lt;/sub&gt;` : `${aPartHtml}&lt;sub&gt;${aSub}&lt;/sub&gt;`;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('ansFormula').innerHTML = cPartHtml + aPartHtml;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>answerAreaEl.style.display = 'block';</p>
-<p class="p1"><span class="Apple-converted-space">            </span>btnAnswer.disabled = true; // 顯示完答案後禁用按鈕，引導按下一題</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>// 綁定事件監聽器</p>
-<p class="p1"><span class="Apple-converted-space">        </span>btnGenerate.addEventListener('click', generateQuestion);</p>
-<p class="p1"><span class="Apple-converted-space">        </span>btnAnswer.addEventListener('click', showAnswer);</p>
-<p class="p1"><span class="Apple-converted-space">        </span>displayModeEl.addEventListener('change', renderQuestion); // 切換模式時自動更新當前題目</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;/script&gt;</p>
-<p class="p1">&lt;/body&gt;</p>
-<p class="p1">&lt;/html&gt;</p>
+
+    <h1>🧪 A.A. Sir's Ion Master</h1>
+    <p>3lite Education - Chemistry Specialist</p>
+
+    <div class="card">
+        <div style="margin-bottom: 20px;">
+            題目類型：
+            <select id="displayMode">
+                <option value="symbol">化學符號 (Symbol)</option>
+                <option value="name">化學名稱 (Name)</option>
+            </select>
+        </div>
+
+        <div class="ion-display" id="question">點擊「抽取題目」開始</div>
+
+        <div>
+            <button id="btn-generate">抽取題目 (Random)</button>
+            <button id="btn-answer" disabled>顯示答案 (Show Answer)</button>
+        </div>
+
+        <div class="answer-area" id="answerArea">
+            <div class="formula" id="ansFormula"></div>
+            <div class="name" id="ansName"></div>
+        </div>
+    </div>
+
+    <script>
+        // 化學數據庫
+        const cations = [
+            { name: "Sodium ion", formula: "Na", charge: 1, html: "Na<sup>+</sup>" },
+            { name: "Potassium ion", formula: "K", charge: 1, html: "K<sup>+</sup>" },
+            { name: "Copper(I) ion", formula: "Cu", charge: 1, html: "Cu<sup>+</sup>" },
+            { name: "Silver ion", formula: "Ag", charge: 1, html: "Ag<sup>+</sup>" },
+            { name: "Mercury(I) ion", formula: "Hg", charge: 1, html: "Hg<sup>+</sup>" },
+            { name: "Hydrogen ion", formula: "H", charge: 1, html: "H<sup>+</sup>" },
+            { name: "Ammonium ion", formula: "NH4", charge: 1, html: "NH<sub>4</sub><sup>+</sup>", poly: true },
+            { name: "Magnesium ion", formula: "Mg", charge: 2, html: "Mg<sup>2+</sup>" },
+            { name: "Calcium ion", formula: "Ca", charge: 2, html: "Ca<sup>2+</sup>" },
+            { name: "Barium ion", formula: "Ba", charge: 2, html: "Ba<sup>2+</sup>" },
+            { name: "Lead(II) ion", formula: "Pb", charge: 2, html: "Pb<sup>2+</sup>" },
+            { name: "Iron(II) ion", formula: "Fe", charge: 2, html: "Fe<sup>2+</sup>" },
+            { name: "Cobalt(II) ion", formula: "Co", charge: 2, html: "Co<sup>2+</sup>" },
+            { name: "Nickel(II) ion", formula: "Ni", charge: 2, html: "Ni<sup>2+</sup>" },
+            { name: "Manganese(II) ion", formula: "Mn", charge: 2, html: "Mn<sup>2+</sup>" },
+            { name: "Copper(II) ion", formula: "Cu", charge: 2, html: "Cu<sup>2+</sup>" },
+            { name: "Zinc ion", formula: "Zn", charge: 2, html: "Zn<sup>2+</sup>" },
+            { name: "Mercury(II) ion", formula: "Hg", charge: 2, html: "Hg<sup>2+</sup>" },
+            { name: "Aluminium ion", formula: "Al", charge: 3, html: "Al<sup>3+</sup>" },
+            { name: "Iron(III) ion", formula: "Fe", charge: 3, html: "Fe<sup>3+</sup>" },
+            { name: "Chromium(III) ion", formula: "Cr", charge: 3, html: "Cr<sup>3+</sup>" }
+        ];
+
+        const anions = [
+            { name: "Hydride ion", formula: "H", charge: 1, html: "H<sup>-</sup>" },
+            { name: "Chloride ion", formula: "Cl", charge: 1, html: "Cl<sup>-</sup>" },
+            { name: "Bromide ion", formula: "Br", charge: 1, html: "Br<sup>-</sup>" },
+            { name: "Iodide ion", formula: "I", charge: 1, html: "I<sup>-</sup>" },
+            { name: "Hydroxide ion", formula: "OH", charge: 1, html: "OH<sup>-</sup>", poly: true },
+            { name: "Nitrate ion", formula: "NO3", charge: 1, html: "NO<sub>3</sub><sup>-</sup>", poly: true },
+            { name: "Nitrite ion", formula: "NO2", charge: 1, html: "NO<sub>2</sub><sup>-</sup>", poly: true },
+            { name: "Hydrogencarbonate ion", formula: "HCO3", charge: 1, html: "HCO<sub>3</sub><sup>-</sup>", poly: true },
+            { name: "Hydrogensulphate ion", formula: "HSO4", charge: 1, html: "HSO<sub>4</sub><sup>-</sup>", poly: true },
+            { name: "Cyanide ion", formula: "CN", charge: 1, html: "CN<sup>-</sup>", poly: true },
+            { name: "Permanganate ion", formula: "MnO4", charge: 1, html: "MnO<sub>4</sub><sup>-</sup>", poly: true },
+            { name: "Chlorate ion", formula: "ClO3", charge: 1, html: "ClO<sub>3</sub><sup>-</sup>", poly: true },
+            { name: "Hypochlorite ion", formula: "ClO", charge: 1, html: "ClO<sup>-</sup>", poly: true },
+            { name: "Oxide ion", formula: "O", charge: 2, html: "O<sup>2-</sup>" },
+            { name: "Sulphide ion", formula: "S", charge: 2, html: "S<sup>2-</sup>" },
+            { name: "Sulphate ion", formula: "SO4", charge: 2, html: "SO<sub>4</sub><sup>2-</sup>", poly: true },
+            { name: "Sulphite ion", formula: "SO3", charge: 2, html: "SO<sub>3</sub><sup>2-</sup>", poly: true },
+            { name: "Silicate ion", formula: "SiO3", charge: 2, html: "SiO<sub>3</sub><sup>2-</sup>", poly: true },
+            { name: "Carbonate ion", formula: "CO3", charge: 2, html: "CO<sub>3</sub><sup>2-</sup>", poly: true },
+            { name: "Chromate ion", formula: "CrO4", charge: 2, html: "CrO<sub>4</sub><sup>2-</sup>", poly: true },
+            { name: "Dichromate ion", formula: "Cr2O7", charge: 2, html: "Cr<sub>2</sub>O<sub>7</sub><sup>2-</sup>", poly: true },
+            { name: "Nitride ion", formula: "N", charge: 3, html: "N<sup>3-</sup>" },
+            { name: "Phosphide ion", formula: "P", charge: 3, html: "P<sup>3-</sup>" },
+            { name: "Phosphate ion", formula: "PO4", charge: 3, html: "PO<sub>4</sub><sup>3-</sup>", poly: true }
+        ];
+
+        // 狀態管理
+        let curC = null;
+        let curA = null;
+
+        // DOM 元素選取
+        const questionEl = document.getElementById('question');
+        const answerAreaEl = document.getElementById('answerArea');
+        const displayModeEl = document.getElementById('displayMode');
+        const btnGenerate = document.getElementById('btn-generate');
+        const btnAnswer = document.getElementById('btn-answer');
+
+        // 工具函式
+        const getGCD = (a, b) => b ? getGCD(b, a % b) : a;
+        const formatSub = text => text.replace(/([0-9]+)/g, '<sub>$1</sub>');
+
+       // 更新題目畫面 (分離邏輯，方便下拉選單切換時直接呼叫)
+function renderQuestion() {
+    if (!curC || !curA) return;
+    const mode = displayModeEl.value;
+    
+    if (mode === 'symbol') {
+        // 加入 <span> 包覆，讓裡面的 sub 和 sup 恢復正常上下標位置
+        questionEl.innerHTML = `<span>${curC.html} &nbsp;+&nbsp; ${curA.html}</span>`;
+    } else {
+        // 這裡也順便包起來保持一致性
+        questionEl.innerHTML = `<span>${curC.name}<br>+<br>${curA.name}</span>`;
+    }
+}
+
+        // 抽取題目事件
+        function generateQuestion() {
+            curC = cations[Math.floor(Math.random() * cations.length)];
+            curA = anions[Math.floor(Math.random() * anions.length)];
+            
+            answerAreaEl.style.display = 'none'; // 隱藏答案區
+            btnAnswer.disabled = false;          // 啟用顯示答案按鈕
+            
+            renderQuestion();
+        }
+
+        // 顯示答案事件
+        function showAnswer() {
+            if(!curC || !curA) return;
+
+            let cSub = curA.charge; 
+            let aSub = curC.charge; 
+            let common = getGCD(cSub, aSub);
+            cSub /= common; 
+            aSub /= common;
+
+            // 名稱處理
+            let cleanCName = curC.name.replace(/ion/i, '').trim();
+            let cleanAName = curA.name.replace(/ion/i, '').trim();
+            document.getElementById('ansName').innerText = `${cleanCName} ${cleanAName.toLowerCase()}`;
+
+            // 陽離子部分處理
+            let cPartHtml = formatSub(curC.formula);
+            if (cSub > 1) {
+                cPartHtml = curC.poly ? `(${cPartHtml})<sub>${cSub}</sub>` : `${cPartHtml}<sub>${cSub}</sub>`;
+            }
+
+            // 陰離子部分處理
+            let aPartHtml = formatSub(curA.formula);
+            if (aSub > 1) {
+                aPartHtml = curA.poly ? `(${aPartHtml})<sub>${aSub}</sub>` : `${aPartHtml}<sub>${aSub}</sub>`;
+            }
+
+            document.getElementById('ansFormula').innerHTML = cPartHtml + aPartHtml;
+            answerAreaEl.style.display = 'block';
+            btnAnswer.disabled = true; // 顯示完答案後禁用按鈕，引導按下一題
+        }
+
+        // 綁定事件監聽器
+        btnGenerate.addEventListener('click', generateQuestion);
+        btnAnswer.addEventListener('click', showAnswer);
+        displayModeEl.addEventListener('change', renderQuestion); // 切換模式時自動更新當前題目
+    </script>
 </body>
 </html>
