@@ -16,7 +16,7 @@
         }
         .card { 
             background: white; 
-            padding: 40px; 
+            padding: 30px; 
             border-radius: 20px; 
             box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
             text-align: center; 
@@ -25,13 +25,61 @@
             box-sizing: border-box;
             border-top: 6px solid #2ecc71; 
         }
-        
+
+        /* 🔋 A.A. 電池計分器樣式 */
+        .score-board {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            font-size: 20px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .battery {
+            width: 80px;
+            height: 30px;
+            border: 3px solid #2c3e50;
+            border-radius: 6px;
+            position: relative;
+            padding: 2px;
+            background: #fff;
+            display: flex;
+        }
+        .battery::after {
+            content: '';
+            position: absolute;
+            right: -8px;
+            top: 7px;
+            width: 5px;
+            height: 16px;
+            background: #2c3e50;
+            border-radius: 0 3px 3px 0;
+        }
+        .battery-level {
+            height: 100%;
+            width: 0%; /* 預設 0% */
+            background: #2ecc71;
+            border-radius: 3px;
+            transition: width 0.4s ease-in-out, background-color 0.3s;
+        }
+        /* 充飽電的閃爍特效 */
+        @keyframes batteryGlow {
+            0% { box-shadow: 0 0 5px #f1c40f; }
+            50% { box-shadow: 0 0 20px #f1c40f; }
+            100% { box-shadow: 0 0 5px #f1c40f; }
+        }
+        .battery.full {
+            animation: batteryGlow 1s infinite;
+        }
+
         .ion-display { 
             font-size: 36px; 
             font-weight: bold; 
             color: #2c3e50; 
-            margin: 30px 0; 
-            min-height: 120px; 
+            margin: 20px 0; 
+            min-height: 100px; 
             display: flex; 
             justify-content: center; 
             align-items: center; 
@@ -41,47 +89,40 @@
             line-height: 1.2;
             font-family: 'Times New Roman', Times, serif; 
         }
-        
-        .answer-area { 
-            border-top: 2px dashed #2ecc71; 
-            margin-top: 20px; 
-            padding-top: 30px; 
-            display: none; 
-            animation: fadeIn 0.4s ease-in-out; 
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
 
-        .formula { font-size: 52px; color: #e67e22; font-family: 'Times New Roman', serif; margin-bottom: 15px; }
-        .name { font-size: 28px; color: #2c3e50; font-weight: 600; }
-        
-        button { 
-            background-color: #2ecc71; 
-            color: white; 
-            border: none; 
-            padding: 15px 30px; 
-            font-size: 18px; 
-            border-radius: 10px; 
-            cursor: pointer; 
-            margin: 10px 5px; 
-            transition: all 0.3s; 
+        /* 🔠 選擇題 4x4 網格 */
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
         }
-        button:hover:not(:disabled) { 
-            background-color: #27ae60; 
-            transform: translateY(-2px); 
+        .option-btn {
+            background-color: #fff;
+            color: #2c3e50;
+            border: 2px solid #bdc3c7;
+            padding: 20px 10px;
+            font-size: 24px;
+            font-family: 'Times New Roman', serif;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-height: 80px;
         }
-        button:disabled { 
-            background-color: #bdc3c7;
+        .option-btn:hover:not(:disabled) {
+            border-color: #3498db;
+            background-color: #f1f8ff;
+            transform: translateY(-2px);
+        }
+        .option-btn:disabled {
             cursor: not-allowed;
-            transform: none;
         }
-        #btn-answer { background-color: #3498db; }
-        #btn-answer:hover:not(:disabled) { background-color: #2980b9; }
         
+        /* 答對答錯的狀態顏色 */
+        .option-btn.correct { background-color: #2ecc71; color: white; border-color: #27ae60; }
+        .option-btn.wrong { background-color: #e74c3c; color: white; border-color: #c0392b; }
+
         select { padding: 10px; border-radius: 8px; font-size: 16px; border: 1px solid #ccc; cursor: pointer; }
-        
         sub, sup { font-size: 0.55em; }
         sub { vertical-align: sub; }
         sup { vertical-align: super; }
@@ -93,6 +134,13 @@
     <p>3lite Education - Chemistry Specialist</p>
 
     <div class="card">
+        <div class="score-board">
+            <span>Score: <span id="scoreText">0</span></span>
+            <div class="battery" id="batteryIcon">
+                <div class="battery-level" id="batteryLevel"></div>
+            </div>
+        </div>
+
         <div style="margin-bottom: 20px;">
             題目類型：
             <select id="displayMode">
@@ -101,21 +149,18 @@
             </select>
         </div>
 
-        <div class="ion-display" id="question">點擊「抽取題目」開始</div>
+        <div class="ion-display" id="question"><span>準備好挑戰了嗎？</span></div>
 
-        <div>
-            <button id="btn-generate">抽取題目 (Random)</button>
-            <button id="btn-answer" disabled>顯示答案 (Show Answer)</button>
-        </div>
+        <button id="btn-generate" style="background-color: #3498db; color: white; border: none; padding: 12px 25px; font-size: 18px; border-radius: 8px; cursor: pointer; transition: 0.3s;">
+            點擊開始 / 換一題
+        </button>
 
-        <div class="answer-area" id="answerArea">
-            <div class="formula" id="ansFormula"></div>
-            <div class="name" id="ansName"></div>
-        </div>
+        <div class="options-grid" id="optionsArea">
+            </div>
     </div>
 
     <script>
-        // 化學數據庫
+        // 化學數據庫 (維持不變)
         const cations = [
             { name: "Sodium ion", formula: "Na", charge: 1, html: "Na<sup>+</sup>" },
             { name: "Potassium ion", formula: "K", charge: 1, html: "K<sup>+</sup>" },
@@ -168,104 +213,166 @@
         ];
 
         // 狀態管理
-        let curC = null;
-        let curA = null;
+        let curC = null, curA = null;
+        let score = 0;
+        let correctOptionIndex = -1;
+        let isAnswered = false;
 
-        // DOM 元素選取
+        // DOM 元素
         const questionEl = document.getElementById('question');
-        const answerAreaEl = document.getElementById('answerArea');
         const displayModeEl = document.getElementById('displayMode');
         const btnGenerate = document.getElementById('btn-generate');
-        const btnAnswer = document.getElementById('btn-answer');
+        const optionsArea = document.getElementById('optionsArea');
+        const scoreText = document.getElementById('scoreText');
+        const batteryLevel = document.getElementById('batteryLevel');
+        const batteryIcon = document.getElementById('batteryIcon');
 
         // 工具函式
         const getGCD = (a, b) => b ? getGCD(b, a % b) : a;
         const formatSub = text => text.replace(/([0-9]+)/g, '<sub>$1</sub>');
 
-        // 更新題目畫面 
-        function renderQuestion() {
-            if (!curC || !curA) return;
+        // 生成標準答案的 HTML 邏輯
+        function buildFormulaHTML(c, a, subC, subA) {
+            let common = getGCD(subC, subA);
+            subC /= common; subA /= common;
+            let cPart = formatSub(c.formula);
+            if (subC > 1) cPart = c.poly ? `(${cPart})<sub>${subC}</sub>` : `${cPart}<sub>${subC}</sub>`;
+            let aPart = formatSub(a.formula);
+            if (subA > 1) aPart = a.poly ? `(${aPart})<sub>${subA}</sub>` : `${aPart}<sub>${subA}</sub>`;
+            return `<span>${cPart}${aPart}</span>`;
+        }
+
+        // 生成標準名稱的邏輯
+        function buildNameHTML(c, a) {
+            let cleanCName = c.name.replace(/ion/i, '').trim();
+            let cleanAName = a.name.replace(/ion/i, '').trim();
+            return `<span style="font-size:24px;">${cleanCName} ${cleanAName.toLowerCase()}</span>`;
+        }
+
+        // 核心：生成 1對3錯 的選項陣列
+        function generateOptions() {
             const mode = displayModeEl.value;
-            
+            let correctHTML = "";
+            let optionsSet = new Set();
+            let optionsArray = [];
+
+            if (mode === 'symbol') {
+                // 正確答案
+                correctHTML = buildFormulaHTML(curC, curA, curA.charge, curC.charge);
+                optionsSet.add(correctHTML);
+                optionsArray.push({ html: correctHTML, isCorrect: true });
+
+                // 產生誘答：隨機調換同元素的上下標比例
+                let fakeRatios = [[1,1], [1,2], [2,1], [1,3], [3,1], [2,3], [3,2]].sort(() => 0.5 - Math.random());
+                for (let ratio of fakeRatios) {
+                    let fakeHTML = buildFormulaHTML(curC, curA, ratio[0], ratio[1]);
+                    if (!optionsSet.has(fakeHTML)) {
+                        optionsSet.add(fakeHTML);
+                        optionsArray.push({ html: fakeHTML, isCorrect: false });
+                    }
+                    if (optionsArray.length === 4) break;
+                }
+            } else {
+                // 名稱模式：正確答案
+                correctHTML = buildNameHTML(curC, curA);
+                optionsSet.add(correctHTML);
+                optionsArray.push({ html: correctHTML, isCorrect: true });
+
+                // 產生誘答：同陽離子，配不同的隨機陰離子
+                while (optionsArray.length < 4) {
+                    let randomA = anions[Math.floor(Math.random() * anions.length)];
+                    let fakeHTML = buildNameHTML(curC, randomA);
+                    if (!optionsSet.has(fakeHTML)) {
+                        optionsSet.add(fakeHTML);
+                        optionsArray.push({ html: fakeHTML, isCorrect: false });
+                    }
+                }
+            }
+
+            // 洗牌選項順序
+            return optionsArray.sort(() => 0.5 - Math.random());
+        }
+
+        // 建立遊戲畫面
+        function renderGame() {
+            curC = cations[Math.floor(Math.random() * cations.length)];
+            curA = anions[Math.floor(Math.random() * anions.length)];
+            isAnswered = false;
+
+            // 顯示題目
+            const mode = displayModeEl.value;
             if (mode === 'symbol') {
                 questionEl.innerHTML = `<span>${curC.html} &nbsp;+&nbsp; ${curA.html}</span>`;
             } else {
                 questionEl.innerHTML = `<span>${curC.name}<br>+<br>${curA.name}</span>`;
             }
+
+            // 生成並渲染按鈕
+            const finalOptions = generateOptions();
+            optionsArea.innerHTML = '';
+            
+            finalOptions.forEach((opt, index) => {
+                let btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = opt.html;
+                btn.onclick = () => handleAnswer(btn, opt.isCorrect, index);
+                optionsArea.appendChild(btn);
+                if (opt.isCorrect) correctOptionIndex = index;
+            });
         }
 
-        // 抽取題目事件
-        function generateQuestion() {
-            curC = cations[Math.floor(Math.random() * cations.length)];
-            curA = anions[Math.floor(Math.random() * anions.length)];
-            
-            answerAreaEl.style.display = 'none'; 
-            btnAnswer.disabled = false;          
-            
-            renderQuestion();
-        }
+        // 判斷作答結果與電池特效
+        function handleAnswer(btn, isCorrect, index) {
+            if (isAnswered) return; // 避免重複點擊
+            isAnswered = true;
 
-        // 顯示答案事件
-        function showAnswer() {
-            if(!curC || !curA) return;
+            const allBtns = document.querySelectorAll('.option-btn');
+            allBtns.forEach(b => b.disabled = true); // 鎖定所有按鈕
 
-            let cSub = curA.charge; 
-            let aSub = curC.charge; 
-            let common = getGCD(cSub, aSub);
-            cSub /= common; 
-            aSub /= common;
+            if (isCorrect) {
+                // 答對處理
+                btn.classList.add('correct');
+                score++;
+                scoreText.innerText = score;
+                
+                // 更新電池動畫 (每 10 分充滿一次)
+                let fillPercent = (score % 10) * 10;
+                if (fillPercent === 0 && score > 0) {
+                    batteryLevel.style.width = '100%';
+                    batteryLevel.style.backgroundColor = '#f1c40f'; // 滿電變金色
+                    batteryIcon.classList.add('full');
+                    setTimeout(() => {
+                        batteryIcon.classList.remove('full');
+                        batteryLevel.style.width = '0%';
+                        batteryLevel.style.backgroundColor = '#2ecc71';
+                    }, 1500);
+                } else {
+                    batteryLevel.style.width = fillPercent + '%';
+                }
 
-            // 名稱處理
-            let cleanCName = curC.name.replace(/ion/i, '').trim();
-            let cleanAName = curA.name.replace(/ion/i, '').trim();
-            document.getElementById('ansName').innerText = `${cleanCName} ${cleanAName.toLowerCase()}`;
-
-            // 陽離子部分處理
-            let cPartHtml = formatSub(curC.formula);
-            if (cSub > 1) {
-                cPartHtml = curC.poly ? `(${cPartHtml})<sub>${cSub}</sub>` : `${cPartHtml}<sub>${cSub}</sub>`;
+            } else {
+                // 答錯處理：自己變紅，正確選項變綠提示
+                btn.classList.add('wrong');
+                allBtns[correctOptionIndex].classList.add('correct');
             }
 
-            // 陰離子部分處理
-            let aPartHtml = formatSub(curA.formula);
-            if (aSub > 1) {
-                aPartHtml = curA.poly ? `(${aPartHtml})<sub>${aSub}</sub>` : `${aPartHtml}<sub>${aSub}</sub>`;
-            }
-
-            document.getElementById('ansFormula').innerHTML = cPartHtml + aPartHtml;
-            answerAreaEl.style.display = 'block';
-            btnAnswer.disabled = true; 
+            // 1.5 秒後自動進入下一題
+            setTimeout(renderGame, 1500);
         }
 
-        // 綁定事件監聽器
-        btnGenerate.addEventListener('click', generateQuestion);
-        btnAnswer.addEventListener('click', showAnswer);
-        displayModeEl.addEventListener('change', renderQuestion); 
+        // 綁定事件
+        btnGenerate.addEventListener('click', renderGame);
+        displayModeEl.addEventListener('change', () => {
+            if(curC && curA) renderGame();
+        });
 
         // ==========================================
         // 🛡️ 防禦等級三：基礎防拷貝與開發者工具攔截腳本
         // ==========================================
-        
-        // 1. 禁用滑鼠右鍵
-        document.addEventListener('contextmenu', function(e) {
-            e.preventDefault();
-        }, false);
-
-        // 2. 禁用文字反白選取
-        document.onselectstart = function() { return false; };
-
-        // 3. 禁用常見的開發者工具快捷鍵
-        document.onkeydown = function(e) {
-            // 禁用 F12
-            if (e.keyCode == 123) {
-                return false;
-            }
-            // 禁用 Ctrl+Shift+I (Windows) / Cmd+Option+I (Mac)
-            if (e.ctrlKey && e.shiftKey && e.keyCode == 73) {
-                return false;
-            }
-            // 禁用 Ctrl+U (Windows) / Cmd+Option+U (Mac) - 檢視原始碼
-            if (e.ctrlKey && e.keyCode == 85) {
+        document.addEventListener('contextmenu', e => e.preventDefault(), false);
+        document.onselectstart = () => false;
+        document.onkeydown = e => {
+            if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && e.keyCode == 73) || (e.ctrlKey && e.keyCode == 85)) {
                 return false;
             }
         };
