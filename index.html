@@ -3,197 +3,237 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3lite Education - 離子組合大挑戰</title>
+    <title>3lite Education - Ion Master 終極版</title>
     <style>
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            display: flex; flex-direction: column; align-items: center; 
-            background-color: #f4f7f6; padding: 10px; margin: 0;
-        }
-        .card { 
-            background: white; padding: 25px; border-radius: 20px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; 
-            width: 95%; max-width: 500px; box-sizing: border-box;
-            border-top: 6px solid #2ecc71; 
-        }
-
-        /* 主選單按鈕 */
-        .menu-btn {
-            width: 100%; padding: 15px; margin: 10px 0; font-size: 18px; font-weight: bold;
-            border: none; border-radius: 12px; cursor: pointer; transition: 0.2s; color: white;
-        }
-        .btn-speed { background-color: #e74c3c; }
-        .btn-speed:hover { background-color: #c0392b; transform: translateY(-2px); }
-        .btn-practice { background-color: #3498db; }
-        .btn-practice:hover { background-color: #2980b9; transform: translateY(-2px); }
-        .btn-quit { background-color: #95a5a6; color: white; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; margin-top: 15px;}
-
-        /* 頂部狀態列 */
-        .status-bar {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 15px; padding: 10px; background: #fdfdfd; border-radius: 10px; font-size: 15px; font-weight: bold;
-        }
-        .battery {
-            width: 60px; height: 25px; border: 2px solid #2c3e50; border-radius: 4px;
-            position: relative; padding: 1px;
-        }
-        .battery::after {
-            content: ''; position: absolute; right: -6px; top: 5px; width: 4px; height: 12px; background: #2c3e50;
-        }
-        .battery-level { height: 100%; width: 0%; background: #2ecc71; transition: width 0.3s; }
-        .timer { font-family: monospace; font-size: 18px; color: #e67e22; }
-
-        .ion-display { 
-            font-size: 32px; font-weight: bold; color: #2c3e50; 
-            margin: 15px 0; min-height: 90px; display: flex; justify-content: center; align-items: center; flex-direction: column;
-            background: #f9f9f9; border-radius: 12px; border: 1px solid #ddd; font-family: 'Times New Roman', serif; 
-            line-height: 1.3;
-        }
-
-        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-        .option-btn {
-            background-color: #fff; border: 2px solid #bdc3c7; padding: 15px 5px; font-size: 20px; 
-            font-family: 'Times New Roman', serif; border-radius: 10px; cursor: pointer; transition: 0.2s; min-height: 70px;
-        }
-        .option-btn:hover:not(:disabled) { background-color: #f1f8ff; border-color: #3498db; }
-        .option-btn.correct { background-color: #2ecc71; color: white; border-color: #27ae60; }
-        .option-btn.wrong { background-color: #e74c3c; color: white; border-color: #c0392b; }
-
-        /* 彈窗樣式 */
-        #resultModal {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); z-index: 100; justify-content: center; align-items: center;
-        }
-        .modal-content { background: white; padding: 25px; border-radius: 20px; width: 85%; max-width: 400px; text-align: center; }
-        .best-time-box { background: #fff8e1; border: 2px solid #f1c40f; border-radius: 10px; padding: 10px; margin: 15px 0; }
+        :root { --primary: #2ecc71; --secondary: #3498db; --rare: #f1c40f; --epic: #9b59b6; --legend: #e74c3c; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; margin: 0; display: flex; flex-direction: column; align-items: center; padding: 10px; }
+        .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; width: 95%; max-width: 500px; box-sizing: border-box; border-top: 6px solid var(--primary); }
         
-        sub, sup { font-size: 0.55em; }
+        /* 🏠 選單與按鈕 */
+        .menu-btn { width: 100%; padding: 15px; margin: 8px 0; font-size: 18px; font-weight: bold; border: none; border-radius: 12px; cursor: pointer; color: white; transition: 0.2s; }
+        .btn-speed { background: var(--legend); }
+        .btn-speed:hover { background: #c0392b; transform: translateY(-2px); }
+        .btn-practice { background: var(--secondary); }
+        .btn-practice:hover { background: #2980b9; transform: translateY(-2px); }
+        .btn-gacha-menu { background: var(--rare); color: #2c3e50; }
+        .btn-gacha-menu:hover { background: #f39c12; transform: translateY(-2px); }
+        .btn-back { background: #95a5a6; padding: 10px 20px; margin-top: 20px; border: none; border-radius: 8px; color: white; cursor: pointer; font-size: 16px; width: 100%; }
+
+        /* 📊 狀態列 */
+        .status-bar { display: flex; justify-content: space-between; align-items: center; background: #fdfdfd; padding: 10px 15px; border-radius: 10px; margin-bottom: 15px; font-weight: bold; border: 1px solid #eee; }
+        .coin-display { color: #d35400; font-size: 18px; display: flex; align-items: center; gap: 5px; }
+        .timer { font-family: monospace; font-size: 18px; color: var(--legend); }
+        
+        /* 🔋 電池動畫 */
+        .battery { width: 60px; height: 25px; border: 2px solid #2c3e50; border-radius: 4px; position: relative; padding: 1px; }
+        .battery::after { content: ''; position: absolute; right: -6px; top: 5px; width: 4px; height: 12px; background: #2c3e50; }
+        .battery-level { height: 100%; width: 0%; background: var(--primary); transition: width 0.3s; }
+
+        /* 🎮 遊戲區域 */
+        .ion-display { font-size: 32px; font-weight: bold; color: #2c3e50; margin: 15px 0; min-height: 100px; display: flex; justify-content: center; align-items: center; flex-direction: column; background: #f9f9f9; border-radius: 12px; border: 1px solid #ddd; font-family: 'Times New Roman', serif; line-height: 1.3; }
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+        .option-btn { background: #fff; border: 2px solid #bdc3c7; padding: 15px 5px; font-size: 20px; font-family: 'Times New Roman', serif; border-radius: 10px; cursor: pointer; transition: 0.2s; min-height: 75px; }
+        .option-btn:hover:not(:disabled) { background: #f1f8ff; border-color: var(--secondary); }
+        .option-btn.correct { background: var(--primary); color: white; border-color: #27ae60; }
+        .option-btn.wrong { background: var(--legend); color: white; border-color: #c0392b; }
+
+        /* 🎰 抽卡與圖鑑 UI */
+        .gallery-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 15px; max-height: 350px; overflow-y: auto; padding: 5px; }
+        .card-item { aspect-ratio: 2/3; background: #eee; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; position: relative; border: 2px solid transparent; color: #999; flex-direction: column; }
+        .card-item.owned { background: #fff; border-color: #ddd; color: #2c3e50; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .card-item.n { border-color: #bdc3c7; }
+        .card-item.r { border-color: var(--secondary); background: #ebf5fb; }
+        .card-item.sr { border-color: var(--epic); background: #f5eef8; }
+        .card-item.ssr { border-color: var(--rare); background: #fef9e7; animation: glow 1.5s infinite alternate; }
+        @keyframes glow { from { box-shadow: 0 0 5px var(--rare); } to { box-shadow: 0 0 15px var(--rare); } }
+
+        /* 🏆 彈窗共通樣式 */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 100; justify-content: center; align-items: center; flex-direction: column; color: white; }
+        .modal-content { background: white; color: #2c3e50; padding: 25px; border-radius: 20px; width: 85%; max-width: 400px; text-align: center; }
+        .best-time-box { background: #fff8e1; border: 2px solid var(--rare); border-radius: 10px; padding: 10px; margin: 15px 0; }
+        
+        /* 抽卡結果特效 */
+        .reveal-card { width: 160px; height: 240px; background: white; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #2c3e50; margin-bottom: 20px; transform: scale(0); transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
+        .reveal-card.show { transform: scale(1.2); }
+        .reveal-card.n { border: 5px solid #bdc3c7; }
+        .reveal-card.r { border: 5px solid var(--secondary); background: #ebf5fb; }
+        .reveal-card.sr { border: 5px solid var(--epic); background: #f5eef8; }
+        .reveal-card.ssr { border: 5px solid var(--rare); background: #fef9e7; box-shadow: 0 0 30px var(--rare); }
+        
+        sub, sup { font-size: 0.6em; }
     </style>
 </head>
 <body>
 
-    <h2 style="margin: 10px 0;">🧪 A.A. Sir's Ion Master</h2>
+    <h2 style="margin: 10px 0; color: #2c3e50;">🧪 A.A. Sir's Ion Master</h2>
 
     <div class="card">
         <div id="menuArea">
-            <p style="color: #7f8c8d; margin-bottom: 25px;">3lite Education - 專業化學訓練</p>
-
-            <button class="menu-btn btn-speed" onclick="startGame('speed')">⚡ 速度模式 (10題計時挑戰)</button>
-            <button class="menu-btn btn-practice" onclick="startGame('practice')">🧠 練習模式 (無限題數特訓)</button>
+            <p style="color: #7f8c8d; margin-bottom: 20px;">3lite Education - 專業化學訓練</p>
+            <div class="status-bar" style="justify-content: center;">
+                <div class="coin-display">🪙 AA 代幣: <span id="mainCoinCount">0</span></div>
+            </div>
+            <button class="menu-btn btn-speed" onclick="startGame('speed')">⚡ 速度模式 (10題計時)</button>
+            <button class="menu-btn btn-practice" onclick="startGame('practice')">🧠 練習模式 (賺取代幣)</button>
+            <button class="menu-btn btn-gacha-menu" onclick="showGachaMenu()">🎰 元素抽卡與圖鑑</button>
         </div>
 
         <div id="gameArea" style="display: none;">
             <div class="status-bar">
-                <div id="progressText" style="color: #3498db;">進度: 0/10</div>
-                <div class="timer" id="timerDisplay">00:00.0</div>
+                <div id="progressText" style="color: var(--secondary);">進度: 0/10</div>
+                <div class="timer" id="timerDisplay" style="display:none;">00:00.0</div>
+                <div class="coin-display" id="gameCoinDisplay" style="display:none;">🪙 <span id="gameCoinCount">0</span></div>
                 <div class="battery"><div class="battery-level" id="batteryLevel"></div></div>
             </div>
 
             <div class="ion-display" id="question"><span>載入中...</span></div>
             <div class="options-grid" id="optionsArea"></div>
 
-            <button class="btn-quit" onclick="quitGame()">返回主選單</button>
+            <button class="btn-back" onclick="quitToMenu()">返回主選單</button>
+        </div>
+
+        <div id="gachaArea" style="display: none;">
+            <div class="status-bar">
+                <div class="coin-display">🪙 餘額: <span id="gachaCoinCount">0</span></div>
+                <div style="font-size: 15px; color: var(--secondary);">收藏: <span id="collectionCount">0</span>/46</div>
+            </div>
+            <button class="menu-btn" style="background: var(--epic); box-shadow: 0 4px #8e44ad;" onclick="drawCard()" id="drawBtn">
+                消耗 5 🪙 抽取元素
+            </button>
+            <div class="gallery-grid" id="galleryGrid"></div>
+            <button class="btn-back" onclick="quitToMenu()">返回主選單</button>
         </div>
     </div>
 
-    <div id="resultModal">
+    <div id="resultModal" class="modal">
         <div class="modal-content">
             <h2 style="margin-top: 0;">🎯 挑戰完成！</h2>
             <p style="margin: 5px 0;">本次時間：</p>
-            <div id="finalTime" style="font-size:36px; color:#e74c3c; font-weight:bold; margin-bottom: 10px;"></div>
+            <div id="finalTime" style="font-size:36px; color:var(--legend); font-weight:bold; margin-bottom: 10px;"></div>
             
             <div class="best-time-box">
                 <div style="color: #f39c12; font-weight: bold;">👑 歷史最佳紀錄 (PB)</div>
                 <div id="bestTimeDisplay" style="font-size: 24px; font-weight: bold; color: #2c3e50;">--</div>
             </div>
             
-            <button onclick="quitGame()" style="margin-top:20px; padding:12px 25px; background:#3498db; color:white; border:none; border-radius:10px; font-size: 16px; cursor:pointer; width: 100%;">
-                返回主選單
-            </button>
+            <button onclick="quitToMenu()" class="btn-back" style="background: var(--secondary);">返回主選單</button>
         </div>
     </div>
 
+    <div id="gachaResultModal" class="modal" onclick="closeGachaResult()">
+        <div id="rarityText" style="font-size: 28px; font-weight: bold; margin-bottom: 15px; text-shadow: 0 2px 4px rgba(0,0,0,0.5);"></div>
+        <div class="reveal-card" id="revealCard">
+            <div id="cardContent" style="font-size: 45px; margin-bottom: 15px; font-family: 'Times New Roman', serif;"></div>
+            <div id="cardName" style="font-size: 18px; font-weight: bold;"></div>
+        </div>
+        <p style="opacity: 0.7; font-size: 14px; margin-top: 20px;">(點擊螢幕任意處繼續)</p>
+    </div>
+
     <script>
-        // 化學數據庫
+        // ==========================================
+        // 1. 完整化學數據庫 (依據文件更新)
+        // ==========================================
         const cations = [
-            { name: "Sodium ion", formula: "Na", charge: 1, html: "Na<sup>+</sup>" },
-            { name: "Potassium ion", formula: "K", charge: 1, html: "K<sup>+</sup>" },
-            { name: "Copper(I) ion", formula: "Cu", charge: 1, html: "Cu<sup>+</sup>" },
-            { name: "Silver ion", formula: "Ag", charge: 1, html: "Ag<sup>+</sup>" },
-            { name: "Hydrogen ion", formula: "H", charge: 1, html: "H<sup>+</sup>" },
-            { name: "Ammonium ion", formula: "NH4", charge: 1, html: "NH<sub>4</sub><sup>+</sup>", poly: true },
-            { name: "Magnesium ion", formula: "Mg", charge: 2, html: "Mg<sup>2+</sup>" },
-            { name: "Calcium ion", formula: "Ca", charge: 2, html: "Ca<sup>2+</sup>" },
-            { name: "Barium ion", formula: "Ba", charge: 2, html: "Ba<sup>2+</sup>" },
-            { name: "Iron(II) ion", formula: "Fe", charge: 2, html: "Fe<sup>2+</sup>" },
-            { name: "Copper(II) ion", formula: "Cu", charge: 2, html: "Cu<sup>2+</sup>" },
-            { name: "Zinc ion", formula: "Zn", charge: 2, html: "Zn<sup>2+</sup>" },
-            { name: "Aluminium ion", formula: "Al", charge: 3, html: "Al<sup>3+</sup>" },
-            { name: "Iron(III) ion", formula: "Fe", charge: 3, html: "Fe<sup>3+</sup>" }
+            { id: 1, name: "Sodium", formula: "Na", charge: 1, html: "Na<sup>+</sup>", rarity: 'N' },
+            { id: 2, name: "Potassium", formula: "K", charge: 1, html: "K<sup>+</sup>", rarity: 'N' },
+            { id: 3, name: "Copper(I)", formula: "Cu", charge: 1, html: "Cu<sup>+</sup>", rarity: 'R' },
+            { id: 4, name: "Silver", formula: "Ag", charge: 1, html: "Ag<sup>+</sup>", rarity: 'R' },
+            { id: 5, name: "Mercury(I)", formula: "Hg", charge: 1, html: "Hg<sup>+</sup>", rarity: 'SR' },
+            { id: 6, name: "Hydrogen", formula: "H", charge: 1, html: "H<sup>+</sup>", rarity: 'N' },
+            { id: 7, name: "Ammonium", formula: "NH4", charge: 1, html: "NH<sub>4</sub><sup>+</sup>", poly: true, rarity: 'R' },
+            { id: 8, name: "Magnesium", formula: "Mg", charge: 2, html: "Mg<sup>2+</sup>", rarity: 'N' },
+            { id: 9, name: "Calcium", formula: "Ca", charge: 2, html: "Ca<sup>2+</sup>", rarity: 'N' },
+            { id: 10, name: "Barium", formula: "Ba", charge: 2, html: "Ba<sup>2+</sup>", rarity: 'R' },
+            { id: 11, name: "Lead(II)", formula: "Pb", charge: 2, html: "Pb<sup>2+</sup>", rarity: 'R' },
+            { id: 12, name: "Iron(II)", formula: "Fe", charge: 2, html: "Fe<sup>2+</sup>", rarity: 'R' },
+            { id: 13, name: "Cobalt(II)", formula: "Co", charge: 2, html: "Co<sup>2+</sup>", rarity: 'R' },
+            { id: 14, name: "Nickel(II)", formula: "Ni", charge: 2, html: "Ni<sup>2+</sup>", rarity: 'R' },
+            { id: 15, name: "Manganese(II)", formula: "Mn", charge: 2, html: "Mn<sup>2+</sup>", rarity: 'R' },
+            { id: 16, name: "Copper(II)", formula: "Cu", charge: 2, html: "Cu<sup>2+</sup>", rarity: 'R' },
+            { id: 17, name: "Zinc", formula: "Zn", charge: 2, html: "Zn<sup>2+</sup>", rarity: 'R' },
+            { id: 18, name: "Mercury(II)", formula: "Hg", charge: 2, html: "Hg<sup>2+</sup>", rarity: 'SR' },
+            { id: 19, name: "Aluminium", formula: "Al", charge: 3, html: "Al<sup>3+</sup>", rarity: 'SR' },
+            { id: 20, name: "Iron(III)", formula: "Fe", charge: 3, html: "Fe<sup>3+</sup>", rarity: 'SR' },
+            { id: 21, name: "Chromium(III)", formula: "Cr", charge: 3, html: "Cr<sup>3+</sup>", rarity: 'SR' },
+            // 隱藏版 SSR 閃卡
+            { id: 99, name: "A.A. Sir", formula: "AA", charge: 0, html: "🔋", rarity: 'SSR', isSpecial: true } 
         ];
 
         const anions = [
-            { name: "Hydride ion", formula: "H", charge: 1, html: "H<sup>-</sup>" },
-            { name: "Chloride ion", formula: "Cl", charge: 1, html: "Cl<sup>-</sup>" },
-            { name: "Bromide ion", formula: "Br", charge: 1, html: "Br<sup>-</sup>" },
-            { name: "Iodide ion", formula: "I", charge: 1, html: "I<sup>-</sup>" },
-            { name: "Hydroxide ion", formula: "OH", charge: 1, html: "OH<sup>-</sup>", poly: true },
-            { name: "Nitrate ion", formula: "NO3", charge: 1, html: "NO<sub>3</sub><sup>-</sup>", poly: true },
-            { name: "Oxide ion", formula: "O", charge: 2, html: "O<sup>2-</sup>" },
-            { name: "Sulphate ion", formula: "SO4", charge: 2, html: "SO<sub>4</sub><sup>2-</sup>", poly: true },
-            { name: "Carbonate ion", formula: "CO3", charge: 2, html: "CO<sub>3</sub><sup>2-</sup>", poly: true },
-            { name: "Phosphate ion", formula: "PO4", charge: 3, html: "PO<sub>4</sub><sup>3-</sup>", poly: true }
+            { id: 22, name: "Hydride", formula: "H", charge: 1, html: "H<sup>-</sup>", rarity: 'R' },
+            { id: 23, name: "Chloride", formula: "Cl", charge: 1, html: "Cl<sup>-</sup>", rarity: 'N' }, // 已修正 CH 為 Cl
+            { id: 24, name: "Bromide", formula: "Br", charge: 1, html: "Br<sup>-</sup>", rarity: 'N' },
+            { id: 25, name: "Iodide", formula: "I", charge: 1, html: "I<sup>-</sup>", rarity: 'R' },
+            { id: 26, name: "Hydroxide", formula: "OH", charge: 1, html: "OH<sup>-</sup>", poly: true, rarity: 'R' },
+            { id: 27, name: "Nitrate", formula: "NO3", charge: 1, html: "NO<sub>3</sub><sup>-</sup>", poly: true, rarity: 'SR' },
+            { id: 28, name: "Nitrite", formula: "NO2", charge: 1, html: "NO<sub>2</sub><sup>-</sup>", poly: true, rarity: 'SR' },
+            { id: 29, name: "Hydrogencarbonate", formula: "HCO3", charge: 1, html: "HCO<sub>3</sub><sup>-</sup>", poly: true, rarity: 'SR' },
+            { id: 30, name: "Hydrogensulphate", formula: "HSO4", charge: 1, html: "HSO<sub>4</sub><sup>-</sup>", poly: true, rarity: 'SR' },
+            { id: 31, name: "Cyanide", formula: "CN", charge: 1, html: "CN<sup>-</sup>", poly: true, rarity: 'SR' },
+            { id: 32, name: "Permanganate", formula: "MnO4", charge: 1, html: "MnO<sub>4</sub><sup>-</sup>", poly: true, rarity: 'SR' },
+            { id: 33, name: "Chlorate", formula: "ClO3", charge: 1, html: "ClO<sub>3</sub><sup>-</sup>", poly: true, rarity: 'SR' },
+            { id: 34, name: "Hypochlorite", formula: "ClO", charge: 1, html: "ClO<sup>-</sup>", poly: true, rarity: 'SR' },
+            { id: 35, name: "Oxide", formula: "O", charge: 2, html: "O<sup>2-</sup>", rarity: 'N' },
+            { id: 36, name: "Sulphide", formula: "S", charge: 2, html: "S<sup>2-</sup>", rarity: 'R' },
+            { id: 37, name: "Sulphate", formula: "SO4", charge: 2, html: "SO<sub>4</sub><sup>2-</sup>", poly: true, rarity: 'SR' },
+            { id: 38, name: "Sulphite", formula: "SO3", charge: 2, html: "SO<sub>3</sub><sup>2-</sup>", poly: true, rarity: 'SR' },
+            { id: 39, name: "Silicate", formula: "SiO3", charge: 2, html: "SiO<sub>3</sub><sup>2-</sup>", poly: true, rarity: 'SR' },
+            { id: 40, name: "Carbonate", formula: "CO3", charge: 2, html: "CO<sub>3</sub><sup>2-</sup>", poly: true, rarity: 'SR' },
+            { id: 41, name: "Chromate", formula: "CrO4", charge: 2, html: "CrO<sub>4</sub><sup>2-</sup>", poly: true, rarity: 'SR' },
+            { id: 42, name: "Dichromate", formula: "Cr2O7", charge: 2, html: "Cr<sub>2</sub>O<sub>7</sub><sup>2-</sup>", poly: true, rarity: 'SR' },
+            { id: 43, name: "Nitride", formula: "N", charge: 3, html: "N<sup>3-</sup>", rarity: 'SR' },
+            { id: 44, name: "Phosphide", formula: "P", charge: 3, html: "P<sup>3-</sup>", rarity: 'SR' },
+            { id: 45, name: "Phosphate", formula: "PO4", charge: 3, html: "PO<sub>4</sub><sup>3-</sup>", poly: true, rarity: 'SR' }
         ];
 
+        // 圖鑑用完整卡池
+        const cardPool = [...cations, ...anions];
+
+        // 供遊戲出題使用的合法離子 (排除 A.A. Sir 等特殊卡)
+        const playableCations = cations.filter(c => !c.isSpecial);
+        const playableAnions = anions.filter(a => !a.isSpecial);
+
+        // ==========================================
+        // 2. 狀態管理與本地資料儲存
+        // ==========================================
         let currentMode = '';
-        let curC, curA, score = 0, startTime, timerInterval;
+        let score = 0, practiceCorrectCount = 0;
+        let startTime, timerInterval;
         let isAnswered = false;
         let usedQuestions = new Set(); 
 
+        let coins = parseInt(localStorage.getItem('aaCoins')) || 0;
+        let inventory = JSON.parse(localStorage.getItem('aaInventory')) || [];
+
+        // DOM 元素
         const menuArea = document.getElementById('menuArea');
         const gameArea = document.getElementById('gameArea');
+        const gachaArea = document.getElementById('gachaArea');
         const questionEl = document.getElementById('question');
         const optionsArea = document.getElementById('optionsArea');
         const progressText = document.getElementById('progressText');
         const timerDisplay = document.getElementById('timerDisplay');
+        const gameCoinDisplay = document.getElementById('gameCoinDisplay');
         const batteryLevel = document.getElementById('batteryLevel');
 
-        // 黑名單系統
+        function syncCoinDisplay() {
+            document.getElementById('mainCoinCount').innerText = coins;
+            document.getElementById('gameCoinCount').innerText = coins;
+            document.getElementById('gachaCoinCount').innerText = coins;
+            localStorage.setItem('aaCoins', coins);
+        }
+
+        // ==========================================
+        // 3. 核心化學邏輯與生成器
+        // ==========================================
         function isValidCombination(c, a) {
-            const blacklist = ['NH4_OH', 'H_NO3', 'H_Cl', 'H_Br', 'H_I', 'H_SO4', 'H_OH', 'H_O', 'H_CO3', 'H_PO4'];
+            // 擴展黑名單，避免 H+ 與各種陰離子生成酸類或水
+            const blacklist = [
+                'NH4_OH', 'H_NO3', 'H_NO2', 'H_Cl', 'H_Br', 'H_I', 
+                'H_SO4', 'H_SO3', 'H_OH', 'H_O', 'H_CO3', 'H_PO4', 
+                'H_CN', 'H_MnO4', 'H_ClO3', 'H_ClO', 'H_CrO4', 'H_Cr2O7'
+            ];
             return !blacklist.includes(c.formula + '_' + a.formula);
-        }
-
-        // 遊戲流程
-        function startGame(mode) {
-            currentMode = mode;
-            score = 0;
-            usedQuestions.clear();
-            
-            menuArea.style.display = 'none';
-            gameArea.style.display = 'block';
-            batteryLevel.style.width = '0%';
-
-            if (mode === 'speed') {
-                progressText.innerText = "進度: 0/10";
-                timerDisplay.style.display = 'block';
-                startTime = Date.now();
-                timerInterval = setInterval(() => {
-                    timerDisplay.innerText = ((Date.now() - startTime) / 1000).toFixed(1) + "s";
-                }, 100);
-            } else {
-                progressText.innerText = "已答對: 0 題";
-                timerDisplay.style.display = 'none';
-            }
-
-            nextQuestion();
-        }
-
-        function quitGame() {
-            clearInterval(timerInterval);
-            document.getElementById('resultModal').style.display = 'none';
-            gameArea.style.display = 'none';
-            menuArea.style.display = 'block';
         }
 
         function getGCD(a, b) { return b ? getGCD(b, a % b) : a; }
@@ -210,19 +250,58 @@
         function buildName(c, a) {
             let cleanCName = c.name.replace(/ion/i, '').trim();
             let cleanAName = a.name.replace(/ion/i, '').trim();
-            return `<span style="font-size:20px;">${cleanCName} ${cleanAName.toLowerCase()}</span>`;
+            return `<span style="font-size:22px;">${cleanCName} ${cleanAName.toLowerCase()}</span>`;
+        }
+
+        // ==========================================
+        // 4. 遊戲流程控制 (混合題型)
+        // ==========================================
+        function startGame(mode) {
+            currentMode = mode;
+            score = 0;
+            practiceCorrectCount = 0;
+            usedQuestions.clear();
+            syncCoinDisplay();
+            
+            menuArea.style.display = 'none';
+            gameArea.style.display = 'block';
+            batteryLevel.style.width = '0%';
+
+            if (mode === 'speed') {
+                progressText.innerText = "進度: 0/10";
+                timerDisplay.style.display = 'block';
+                gameCoinDisplay.style.display = 'none';
+                startTime = Date.now();
+                timerInterval = setInterval(() => {
+                    timerDisplay.innerText = ((Date.now() - startTime) / 1000).toFixed(1) + "s";
+                }, 100);
+            } else {
+                progressText.innerText = "已答對: 0 題";
+                timerDisplay.style.display = 'none';
+                gameCoinDisplay.style.display = 'flex'; 
+            }
+
+            nextQuestion();
+        }
+
+        function quitToMenu() {
+            clearInterval(timerInterval);
+            document.getElementById('resultModal').style.display = 'none';
+            gameArea.style.display = 'none';
+            gachaArea.style.display = 'none';
+            menuArea.style.display = 'block';
+            syncCoinDisplay();
         }
 
         function nextQuestion() {
             if (currentMode === 'speed' && score >= 10) { finishSpeedGame(); return; }
             
             isAnswered = false;
-            let attempts = 0;
-            let comboSignature = "";
+            let attempts = 0, comboSignature = "", curC, curA;
 
             do {
-                curC = cations[Math.floor(Math.random() * cations.length)];
-                curA = anions[Math.floor(Math.random() * anions.length)];
+                curC = playableCations[Math.floor(Math.random() * playableCations.length)];
+                curA = playableAnions[Math.floor(Math.random() * playableAnions.length)];
                 comboSignature = curC.formula + "_" + curA.formula;
                 attempts++;
             } while ((usedQuestions.has(comboSignature) || !isValidCombination(curC, curA)) && attempts < 100);
@@ -233,23 +312,19 @@
             let common = getGCD(cSub, aSub);
             cSub /= common; aSub /= common;
 
-            // 隨機決定出題情境 (0: 符號找符號, 1: 符號找名稱, 2: 名稱找符號)
             let scenario = Math.floor(Math.random() * 3);
             let options = [];
             let optionsSet = new Set();
 
             if (scenario === 0 || scenario === 1) {
-                // 題目：化學符號
                 questionEl.innerHTML = `<span>${curC.html} &nbsp;+&nbsp; ${curA.html}</span>`;
             } else {
-                // 題目：化學名稱
                 let cleanC = curC.name.replace(/ion/i, '').trim();
                 let cleanA = curA.name.replace(/ion/i, '').trim();
                 questionEl.innerHTML = `<span style="font-size:26px;">${cleanC} ion<br>+<br>${cleanA} ion</span>`;
             }
 
             if (scenario === 0 || scenario === 2) {
-                // 選項：化學符號
                 let correctHTML = buildFormula(curC, curA, cSub, aSub);
                 options.push({html: correctHTML, isCorrect: true});
                 optionsSet.add(correctHTML);
@@ -263,13 +338,12 @@
                     }
                 }
             } else {
-                // 選項：化學名稱 (情境 1)
                 let correctHTML = buildName(curC, curA);
                 options.push({html: correctHTML, isCorrect: true});
                 optionsSet.add(correctHTML);
 
                 while(options.length < 4) {
-                    let randomA = anions[Math.floor(Math.random() * anions.length)];
+                    let randomA = playableAnions[Math.floor(Math.random() * playableAnions.length)];
                     let fakeHTML = buildName(curC, randomA);
                     if(!optionsSet.has(fakeHTML)) {
                         optionsSet.add(fakeHTML);
@@ -278,19 +352,18 @@
                 }
             }
 
-            // 渲染按鈕
             options.sort(() => 0.5 - Math.random());
             optionsArea.innerHTML = '';
             options.forEach(opt => {
                 let btn = document.createElement('button');
                 btn.className = 'option-btn';
                 btn.innerHTML = opt.html;
-                btn.onclick = () => checkAnswer(btn, opt.isCorrect);
+                btn.onclick = () => handleAnswer(btn, opt.isCorrect);
                 optionsArea.appendChild(btn);
             });
         }
 
-        function checkAnswer(btn, isCorrect) {
+        function handleAnswer(btn, isCorrect) {
             if(isAnswered) return;
             isAnswered = true;
 
@@ -303,6 +376,12 @@
                     batteryLevel.style.width = (score * 10) + "%";
                 } else {
                     progressText.innerText = `已答對: ${score} 題`;
+                    practiceCorrectCount++;
+                    if (practiceCorrectCount >= 5) {
+                        coins += 1;
+                        practiceCorrectCount = 0;
+                        syncCoinDisplay();
+                    }
                     let fillPercent = (score % 10) * 10;
                     if (fillPercent === 0) fillPercent = 100;
                     batteryLevel.style.width = fillPercent + "%";
@@ -334,7 +413,89 @@
             document.getElementById('resultModal').style.display = 'flex';
         }
 
-        // 防拷貝腳本
+        // ==========================================
+        // 5. 抽卡系統與圖鑑邏輯 (Gacha & Gallery)
+        // ==========================================
+        function showGachaMenu() {
+            menuArea.style.display = 'none';
+            gachaArea.style.display = 'block';
+            syncCoinDisplay();
+            updateGallery();
+        }
+
+        function updateGallery() {
+            const grid = document.getElementById('galleryGrid');
+            grid.innerHTML = '';
+            let count = 0;
+            
+            cardPool.forEach(card => {
+                const isOwned = inventory.includes(card.id);
+                if (isOwned) count++;
+                
+                const item = document.createElement('div');
+                item.className = `card-item ${isOwned ? 'owned ' + card.rarity.toLowerCase() : ''}`;
+                
+                if (isOwned) {
+                    item.innerHTML = `<div style="font-size:24px; margin-bottom:5px;">${card.html}</div><div style="font-size:10px; opacity:0.8;">${card.rarity}</div>`;
+                } else {
+                    item.innerHTML = '?';
+                }
+                grid.appendChild(item);
+            });
+            document.getElementById('collectionCount').innerText = count;
+        }
+
+        function drawCard() {
+            if (coins < 5) { alert('🪙 AA代幣不足！去練習模式多答對幾題來賺取代幣吧。'); return; }
+            
+            coins -= 5;
+            syncCoinDisplay();
+
+            const rand = Math.random() * 100;
+            let targetRarity = 'N';
+            if (rand < 1.5) targetRarity = 'SSR';
+            else if (rand < 10) targetRarity = 'SR';
+            else if (rand < 30) targetRarity = 'R';
+
+            const possibleCards = cardPool.filter(c => c.rarity === targetRarity);
+            const reward = possibleCards[Math.floor(Math.random() * possibleCards.length)];
+
+            if (!inventory.includes(reward.id)) {
+                inventory.push(reward.id);
+                localStorage.setItem('aaInventory', JSON.stringify(inventory));
+            }
+
+            showGachaResult(reward);
+        }
+
+        function showGachaResult(card) {
+            const modal = document.getElementById('gachaResultModal');
+            const revealCard = document.getElementById('revealCard');
+            const rarityText = document.getElementById('rarityText');
+            
+            let color = 'white';
+            if(card.rarity === 'SSR') color = 'var(--rare)';
+            else if(card.rarity === 'SR') color = '#e056fd';
+            else if(card.rarity === 'R') color = '#7ed6df';
+
+            rarityText.innerHTML = `<span style="color:${color};">[${card.rarity}]</span> 發現新元素！`;
+            document.getElementById('cardContent').innerHTML = card.html;
+            document.getElementById('cardName').innerText = card.name;
+            revealCard.className = `reveal-card show ${card.rarity.toLowerCase()}`;
+            modal.style.display = 'flex';
+        }
+
+        function closeGachaResult() {
+            document.getElementById('gachaResultModal').style.display = 'none';
+            document.getElementById('revealCard').classList.remove('show');
+            updateGallery();
+        }
+
+        // ==========================================
+        // 6. 防禦等級三：基礎防拷貝腳本
+        // ==========================================
+        syncCoinDisplay();
+        
         document.addEventListener('contextmenu', e => e.preventDefault());
         document.onselectstart = () => false;
         document.onkeydown = e => {
