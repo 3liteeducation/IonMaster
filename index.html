@@ -554,7 +554,7 @@
             const shareText = `🧪 我在 A.A. Sir 的化學挑戰中，收集到了 [${currentDrawnCard.rarity}] 級別的 ${starStr}「${currentDrawnCard.name}」！\n你能收集到比我更強的元素嗎？快來 3lite Education 挑戰：\nhttps://3liteeducation.github.io/IonMaster/`;
 
             if (navigator.share) {
-                navigator.share({ title: 'A.A. Sir Ion Master 收藏炫耀', text: shareText, url: 'https://3liteeducation.github.io/IonMaster/' })
+                navigator.share({ title: 'A.A. Sir Ion Master 收藏炫耀', text: shareText, url: 'https://ionmaster.netlify.app/' })
                 .catch(err => console.log('分享被取消或失敗', err));
             } else {
                 navigator.clipboard.writeText(shareText).then(() => { alert('📝 炫耀文字已複製到剪貼簿！'); })
