@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3lite Education - Ion Master 終極升級版</title>
+    <title>3lite Education - Ion Master 終極版 3.0</title>
     <style>
         :root { --primary: #2ecc71; --secondary: #3498db; --rare: #f1c40f; --epic: #9b59b6; --legend: #e74c3c; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; margin: 0; display: flex; flex-direction: column; align-items: center; padding: 10px; }
-        .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; width: 95%; max-width: 500px; box-sizing: border-box; border-top: 6px solid var(--primary); }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; margin: 0; display: flex; flex-direction: column; align-items: center; padding: 10px; overflow-x: hidden;}
+        .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; width: 95%; max-width: 500px; box-sizing: border-box; border-top: 6px solid var(--primary); margin-bottom: 80px;}
         
         /* 🏠 選單與按鈕 */
         .menu-btn { width: 100%; padding: 15px; margin: 8px 0; font-size: 18px; font-weight: bold; border: none; border-radius: 12px; cursor: pointer; color: white; transition: 0.2s; }
@@ -17,7 +17,8 @@
         .btn-practice:hover { background: #2980b9; transform: translateY(-2px); }
         .btn-gacha-menu { background: var(--rare); color: #2c3e50; }
         .btn-gacha-menu:hover { background: #f39c12; transform: translateY(-2px); }
-        .btn-back { background: #95a5a6; padding: 10px 20px; margin-top: 20px; border: none; border-radius: 8px; color: white; cursor: pointer; font-size: 16px; width: 100%; }
+        .btn-back { background: #95a5a6; padding: 10px 20px; margin-top: 20px; border: none; border-radius: 8px; color: white; cursor: pointer; font-size: 16px; width: 100%; transition: 0.2s;}
+        .btn-back:hover { background: #7f8c8d; }
 
         /* 📊 狀態列 */
         .status-bar { display: flex; justify-content: space-between; align-items: center; background: #fdfdfd; padding: 10px 15px; border-radius: 10px; margin-bottom: 15px; font-weight: bold; border: 1px solid #eee; }
@@ -33,7 +34,7 @@
         .ion-display { font-size: 32px; font-weight: bold; color: #2c3e50; margin: 15px 0; min-height: 100px; display: flex; justify-content: center; align-items: center; flex-direction: column; background: #f9f9f9; border-radius: 12px; border: 1px solid #ddd; font-family: 'Times New Roman', serif; line-height: 1.3; }
         .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
         .option-btn { background: #fff; border: 2px solid #bdc3c7; padding: 15px 5px; font-size: 20px; font-family: 'Times New Roman', serif; border-radius: 10px; cursor: pointer; transition: 0.2s; min-height: 75px; }
-        .option-btn:hover:not(:disabled) { background: #f1f8ff; border-color: var(--secondary); }
+        .option-btn:hover:not(:disabled) { background: #f1f8ff; border-color: var(--secondary); transform: translateY(-2px); }
         .option-btn.correct { background: var(--primary); color: white; border-color: #27ae60; }
         .option-btn.wrong { background: var(--legend); color: white; border-color: #c0392b; }
 
@@ -41,48 +42,63 @@
         .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 15px; max-height: 400px; overflow-y: auto; padding: 5px; }
         .card-item { aspect-ratio: 2.5/3.5; background: #eee; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; padding: 8px; font-size: 14px; position: relative; border: 3px solid transparent; color: #999; flex-direction: column; transition: 0.2s; }
         .card-item.owned { background: #fff; border-color: #ddd; color: #2c3e50; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1); cursor: pointer; }
-        .card-item.owned:hover { transform: scale(1.05); z-index: 10; }
+        .card-item.owned:hover { transform: scale(1.05); z-index: 10; border-color: var(--secondary);}
         
         .card-item.n { border-color: #bdc3c7; }
         .card-item.r { border-color: var(--secondary); background: #ebf5fb; }
         .card-item.sr { border-color: var(--epic); background: #f5eef8; }
         .card-item.ssr { border-color: var(--rare); background: #fef9e7; animation: glow 1.5s infinite alternate; }
-        
-        /* 圖鑑內圖片區塊 */
         .gallery-img-box { width: 100%; height: 55%; background: rgba(0,0,0,0.05); border-radius: 4px; display: flex; justify-content: center; align-items: center; overflow: hidden; margin-bottom: 5px; }
-        
-        /* 滿星專屬黃金特效 */
         .card-item.max-star { border-color: #f39c12; box-shadow: 0 0 10px rgba(243, 156, 18, 0.5), inset 0 0 5px rgba(243, 156, 18, 0.2); }
         .stars { font-size: 12px; color: #f1c40f; margin-top: 2px; letter-spacing: 1px; text-shadow: 0 1px 1px rgba(0,0,0,0.2); }
 
         @keyframes glow { from { box-shadow: 0 0 5px var(--rare); } to { box-shadow: 0 0 15px var(--rare); } }
 
         /* 🏆 彈窗共通樣式 */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 100; justify-content: center; align-items: center; flex-direction: column; color: white; }
-        .modal-content { background: white; color: #2c3e50; padding: 25px; border-radius: 20px; width: 85%; max-width: 400px; text-align: center; position: relative;}
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 100; justify-content: center; align-items: center; flex-direction: column; color: white; backdrop-filter: blur(5px);}
+        .modal-content { background: white; color: #2c3e50; padding: 25px; border-radius: 20px; width: 85%; max-width: 400px; text-align: center; position: relative; box-shadow: 0 20px 40px rgba(0,0,0,0.4);}
         .best-time-box { background: #fff8e1; border: 2px solid var(--rare); border-radius: 10px; padding: 10px; margin: 15px 0; }
         .reward-badge { display: none; background: #e74c3c; color: white; padding: 8px 15px; border-radius: 20px; font-weight: bold; font-size: 16px; margin: 10px auto; animation: bounce 1s infinite alternate; width: fit-content; box-shadow: 0 4px 10px rgba(231, 76, 60, 0.4); }
         @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-5px); } }
         
-        /* 🧪 抽卡前懸念動畫 */
-        .gacha-anim-container { font-size: 100px; text-shadow: 0 0 20px #2ecc71; animation: shake 0.4s infinite; }
-        @keyframes shake { 0% { transform: translate(2px, 2px) rotate(0deg); } 25% { transform: translate(-2px, -2px) rotate(15deg); } 50% { transform: translate(2px, -2px) rotate(0deg); } 75% { transform: translate(-2px, 2px) rotate(-15deg); } 100% { transform: translate(2px, 2px) rotate(0deg); } }
+        /* 🧪 抽卡懸念動畫 (極致晃動放大) */
+        .gacha-anim-container { font-size: 100px; text-shadow: 0 0 30px #2ecc71; animation: gachaShake 2s cubic-bezier(.36,.07,.19,.97) both; transform-origin: bottom center;}
+        @keyframes gachaShake { 
+            0% { transform: scale(1) rotate(0deg); } 
+            20% { transform: scale(1.1) rotate(-10deg); filter: hue-rotate(45deg); } 
+            40% { transform: scale(1.2) rotate(10deg); filter: hue-rotate(90deg); } 
+            60% { transform: scale(1.4) rotate(-15deg); filter: hue-rotate(180deg); } 
+            80% { transform: scale(1.6) rotate(15deg); filter: hue-rotate(270deg); } 
+            100% { transform: scale(2) rotate(0deg); filter: brightness(200%); } 
+        }
+        
+        /* 💥 白光過場特效 */
+        .white-flash { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.4s ease-in-out; }
+        .white-flash.active { opacity: 1; }
 
         /* 卡片展示畫面 */
-        .reveal-card { width: 180px; height: 260px; background: white; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; color: #2c3e50; margin-bottom: 20px; transform: scale(0); transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 10px 30px rgba(0,0,0,0.5); padding: 15px; box-sizing: border-box;}
+        .reveal-card { width: 180px; height: 260px; background: white; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; color: #2c3e50; margin-bottom: 20px; transform: scale(0); transition: 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 10px 40px rgba(0,0,0,0.6); padding: 15px; box-sizing: border-box;}
         .reveal-card.show { transform: scale(1.2); }
         .reveal-card.n { border: 6px solid #bdc3c7; }
         .reveal-card.r { border: 6px solid var(--secondary); background: #ebf5fb; }
         .reveal-card.sr { border: 6px solid var(--epic); background: #f5eef8; }
         .reveal-card.ssr { border: 6px solid var(--rare); background: #fef9e7; box-shadow: 0 0 40px var(--rare); }
         
-        /* 卡片專屬圖片區塊 */
         .card-image-box { width: 100%; height: 120px; background: linear-gradient(135deg, rgba(0,0,0,0.05), rgba(0,0,0,0.1)); border-radius: 8px; display: flex; justify-content: center; align-items: center; overflow: hidden; margin-bottom: 10px; box-shadow: inset 0 2px 5px rgba(0,0,0,0.1); border: 1px solid rgba(0,0,0,0.1); }
         .card-image-box img { width: 100%; height: 100%; object-fit: contain; }
 
         .btn-share { margin-top: 10px; padding: 12px 25px; background: #2ecc71; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; box-shadow: 0 4px #27ae60; transition: 0.2s; }
         .btn-share:hover { transform: translateY(-2px); box-shadow: 0 6px #27ae60; }
         .btn-share:active { transform: translateY(2px); box-shadow: 0 0px #27ae60; }
+
+        /* 📚 浮動元素表 (FAB) 與彈窗 */
+        .fab-btn { position: fixed; bottom: 25px; right: 25px; width: 65px; height: 65px; background: #34495e; color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 30px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); cursor: pointer; z-index: 50; transition: 0.3s; border: 3px solid white;}
+        .fab-btn:hover { transform: scale(1.1) rotate(15deg); background: #2c3e50; }
+        
+        #ptModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 150; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
+        .pt-content { background: white; padding: 10px; border-radius: 15px; width: 95%; max-width: 800px; max-height: 80vh; overflow: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.5); text-align: center; position: relative;}
+        .pt-content img { width: 100%; height: auto; border-radius: 8px; }
+        .pt-placeholder { padding: 50px 20px; color: #7f8c8d; font-size: 18px; border: 2px dashed #bdc3c7; border-radius: 10px; margin: 10px;}
         
         sub, sup { font-size: 0.6em; }
     </style>
@@ -90,6 +106,20 @@
 <body>
 
     <h2 style="margin: 10px 0; color: #2c3e50;">🧪 A.A. Sir's Ion Master</h2>
+
+    <div class="fab-btn" onclick="openPT()">📊</div>
+
+    <div id="ptModal" onclick="closePT()">
+        <div class="pt-content" onclick="event.stopPropagation()"> <h3 style="margin-top: 5px; color: #2c3e50;">化學元素週期表</h3>
+            
+            <div class="pt-placeholder">
+                <p>A.A. Sir，請在此處放入您的週期表圖片！</p>
+                <p style="font-size: 14px;">(替換 HTML 中的 <code>&lt;img src="..."&gt;</code> 標籤)</p>
+            </div>
+            
+            <button class="btn-back" onclick="closePT()" style="width: auto; margin-top: 10px;">關閉 (Close)</button>
+        </div>
+    </div>
 
     <div class="card">
         <div id="menuArea">
@@ -145,9 +175,11 @@
         </div>
     </div>
 
+    <div id="whiteFlash" class="white-flash"></div>
+
     <div id="gachaAnimModal" class="modal" style="z-index: 150;">
         <div class="gacha-anim-container">🧪</div>
-        <h3 style="color: #2ecc71; margin-top: 30px; letter-spacing: 2px;">元素合成中...</h3>
+        <h3 style="color: white; margin-top: 40px; letter-spacing: 3px; text-shadow: 0 2px 5px rgba(0,0,0,0.5);">高能反應合成中...</h3>
     </div>
 
     <div id="gachaResultModal" class="modal">
@@ -166,58 +198,58 @@
 
     <script>
         // ==========================================
-        // 1. 完整化學數據庫 (新增 img 屬性供未來替換)
+        // 1. 完整化學數據庫 (圖片路徑已更新為 images/)
         // ==========================================
         const cations = [
-            { id: 1, name: "Sodium", formula: "Na", charge: 1, html: "Na<sup>+</sup>", rarity: 'N', img: '' },
-            { id: 2, name: "Potassium", formula: "K", charge: 1, html: "K<sup>+</sup>", rarity: 'N', img: '' },
-            { id: 3, name: "Copper(I)", formula: "Cu", charge: 1, html: "Cu<sup>+</sup>", rarity: 'R', img: '' },
-            { id: 4, name: "Silver", formula: "Ag", charge: 1, html: "Ag<sup>+</sup>", rarity: 'R', img: '' },
-            { id: 5, name: "Mercury(I)", formula: "Hg", charge: 1, html: "Hg<sup>+</sup>", rarity: 'SR', img: '' },
-            { id: 6, name: "Hydrogen", formula: "H", charge: 1, html: "H<sup>+</sup>", rarity: 'N', img: '' },
-            { id: 7, name: "Ammonium", formula: "NH4", charge: 1, html: "NH<sub>4</sub><sup>+</sup>", poly: true, rarity: 'R', img: '' },
-            { id: 8, name: "Magnesium", formula: "Mg", charge: 2, html: "Mg<sup>2+</sup>", rarity: 'N', img: '' },
-            { id: 9, name: "Calcium", formula: "Ca", charge: 2, html: "Ca<sup>2+</sup>", rarity: 'N', img: '' },
-            { id: 10, name: "Barium", formula: "Ba", charge: 2, html: "Ba<sup>2+</sup>", rarity: 'R', img: '' },
-            { id: 11, name: "Lead(II)", formula: "Pb", charge: 2, html: "Pb<sup>2+</sup>", rarity: 'R', img: '' },
-            { id: 12, name: "Iron(II)", formula: "Fe", charge: 2, html: "Fe<sup>2+</sup>", rarity: 'R', img: '' },
-            { id: 13, name: "Cobalt(II)", formula: "Co", charge: 2, html: "Co<sup>2+</sup>", rarity: 'R', img: '' },
-            { id: 14, name: "Nickel(II)", formula: "Ni", charge: 2, html: "Ni<sup>2+</sup>", rarity: 'R', img: '' },
-            { id: 15, name: "Manganese(II)", formula: "Mn", charge: 2, html: "Mn<sup>2+</sup>", rarity: 'R', img: '' },
-            { id: 16, name: "Copper(II)", formula: "Cu", charge: 2, html: "Cu<sup>2+</sup>", rarity: 'R', img: '' },
-            { id: 17, name: "Zinc", formula: "Zn", charge: 2, html: "Zn<sup>2+</sup>", rarity: 'R', img: '' },
-            { id: 18, name: "Mercury(II)", formula: "Hg", charge: 2, html: "Hg<sup>2+</sup>", rarity: 'SR', img: '' },
-            { id: 19, name: "Aluminium", formula: "Al", charge: 3, html: "Al<sup>3+</sup>", rarity: 'SR', img: '' },
-            { id: 20, name: "Iron(III)", formula: "Fe", charge: 3, html: "Fe<sup>3+</sup>", rarity: 'SR', img: '' },
-            { id: 21, name: "Chromium(III)", formula: "Cr", charge: 3, html: "Cr<sup>3+</sup>", rarity: 'SR', img: '' },
-            { id: 99, name: "A.A. Sir", formula: "AA", charge: 0, html: "🔋", rarity: 'SSR', img: '', isSpecial: true } 
+            { id: 1, name: "Sodium", formula: "Na", charge: 1, html: "Na<sup>+</sup>", rarity: 'N', img: 'images/na.png' },
+            { id: 2, name: "Potassium", formula: "K", charge: 1, html: "K<sup>+</sup>", rarity: 'N', img: 'images/k.png' },
+            { id: 3, name: "Copper(I)", formula: "Cu", charge: 1, html: "Cu<sup>+</sup>", rarity: 'R', img: 'images/cu1.png' },
+            { id: 4, name: "Silver", formula: "Ag", charge: 1, html: "Ag<sup>+</sup>", rarity: 'R', img: 'images/ag.png' },
+            { id: 5, name: "Mercury(I)", formula: "Hg", charge: 1, html: "Hg<sup>+</sup>", rarity: 'SR', img: 'images/hg1.png' },
+            { id: 6, name: "Hydrogen", formula: "H", charge: 1, html: "H<sup>+</sup>", rarity: 'N', img: 'images/h.png' },
+            { id: 7, name: "Ammonium", formula: "NH4", charge: 1, html: "NH<sub>4</sub><sup>+</sup>", poly: true, rarity: 'R', img: 'images/nh4.png' },
+            { id: 8, name: "Magnesium", formula: "Mg", charge: 2, html: "Mg<sup>2+</sup>", rarity: 'N', img: 'images/mg.png' },
+            { id: 9, name: "Calcium", formula: "Ca", charge: 2, html: "Ca<sup>2+</sup>", rarity: 'N', img: 'images/ca.png' },
+            { id: 10, name: "Barium", formula: "Ba", charge: 2, html: "Ba<sup>2+</sup>", rarity: 'R', img: 'images/ba.png' },
+            { id: 11, name: "Lead(II)", formula: "Pb", charge: 2, html: "Pb<sup>2+</sup>", rarity: 'R', img: 'images/pb.png' },
+            { id: 12, name: "Iron(II)", formula: "Fe", charge: 2, html: "Fe<sup>2+</sup>", rarity: 'R', img: 'images/fe2.png' },
+            { id: 13, name: "Cobalt(II)", formula: "Co", charge: 2, html: "Co<sup>2+</sup>", rarity: 'R', img: 'images/co.png' },
+            { id: 14, name: "Nickel(II)", formula: "Ni", charge: 2, html: "Ni<sup>2+</sup>", rarity: 'R', img: 'images/ni.png' },
+            { id: 15, name: "Manganese(II)", formula: "Mn", charge: 2, html: "Mn<sup>2+</sup>", rarity: 'R', img: 'images/mn.png' },
+            { id: 16, name: "Copper(II)", formula: "Cu", charge: 2, html: "Cu<sup>2+</sup>", rarity: 'R', img: 'images/cu2.png' },
+            { id: 17, name: "Zinc", formula: "Zn", charge: 2, html: "Zn<sup>2+</sup>", rarity: 'R', img: 'images/zn.png' },
+            { id: 18, name: "Mercury(II)", formula: "Hg", charge: 2, html: "Hg<sup>2+</sup>", rarity: 'SR', img: 'images/hg2.png' },
+            { id: 19, name: "Aluminium", formula: "Al", charge: 3, html: "Al<sup>3+</sup>", rarity: 'SR', img: 'images/al.png' },
+            { id: 20, name: "Iron(III)", formula: "Fe", charge: 3, html: "Fe<sup>3+</sup>", rarity: 'SR', img: 'images/fe3.png' },
+            { id: 21, name: "Chromium(III)", formula: "Cr", charge: 3, html: "Cr<sup>3+</sup>", rarity: 'SR', img: 'images/cr.png' },
+            { id: 99, name: "A.A. Sir", formula: "AA", charge: 0, html: "🔋", rarity: 'SSR', img: 'images/aa_sir.png', isSpecial: true } 
         ];
 
         const anions = [
-            { id: 22, name: "Hydride", formula: "H", charge: 1, html: "H<sup>-</sup>", rarity: 'R', img: '' },
-            { id: 23, name: "Chloride", formula: "Cl", charge: 1, html: "Cl<sup>-</sup>", rarity: 'N', img: '' }, 
-            { id: 24, name: "Bromide", formula: "Br", charge: 1, html: "Br<sup>-</sup>", rarity: 'N', img: '' },
-            { id: 25, name: "Iodide", formula: "I", charge: 1, html: "I<sup>-</sup>", rarity: 'R', img: '' },
-            { id: 26, name: "Hydroxide", formula: "OH", charge: 1, html: "OH<sup>-</sup>", poly: true, rarity: 'R', img: '' },
-            { id: 27, name: "Nitrate", formula: "NO3", charge: 1, html: "NO<sub>3</sub><sup>-</sup>", poly: true, rarity: 'SR', img: '' },
-            { id: 28, name: "Nitrite", formula: "NO2", charge: 1, html: "NO<sub>2</sub><sup>-</sup>", poly: true, rarity: 'SR', img: '' },
-            { id: 29, name: "Hydrogencarbonate", formula: "HCO3", charge: 1, html: "HCO<sub>3</sub><sup>-</sup>", poly: true, rarity: 'SR', img: '' },
-            { id: 30, name: "Hydrogensulphate", formula: "HSO4", charge: 1, html: "HSO<sub>4</sub><sup>-</sup>", poly: true, rarity: 'SR', img: '' },
-            { id: 31, name: "Cyanide", formula: "CN", charge: 1, html: "CN<sup>-</sup>", poly: true, rarity: 'SR', img: '' },
-            { id: 32, name: "Permanganate", formula: "MnO4", charge: 1, html: "MnO<sub>4</sub><sup>-</sup>", poly: true, rarity: 'SR', img: '' },
-            { id: 33, name: "Chlorate", formula: "ClO3", charge: 1, html: "ClO<sub>3</sub><sup>-</sup>", poly: true, rarity: 'SR', img: '' },
-            { id: 34, name: "Hypochlorite", formula: "ClO", charge: 1, html: "ClO<sup>-</sup>", poly: true, rarity: 'SR', img: '' },
-            { id: 35, name: "Oxide", formula: "O", charge: 2, html: "O<sup>2-</sup>", rarity: 'N', img: '' },
-            { id: 36, name: "Sulphide", formula: "S", charge: 2, html: "S<sup>2-</sup>", rarity: 'R', img: '' },
-            { id: 37, name: "Sulphate", formula: "SO4", charge: 2, html: "SO<sub>4</sub><sup>2-</sup>", poly: true, rarity: 'SR', img: '' },
-            { id: 38, name: "Sulphite", formula: "SO3", charge: 2, html: "SO<sub>3</sub><sup>2-</sup>", poly: true, rarity: 'SR', img: '' },
-            { id: 39, name: "Silicate", formula: "SiO3", charge: 2, html: "SiO<sub>3</sub><sup>2-</sup>", poly: true, rarity: 'SR', img: '' },
-            { id: 40, name: "Carbonate", formula: "CO3", charge: 2, html: "CO<sub>3</sub><sup>2-</sup>", poly: true, rarity: 'SR', img: '' },
-            { id: 41, name: "Chromate", formula: "CrO4", charge: 2, html: "CrO<sub>4</sub><sup>2-</sup>", poly: true, rarity: 'SR', img: '' },
-            { id: 42, name: "Dichromate", formula: "Cr2O7", charge: 2, html: "Cr<sub>2</sub>O<sub>7</sub><sup>2-</sup>", poly: true, rarity: 'SR', img: '' },
-            { id: 43, name: "Nitride", formula: "N", charge: 3, html: "N<sup>3-</sup>", rarity: 'SR', img: '' },
-            { id: 44, name: "Phosphide", formula: "P", charge: 3, html: "P<sup>3-</sup>", rarity: 'SR', img: '' },
-            { id: 45, name: "Phosphate", formula: "PO4", charge: 3, html: "PO<sub>4</sub><sup>3-</sup>", poly: true, rarity: 'SR', img: '' }
+            { id: 22, name: "Hydride", formula: "H", charge: 1, html: "H<sup>-</sup>", rarity: 'R', img: 'images/hydride.png' },
+            { id: 23, name: "Chloride", formula: "Cl", charge: 1, html: "Cl<sup>-</sup>", rarity: 'N', img: 'images/cl.png' }, 
+            { id: 24, name: "Bromide", formula: "Br", charge: 1, html: "Br<sup>-</sup>", rarity: 'N', img: 'images/br.png' },
+            { id: 25, name: "Iodide", formula: "I", charge: 1, html: "I<sup>-</sup>", rarity: 'R', img: 'images/i.png' },
+            { id: 26, name: "Hydroxide", formula: "OH", charge: 1, html: "OH<sup>-</sup>", poly: true, rarity: 'R', img: 'images/oh.png' },
+            { id: 27, name: "Nitrate", formula: "NO3", charge: 1, html: "NO<sub>3</sub><sup>-</sup>", poly: true, rarity: 'SR', img: 'images/no3.png' },
+            { id: 28, name: "Nitrite", formula: "NO2", charge: 1, html: "NO<sub>2</sub><sup>-</sup>", poly: true, rarity: 'SR', img: 'images/no2.png' },
+            { id: 29, name: "Hydrogencarbonate", formula: "HCO3", charge: 1, html: "HCO<sub>3</sub><sup>-</sup>", poly: true, rarity: 'SR', img: 'images/hco3.png' },
+            { id: 30, name: "Hydrogensulphate", formula: "HSO4", charge: 1, html: "HSO<sub>4</sub><sup>-</sup>", poly: true, rarity: 'SR', img: 'images/hso4.png' },
+            { id: 31, name: "Cyanide", formula: "CN", charge: 1, html: "CN<sup>-</sup>", poly: true, rarity: 'SR', img: 'images/cn.png' },
+            { id: 32, name: "Permanganate", formula: "MnO4", charge: 1, html: "MnO<sub>4</sub><sup>-</sup>", poly: true, rarity: 'SR', img: 'images/mno4.png' },
+            { id: 33, name: "Chlorate", formula: "ClO3", charge: 1, html: "ClO<sub>3</sub><sup>-</sup>", poly: true, rarity: 'SR', img: 'images/clo3.png' },
+            { id: 34, name: "Hypochlorite", formula: "ClO", charge: 1, html: "ClO<sup>-</sup>", poly: true, rarity: 'SR', img: 'images/clo.png' },
+            { id: 35, name: "Oxide", formula: "O", charge: 2, html: "O<sup>2-</sup>", rarity: 'N', img: 'images/o.png' },
+            { id: 36, name: "Sulphide", formula: "S", charge: 2, html: "S<sup>2-</sup>", rarity: 'R', img: 'images/s.png' },
+            { id: 37, name: "Sulphate", formula: "SO4", charge: 2, html: "SO<sub>4</sub><sup>2-</sup>", poly: true, rarity: 'SR', img: 'images/so4.png' },
+            { id: 38, name: "Sulphite", formula: "SO3", charge: 2, html: "SO<sub>3</sub><sup>2-</sup>", poly: true, rarity: 'SR', img: 'images/so3.png' },
+            { id: 39, name: "Silicate", formula: "SiO3", charge: 2, html: "SiO<sub>3</sub><sup>2-</sup>", poly: true, rarity: 'SR', img: 'images/sio3.png' },
+            { id: 40, name: "Carbonate", formula: "CO3", charge: 2, html: "CO<sub>3</sub><sup>2-</sup>", poly: true, rarity: 'SR', img: 'images/co3.png' },
+            { id: 41, name: "Chromate", formula: "CrO4", charge: 2, html: "CrO<sub>4</sub><sup>2-</sup>", poly: true, rarity: 'SR', img: 'images/cro4.png' },
+            { id: 42, name: "Dichromate", formula: "Cr2O7", charge: 2, html: "Cr<sub>2</sub>O<sub>7</sub><sup>2-</sup>", poly: true, rarity: 'SR', img: 'images/cr2o7.png' },
+            { id: 43, name: "Nitride", formula: "N", charge: 3, html: "N<sup>3-</sup>", rarity: 'SR', img: 'images/n.png' },
+            { id: 44, name: "Phosphide", formula: "P", charge: 3, html: "P<sup>3-</sup>", rarity: 'SR', img: 'images/p.png' },
+            { id: 45, name: "Phosphate", formula: "PO4", charge: 3, html: "PO<sub>4</sub><sup>3-</sup>", poly: true, rarity: 'SR', img: 'images/po4.png' }
         ];
 
         const cardPool = [...cations, ...anions];
@@ -225,19 +257,16 @@
         const playableAnions = anions.filter(a => !a.isSpecial);
 
         // ==========================================
-        // 2. 狀態管理
+        // 2. 狀態管理與元素表操作
         // ==========================================
         let currentMode = '';
         let score = 0, practiceCorrectCount = 0;
         let startTime, timerInterval;
-        let isAnswered = false;
-        let usedQuestions = new Set(); 
-        let currentDrawnCard = null; 
+        let isAnswered = false, usedQuestions = new Set(), currentDrawnCard = null; 
 
         let coins = parseInt(localStorage.getItem('aaCoins')) || 0;
         let inventory = JSON.parse(localStorage.getItem('aaInventoryStar')) || {};
         
-        // 資料相容性轉移
         let oldInv = JSON.parse(localStorage.getItem('aaInventory'));
         if (Array.isArray(oldInv) && Object.keys(inventory).length === 0) {
             oldInv.forEach(id => inventory[id] = 1);
@@ -261,15 +290,19 @@
             localStorage.setItem('aaCoins', coins);
         }
 
+        // 📚 打開與關閉元素表
+        function openPT() { document.getElementById('ptModal').style.display = 'flex'; }
+        function closePT() { document.getElementById('ptModal').style.display = 'none'; }
+
         // ==========================================
-        // 3. 核心化學邏輯與生成器 (包含完整黑名單)
+        // 3. 核心化學邏輯與生成器 
         // ==========================================
         function isValidCombination(c, a) {
             const blacklist = [
                 'NH4_OH', 'H_NO3', 'H_NO2', 'H_Cl', 'H_Br', 'H_I', 
                 'H_SO4', 'H_SO3', 'H_OH', 'H_O', 'H_CO3', 'H_PO4', 
                 'H_CN', 'H_MnO4', 'H_ClO3', 'H_ClO', 'H_CrO4', 'H_Cr2O7', 
-                'H_H', 'H_HSO4', 'H_HCO3' // 加入所有要求的黑名單
+                'H_H', 'H_HSO4', 'H_HCO3' 
             ];
             return !blacklist.includes(c.formula + '_' + a.formula);
         }
@@ -314,8 +347,7 @@
 
         function nextQuestion() {
             if (currentMode === 'speed' && score >= 10) { finishSpeedGame(); return; }
-            isAnswered = false;
-            let attempts = 0, comboSignature = "", curC, curA;
+            isAnswered = false; let attempts = 0, comboSignature = "", curC, curA;
 
             do {
                 curC = playableCations[Math.floor(Math.random() * playableCations.length)];
@@ -356,8 +388,7 @@
                 }
             }
 
-            options.sort(() => 0.5 - Math.random());
-            optionsArea.innerHTML = '';
+            options.sort(() => 0.5 - Math.random()); optionsArea.innerHTML = '';
             options.forEach(opt => {
                 let btn = document.createElement('button'); btn.className = 'option-btn'; btn.innerHTML = opt.html;
                 btn.onclick = () => handleAnswer(btn, opt.isCorrect); optionsArea.appendChild(btn);
@@ -390,12 +421,11 @@
             let history = JSON.parse(localStorage.getItem('myIonHistory') || '[]');
             let currentBest = history.length > 0 ? Math.min(...history.map(x => x.time)) : Infinity;
             
-            // 判斷是否破紀錄且不是第一次玩
             if (history.length > 0 && finalTime < currentBest) {
                 currentBest = finalTime;
-                coins += 2; // 額外獎勵 2 代幣
+                coins += 2; 
                 syncCoinDisplay();
-                document.getElementById('newRecordReward').style.display = 'block'; // 顯示獎勵標章
+                document.getElementById('newRecordReward').style.display = 'block'; 
             } else {
                 if(finalTime < currentBest) currentBest = finalTime;
                 document.getElementById('newRecordReward').style.display = 'none';
@@ -410,7 +440,7 @@
         }
 
         // ==========================================
-        // 5. 碎片升星與圖鑑系統 
+        // 5. 抽卡、過場動畫與圖鑑系統 
         // ==========================================
         function showGachaMenu() {
             menuArea.style.display = 'none'; gachaArea.style.display = 'block';
@@ -432,19 +462,20 @@
                 item.className = classes;
                 
                 if (isOwned) {
-                    // 如果有自訂圖片則顯示，沒有則顯示化學符號
-                    let imageHTML = card.img ? `<img src="${card.img}" style="width:100%; height:100%; object-fit:cover;">` : `<div style="font-size:24px;">${card.html}</div>`;
+                    // 為了避免圖片報錯，這裡做一個防呆：如果找不到圖片，就顯示化學符號
+                    let imageHTML = `<img src="${card.img}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" style="width:100%; height:100%; object-fit:contain;">
+                                     <div style="font-size:28px; display:none; font-family:'Times New Roman', serif;">${card.html}</div>`;
                     
                     item.innerHTML = `
                         <div class="gallery-img-box">${imageHTML}</div>
-                        <div style="font-size:10px; opacity:0.8; margin-bottom:2px;">${card.rarity}</div>
+                        <div style="font-size:11px; opacity:0.8; margin-bottom:2px; font-weight:bold;">${card.rarity}</div>
                         <div class="stars">${getStarString(stars)}</div>
                     `;
                     item.onclick = () => showCardModal(card, false, stars); 
                 } else {
                     item.innerHTML = `
-                        <div class="gallery-img-box"><div style="font-size:24px;">?</div></div>
-                        <div style="font-size:10px; opacity:0.5;">未解鎖</div>
+                        <div class="gallery-img-box" style="background:transparent;"><div style="font-size:30px;">?</div></div>
+                        <div style="font-size:12px; opacity:0.5;">未解鎖</div>
                     `;
                 }
                 grid.appendChild(item);
@@ -477,14 +508,24 @@
             localStorage.setItem('aaInventoryStar', JSON.stringify(inventory));
             syncCoinDisplay();
             
-            // 🧪 觸發抽卡前懸念動畫
-            document.getElementById('gachaAnimModal').style.display = 'flex';
+            // 🧪 觸發白光過場動畫
+            const animModal = document.getElementById('gachaAnimModal');
+            const flash = document.getElementById('whiteFlash');
             
-            // 等待 1.5 秒後關閉動畫並顯示卡片
+            animModal.style.display = 'flex'; // 顯示搖晃動畫
+            
             setTimeout(() => {
-                document.getElementById('gachaAnimModal').style.display = 'none';
-                showCardModal(reward, true, inventory[reward.id], isNew, isMax, refund);
-            }, 1500);
+                flash.classList.add('active'); // 2秒後白光全白
+                
+                setTimeout(() => {
+                    animModal.style.display = 'none'; // 隱藏搖晃動畫
+                    showCardModal(reward, true, inventory[reward.id], isNew, isMax, refund); // 準備好卡片
+                    
+                    setTimeout(() => {
+                        flash.classList.remove('active'); // 白光慢慢褪去，展示卡片
+                    }, 100); 
+                }, 400); // 白光填滿所需時間
+            }, 2000); // 搖晃時間
         }
 
         function showCardModal(card, isDrawAction, stars, isNew, isMax, refundAmt) {
@@ -509,8 +550,9 @@
                 rarityText.innerHTML = `<span style="color:${color};">[${card.rarity}]</span> 元素卡片`;
             }
             
-            // 決定顯示自訂圖片還是化學符號
-            cardImageArea.innerHTML = card.img ? `<img src="${card.img}">` : `<div style="font-size:45px; font-family:'Times New Roman', serif;">${card.html}</div>`;
+            // 圖片防呆：如果 GitHub 上還沒有這張圖，會退回顯示化學符號
+            cardImageArea.innerHTML = `<img src="${card.img}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                       <div style="font-size:55px; display:none; font-family:'Times New Roman', serif;">${card.html}</div>`;
             
             document.getElementById('cardName').innerText = card.name;
             cardStars.innerText = getStarString(stars);
