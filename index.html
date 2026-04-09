@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3lite Education - Ion Master 終極版 4.0</title>
+    <title>3lite Education - Ion Master 終極進化版</title>
     <style>
         :root { --primary: #2ecc71; --secondary: #3498db; --rare: #f1c40f; --epic: #9b59b6; --legend: #e74c3c; --dark: #2c3e50; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; margin: 0; display: flex; flex-direction: column; align-items: center; padding: 10px; overflow-x: hidden; transition: background 0.5s; }
-        body.alchemy-active { background: #1a0b0b; } /* 煉金模式深色背景 */
+        body.alchemy-active { background: #1a0b0b; }
 
         .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; width: 95%; max-width: 500px; box-sizing: border-box; border-top: 6px solid var(--primary); margin-bottom: 80px; transition: 0.5s; }
         body.alchemy-active .card { border-top: 6px solid var(--legend); box-shadow: 0 10px 40px rgba(231, 76, 60, 0.3); }
@@ -31,11 +31,10 @@
         .coin-display { color: #d35400; font-size: 18px; display: flex; align-items: center; gap: 5px; }
         .timer { font-family: monospace; font-size: 18px; color: var(--legend); }
         
-        /* 🔋 進度條/電池 */
         .battery { width: 60px; height: 25px; border: 2px solid var(--dark); border-radius: 4px; position: relative; padding: 1px; }
         .battery::after { content: ''; position: absolute; right: -6px; top: 5px; width: 4px; height: 12px; background: var(--dark); }
         .battery-level { height: 100%; width: 0%; background: var(--primary); transition: width 0.3s; }
-        body.alchemy-active .battery-level { background: var(--legend); } /* 煉金進度為紅色 */
+        body.alchemy-active .battery-level { background: var(--legend); }
 
         /* 🎮 遊戲區域 */
         .ion-display { font-size: 32px; font-weight: bold; color: var(--dark); margin: 15px 0; min-height: 100px; display: flex; justify-content: center; align-items: center; flex-direction: column; background: #f9f9f9; border-radius: 12px; border: 1px solid #ddd; font-family: 'Times New Roman', serif; line-height: 1.3; }
@@ -58,27 +57,27 @@
         .gallery-img-box { width: 100%; height: 55%; background: rgba(0,0,0,0.05); border-radius: 4px; display: flex; justify-content: center; align-items: center; overflow: hidden; margin-bottom: 5px; }
         .card-item.max-star { border-color: #f39c12; box-shadow: 0 0 10px rgba(243, 156, 18, 0.5), inset 0 0 5px rgba(243, 156, 18, 0.2); }
         
-        /* 🧪 煉金實驗室選擇清單專用 (灰階) */
+        /* 極度模糊效果 (未解鎖) */
         .card-item.locked { cursor: pointer; border-color: #ccc; }
+        .card-item.locked .gallery-img-box { filter: blur(6px); opacity: 0.8; }
         .card-item.locked:hover { transform: scale(1.05); border-color: var(--epic); background: #f5eef8; color: var(--dark);}
+        
         .card-item.maxed-out { opacity: 0.4; cursor: not-allowed; filter: grayscale(100%); }
         .card-item.maxed-out:hover { transform: none; border-color: transparent;}
 
         .stars { font-size: 12px; color: #f1c40f; margin-top: 2px; letter-spacing: 1px; text-shadow: 0 1px 1px rgba(0,0,0,0.2); }
         @keyframes glow { from { box-shadow: 0 0 5px var(--rare); } to { box-shadow: 0 0 15px var(--rare); } }
 
-        /* 🏆 彈窗共通樣式 */
+        /* 🏆 彈窗 */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 100; justify-content: center; align-items: center; flex-direction: column; color: white; backdrop-filter: blur(5px);}
         .modal-content { background: white; color: var(--dark); padding: 25px; border-radius: 20px; width: 85%; max-width: 400px; text-align: center; position: relative; box-shadow: 0 20px 40px rgba(0,0,0,0.4);}
         .best-time-box { background: #fff8e1; border: 2px solid var(--rare); border-radius: 10px; padding: 10px; margin: 15px 0; }
         .reward-badge { display: none; background: var(--legend); color: white; padding: 8px 15px; border-radius: 20px; font-weight: bold; font-size: 16px; margin: 10px auto; animation: bounce 1s infinite alternate; width: fit-content; box-shadow: 0 4px 10px rgba(231, 76, 60, 0.4); }
         @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-5px); } }
         
-        /* 動畫特效 */
         .gacha-anim-container { font-size: 100px; text-shadow: 0 0 30px var(--primary); animation: gachaShake 2s cubic-bezier(.36,.07,.19,.97) both; transform-origin: bottom center;}
         @keyframes gachaShake { 0% { transform: scale(1) rotate(0deg); } 20% { transform: scale(1.1) rotate(-10deg); filter: hue-rotate(45deg); } 40% { transform: scale(1.2) rotate(10deg); filter: hue-rotate(90deg); } 60% { transform: scale(1.4) rotate(-15deg); filter: hue-rotate(180deg); } 80% { transform: scale(1.6) rotate(15deg); filter: hue-rotate(270deg); } 100% { transform: scale(2) rotate(0deg); filter: brightness(200%); } }
         
-        /* 💥 煉金爆炸特效 */
         .explosion-anim { font-size: 120px; animation: explode 0.5s ease-out both; }
         @keyframes explode { 0% { transform: scale(0.5); opacity: 0; } 50% { transform: scale(1.5); opacity: 1; filter: brightness(200%);} 100% { transform: scale(1); opacity: 1; } }
         .screen-shake { animation: sShake 0.4s ease-in-out; }
@@ -87,7 +86,6 @@
         .white-flash { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.4s ease-in-out; }
         .white-flash.active { opacity: 1; }
 
-        /* 卡片展示畫面 */
         .reveal-card { width: 180px; height: 260px; background: white; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; color: var(--dark); margin-bottom: 20px; transform: scale(0); transition: 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 10px 40px rgba(0,0,0,0.6); padding: 15px; box-sizing: border-box;}
         .reveal-card.show { transform: scale(1.2); }
         .reveal-card.n { border: 6px solid #bdc3c7; }
@@ -102,7 +100,6 @@
         .btn-share:hover { transform: translateY(-2px); box-shadow: 0 6px #27ae60; }
         .btn-share:active { transform: translateY(2px); box-shadow: 0 0px #27ae60; }
 
-        /* 📚 浮動元素表 (FAB) */
         .fab-btn { position: fixed; bottom: 25px; right: 25px; width: 65px; height: 65px; background: #34495e; color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 30px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); cursor: pointer; z-index: 50; transition: 0.3s; border: 3px solid white;}
         .fab-btn:hover { transform: scale(1.1) rotate(15deg); background: var(--dark); }
         #ptModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 150; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
@@ -137,7 +134,7 @@
             </div>
             <button class="menu-btn btn-speed" onclick="startGame('speed')">⚡ 速度模式 (10題計時)</button>
             <button class="menu-btn btn-practice" onclick="startGame('practice')">🧠 練習模式 (賺取代幣)</button>
-            <button class="menu-btn" style="background: var(--epic); box-shadow: 0 4px #8e44ad;" onclick="showLabMenu()">🧪 煉金實驗室 (定向合成)</button>
+            <button class="menu-btn" style="background: var(--epic); box-shadow: 0 4px #8e44ad;" onclick="showLabMenu()">🧪 煉金實驗室 (定向進化)</button>
             <button class="menu-btn btn-gacha-menu" onclick="showGachaMenu()">🎰 隨機抽卡與圖鑑</button>
         </div>
 
@@ -172,8 +169,8 @@
                 <div class="coin-display">🪙 餘額: <span id="labCoinCount">0</span></div>
                 <div style="font-size: 14px; color: var(--epic); font-weight: bold;">(需 15 🪙 / 次)</div>
             </div>
-            <h3 style="color: var(--epic); margin-top: 5px;">請選擇煉金目標</h3>
-            <p style="font-size: 12px; color: #7f8c8d; margin-top: -10px;">需連續答對 3 題。答錯將沒收代幣並引發爆炸！</p>
+            <h3 style="color: var(--epic); margin-top: 5px;">請選擇進化的目標</h3>
+            <p style="font-size: 12px; color: #7f8c8d; margin-top: -10px;">需連續答對 3 題。滿星卡片將引發「跨階進化」！</p>
             <div class="gallery-grid" id="labGrid"></div>
             <button class="btn-back" onclick="quitToMenu()">返回主選單</button>
         </div>
@@ -185,7 +182,6 @@
             <div id="newRecordReward" class="reward-badge">🎉 破紀錄！額外獎勵 2 枚 🪙</div>
             <p style="margin: 5px 0;">本次時間：</p>
             <div id="finalTime" style="font-size:36px; color:var(--legend); font-weight:bold; margin-bottom: 10px;"></div>
-            
             <div class="best-time-box">
                 <div style="color: #f39c12; font-weight: bold;">👑 歷史最佳紀錄 (PB)</div>
                 <div id="bestTimeDisplay" style="font-size: 24px; font-weight: bold; color: var(--dark);">--</div>
@@ -226,83 +222,92 @@
 
     <script>
         // ==========================================
-        // 1. 完整化學數據庫 (包含圖片與稀有度)
+        // 1. 完整化學數據庫 (新增 fileKey 用於圖片讀取)
         // ==========================================
         const cations = [
-            { id: 1, name: "Sodium", formula: "Na", charge: 1, html: "Na<sup>+</sup>", rarity: 'N', img: 'images/na.png' },
-            { id: 2, name: "Potassium", formula: "K", charge: 1, html: "K<sup>+</sup>", rarity: 'N', img: 'images/k.png' },
-            { id: 3, name: "Copper(I)", formula: "Cu", charge: 1, html: "Cu<sup>+</sup>", rarity: 'R', img: 'images/cu1.png' },
-            { id: 4, name: "Silver", formula: "Ag", charge: 1, html: "Ag<sup>+</sup>", rarity: 'R', img: 'images/ag.png' },
-            { id: 5, name: "Mercury(I)", formula: "Hg", charge: 1, html: "Hg<sup>+</sup>", rarity: 'SR', img: 'images/hg1.png' },
-            { id: 6, name: "Hydrogen", formula: "H", charge: 1, html: "H<sup>+</sup>", rarity: 'N', img: 'images/h.png' },
-            { id: 7, name: "Ammonium", formula: "NH4", charge: 1, html: "NH<sub>4</sub><sup>+</sup>", poly: true, rarity: 'R', img: 'images/nh4.png' },
-            { id: 8, name: "Magnesium", formula: "Mg", charge: 2, html: "Mg<sup>2+</sup>", rarity: 'N', img: 'images/mg.png' },
-            { id: 9, name: "Calcium", formula: "Ca", charge: 2, html: "Ca<sup>2+</sup>", rarity: 'N', img: 'images/ca.png' },
-            { id: 10, name: "Barium", formula: "Ba", charge: 2, html: "Ba<sup>2+</sup>", rarity: 'R', img: 'images/ba.png' },
-            { id: 11, name: "Lead(II)", formula: "Pb", charge: 2, html: "Pb<sup>2+</sup>", rarity: 'R', img: 'images/pb.png' },
-            { id: 12, name: "Iron(II)", formula: "Fe", charge: 2, html: "Fe<sup>2+</sup>", rarity: 'R', img: 'images/fe2.png' },
-            { id: 13, name: "Cobalt(II)", formula: "Co", charge: 2, html: "Co<sup>2+</sup>", rarity: 'R', img: 'images/co.png' },
-            { id: 14, name: "Nickel(II)", formula: "Ni", charge: 2, html: "Ni<sup>2+</sup>", rarity: 'R', img: 'images/ni.png' },
-            { id: 15, name: "Manganese(II)", formula: "Mn", charge: 2, html: "Mn<sup>2+</sup>", rarity: 'R', img: 'images/mn.png' },
-            { id: 16, name: "Copper(II)", formula: "Cu", charge: 2, html: "Cu<sup>2+</sup>", rarity: 'R', img: 'images/cu2.png' },
-            { id: 17, name: "Zinc", formula: "Zn", charge: 2, html: "Zn<sup>2+</sup>", rarity: 'R', img: 'images/zn.png' },
-            { id: 18, name: "Mercury(II)", formula: "Hg", charge: 2, html: "Hg<sup>2+</sup>", rarity: 'SR', img: 'images/hg2.png' },
-            { id: 19, name: "Aluminium", formula: "Al", charge: 3, html: "Al<sup>3+</sup>", rarity: 'SR', img: 'images/al.png' },
-            { id: 20, name: "Iron(III)", formula: "Fe", charge: 3, html: "Fe<sup>3+</sup>", rarity: 'SR', img: 'images/fe3.png' },
-            { id: 21, name: "Chromium(III)", formula: "Cr", charge: 3, html: "Cr<sup>3+</sup>", rarity: 'SR', img: 'images/cr.png' },
-            { id: 99, name: "A.A. Sir", formula: "AA", charge: 0, html: "🔋", rarity: 'SSR', img: 'images/aa_sir.png', isSpecial: true } 
+            { id: 1, name: "Sodium", formula: "Na", charge: 1, html: "Na<sup>+</sup>", fileKey: 'na' },
+            { id: 2, name: "Potassium", formula: "K", charge: 1, html: "K<sup>+</sup>", fileKey: 'k' },
+            { id: 3, name: "Copper(I)", formula: "Cu", charge: 1, html: "Cu<sup>+</sup>", fileKey: 'cu1' },
+            { id: 4, name: "Silver", formula: "Ag", charge: 1, html: "Ag<sup>+</sup>", fileKey: 'ag' },
+            { id: 5, name: "Mercury(I)", formula: "Hg", charge: 1, html: "Hg<sup>+</sup>", fileKey: 'hg1' },
+            { id: 6, name: "Hydrogen", formula: "H", charge: 1, html: "H<sup>+</sup>", fileKey: 'h' },
+            { id: 7, name: "Ammonium", formula: "NH4", charge: 1, html: "NH<sub>4</sub><sup>+</sup>", poly: true, fileKey: 'nh4' },
+            { id: 8, name: "Magnesium", formula: "Mg", charge: 2, html: "Mg<sup>2+</sup>", fileKey: 'mg' },
+            { id: 9, name: "Calcium", formula: "Ca", charge: 2, html: "Ca<sup>2+</sup>", fileKey: 'ca' },
+            { id: 10, name: "Barium", formula: "Ba", charge: 2, html: "Ba<sup>2+</sup>", fileKey: 'ba' },
+            { id: 11, name: "Lead(II)", formula: "Pb", charge: 2, html: "Pb<sup>2+</sup>", fileKey: 'pb' },
+            { id: 12, name: "Iron(II)", formula: "Fe", charge: 2, html: "Fe<sup>2+</sup>", fileKey: 'fe2' },
+            { id: 13, name: "Cobalt(II)", formula: "Co", charge: 2, html: "Co<sup>2+</sup>", fileKey: 'co' },
+            { id: 14, name: "Nickel(II)", formula: "Ni", charge: 2, html: "Ni<sup>2+</sup>", fileKey: 'ni' },
+            { id: 15, name: "Manganese(II)", formula: "Mn", charge: 2, html: "Mn<sup>2+</sup>", fileKey: 'mn' },
+            { id: 16, name: "Copper(II)", formula: "Cu", charge: 2, html: "Cu<sup>2+</sup>", fileKey: 'cu2' },
+            { id: 17, name: "Zinc", formula: "Zn", charge: 2, html: "Zn<sup>2+</sup>", fileKey: 'zn' },
+            { id: 18, name: "Mercury(II)", formula: "Hg", charge: 2, html: "Hg<sup>2+</sup>", fileKey: 'hg2' },
+            { id: 19, name: "Aluminium", formula: "Al", charge: 3, html: "Al<sup>3+</sup>", fileKey: 'al' },
+            { id: 20, name: "Iron(III)", formula: "Fe", charge: 3, html: "Fe<sup>3+</sup>", fileKey: 'fe3' },
+            { id: 21, name: "Chromium(III)", formula: "Cr", charge: 3, html: "Cr<sup>3+</sup>", fileKey: 'cr' },
+            // A.A. Sir 依然作為隱藏卡
+            { id: 99, name: "A.A. Sir", formula: "AA", charge: 0, html: "🔋", fileKey: 'aa_sir', isSpecial: true } 
         ];
 
         const anions = [
-            { id: 22, name: "Hydride", formula: "H", charge: 1, html: "H<sup>-</sup>", rarity: 'R', img: 'images/hydride.png' },
-            { id: 23, name: "Chloride", formula: "Cl", charge: 1, html: "Cl<sup>-</sup>", rarity: 'N', img: 'images/cl.png' }, 
-            { id: 24, name: "Bromide", formula: "Br", charge: 1, html: "Br<sup>-</sup>", rarity: 'N', img: 'images/br.png' },
-            { id: 25, name: "Iodide", formula: "I", charge: 1, html: "I<sup>-</sup>", rarity: 'R', img: 'images/i.png' },
-            { id: 26, name: "Hydroxide", formula: "OH", charge: 1, html: "OH<sup>-</sup>", poly: true, rarity: 'R', img: 'images/oh.png' },
-            { id: 27, name: "Nitrate", formula: "NO3", charge: 1, html: "NO<sub>3</sub><sup>-</sup>", poly: true, rarity: 'SR', img: 'images/no3.png' },
-            { id: 28, name: "Nitrite", formula: "NO2", charge: 1, html: "NO<sub>2</sub><sup>-</sup>", poly: true, rarity: 'SR', img: 'images/no2.png' },
-            { id: 29, name: "Hydrogencarbonate", formula: "HCO3", charge: 1, html: "HCO<sub>3</sub><sup>-</sup>", poly: true, rarity: 'SR', img: 'images/hco3.png' },
-            { id: 30, name: "Hydrogensulphate", formula: "HSO4", charge: 1, html: "HSO<sub>4</sub><sup>-</sup>", poly: true, rarity: 'SR', img: 'images/hso4.png' },
-            { id: 31, name: "Cyanide", formula: "CN", charge: 1, html: "CN<sup>-</sup>", poly: true, rarity: 'SR', img: 'images/cn.png' },
-            { id: 32, name: "Permanganate", formula: "MnO4", charge: 1, html: "MnO<sub>4</sub><sup>-</sup>", poly: true, rarity: 'SR', img: 'images/mno4.png' },
-            { id: 33, name: "Chlorate", formula: "ClO3", charge: 1, html: "ClO<sub>3</sub><sup>-</sup>", poly: true, rarity: 'SR', img: 'images/clo3.png' },
-            { id: 34, name: "Hypochlorite", formula: "ClO", charge: 1, html: "ClO<sup>-</sup>", poly: true, rarity: 'SR', img: 'images/clo.png' },
-            { id: 35, name: "Oxide", formula: "O", charge: 2, html: "O<sup>2-</sup>", rarity: 'N', img: 'images/o.png' },
-            { id: 36, name: "Sulphide", formula: "S", charge: 2, html: "S<sup>2-</sup>", rarity: 'R', img: 'images/s.png' },
-            { id: 37, name: "Sulphate", formula: "SO4", charge: 2, html: "SO<sub>4</sub><sup>2-</sup>", poly: true, rarity: 'SR', img: 'images/so4.png' },
-            { id: 38, name: "Sulphite", formula: "SO3", charge: 2, html: "SO<sub>3</sub><sup>2-</sup>", poly: true, rarity: 'SR', img: 'images/so3.png' },
-            { id: 39, name: "Silicate", formula: "SiO3", charge: 2, html: "SiO<sub>3</sub><sup>2-</sup>", poly: true, rarity: 'SR', img: 'images/sio3.png' },
-            { id: 40, name: "Carbonate", formula: "CO3", charge: 2, html: "CO<sub>3</sub><sup>2-</sup>", poly: true, rarity: 'SR', img: 'images/co3.png' },
-            { id: 41, name: "Chromate", formula: "CrO4", charge: 2, html: "CrO<sub>4</sub><sup>2-</sup>", poly: true, rarity: 'SR', img: 'images/cro4.png' },
-            { id: 42, name: "Dichromate", formula: "Cr2O7", charge: 2, html: "Cr<sub>2</sub>O<sub>7</sub><sup>2-</sup>", poly: true, rarity: 'SR', img: 'images/cr2o7.png' },
-            { id: 43, name: "Nitride", formula: "N", charge: 3, html: "N<sup>3-</sup>", rarity: 'SR', img: 'images/n.png' },
-            { id: 44, name: "Phosphide", formula: "P", charge: 3, html: "P<sup>3-</sup>", rarity: 'SR', img: 'images/p.png' },
-            { id: 45, name: "Phosphate", formula: "PO4", charge: 3, html: "PO<sub>4</sub><sup>3-</sup>", poly: true, rarity: 'SR', img: 'images/po4.png' }
+            { id: 22, name: "Hydride", formula: "H", charge: 1, html: "H<sup>-</sup>", fileKey: 'hydride' },
+            { id: 23, name: "Chloride", formula: "Cl", charge: 1, html: "Cl<sup>-</sup>", fileKey: 'cl' }, 
+            { id: 24, name: "Bromide", formula: "Br", charge: 1, html: "Br<sup>-</sup>", fileKey: 'br' },
+            { id: 25, name: "Iodide", formula: "I", charge: 1, html: "I<sup>-</sup>", fileKey: 'i' },
+            { id: 26, name: "Hydroxide", formula: "OH", charge: 1, html: "OH<sup>-</sup>", poly: true, fileKey: 'oh' },
+            { id: 27, name: "Nitrate", formula: "NO3", charge: 1, html: "NO<sub>3</sub><sup>-</sup>", poly: true, fileKey: 'no3' },
+            { id: 28, name: "Nitrite", formula: "NO2", charge: 1, html: "NO<sub>2</sub><sup>-</sup>", poly: true, fileKey: 'no2' },
+            { id: 29, name: "Hydrogencarbonate", formula: "HCO3", charge: 1, html: "HCO<sub>3</sub><sup>-</sup>", poly: true, fileKey: 'hco3' },
+            { id: 30, name: "Hydrogensulphate", formula: "HSO4", charge: 1, html: "HSO<sub>4</sub><sup>-</sup>", poly: true, fileKey: 'hso4' },
+            { id: 31, name: "Cyanide", formula: "CN", charge: 1, html: "CN<sup>-</sup>", poly: true, fileKey: 'cn' },
+            { id: 32, name: "Permanganate", formula: "MnO4", charge: 1, html: "MnO<sub>4</sub><sup>-</sup>", poly: true, fileKey: 'mno4' },
+            { id: 33, name: "Chlorate", formula: "ClO3", charge: 1, html: "ClO<sub>3</sub><sup>-</sup>", poly: true, fileKey: 'clo3' },
+            { id: 34, name: "Hypochlorite", formula: "ClO", charge: 1, html: "ClO<sup>-</sup>", poly: true, fileKey: 'clo' },
+            { id: 35, name: "Oxide", formula: "O", charge: 2, html: "O<sup>2-</sup>", fileKey: 'o' },
+            { id: 36, name: "Sulphide", formula: "S", charge: 2, html: "S<sup>2-</sup>", fileKey: 's' },
+            { id: 37, name: "Sulphate", formula: "SO4", charge: 2, html: "SO<sub>4</sub><sup>2-</sup>", poly: true, fileKey: 'so4' },
+            { id: 38, name: "Sulphite", formula: "SO3", charge: 2, html: "SO<sub>3</sub><sup>2-</sup>", poly: true, fileKey: 'so3' },
+            { id: 39, name: "Silicate", formula: "SiO3", charge: 2, html: "SiO<sub>3</sub><sup>2-</sup>", poly: true, fileKey: 'sio3' },
+            { id: 40, name: "Carbonate", formula: "CO3", charge: 2, html: "CO<sub>3</sub><sup>2-</sup>", poly: true, fileKey: 'co3' },
+            { id: 41, name: "Chromate", formula: "CrO4", charge: 2, html: "CrO<sub>4</sub><sup>2-</sup>", poly: true, fileKey: 'cro4' },
+            { id: 42, name: "Dichromate", formula: "Cr2O7", charge: 2, html: "Cr<sub>2</sub>O<sub>7</sub><sup>2-</sup>", poly: true, fileKey: 'cr2o7' },
+            { id: 43, name: "Nitride", formula: "N", charge: 3, html: "N<sup>3-</sup>", fileKey: 'n' },
+            { id: 44, name: "Phosphide", formula: "P", charge: 3, html: "P<sup>3-</sup>", fileKey: 'p' },
+            { id: 45, name: "Phosphate", formula: "PO4", charge: 3, html: "PO<sub>4</sub><sup>3-</sup>", poly: true, fileKey: 'po4' }
         ];
 
         const cardPool = [...cations, ...anions];
         const playableCations = cations.filter(c => !c.isSpecial);
         const playableAnions = anions.filter(a => !a.isSpecial);
+        
+        // 稀有度數值化，用於比較進化
+        const rarityMap = { 'N': 1, 'R': 2, 'SR': 3, 'SSR': 4 };
+        const rarityNames = ['N', 'R', 'SR', 'SSR'];
 
         // ==========================================
-        // 2. 狀態管理
+        // 2. 狀態管理 (全新進化資料結構)
         // ==========================================
         let currentMode = '';
-        let score = 0, practiceCorrectCount = 0;
-        let startTime, timerInterval;
-        let isAnswered = false, usedQuestions = new Set(), currentDrawnCard = null; 
-        
-        // 煉金系統狀態
+        let score = 0, practiceCorrectCount = 0, startTime, timerInterval;
+        let isAnswered = false, usedQuestions = new Set();
         let alchemyTargetCard = null;
+        let currentDrawnCard = null; 
 
         let coins = parseInt(localStorage.getItem('aaCoins')) || 0;
-        let inventory = JSON.parse(localStorage.getItem('aaInventoryStar')) || {};
         
-        // 資料相容性
-        let oldInv = JSON.parse(localStorage.getItem('aaInventory'));
-        if (Array.isArray(oldInv) && Object.keys(inventory).length === 0) {
-            oldInv.forEach(id => inventory[id] = 1);
-            localStorage.setItem('aaInventoryStar', JSON.stringify(inventory));
+        // 新版圖鑑結構: { id: { rarity: 'N', stars: 1 } }
+        let inventory = JSON.parse(localStorage.getItem('aaInventoryEvo')) || {};
+        
+        // 從舊版無縫轉移
+        let oldInv = JSON.parse(localStorage.getItem('aaInventoryStar'));
+        if (oldInv && Object.keys(inventory).length === 0) {
+            for (let id in oldInv) {
+                // 根據舊版的固定稀有度轉移
+                let baseCard = cardPool.find(c => c.id == id);
+                if(baseCard) inventory[id] = { rarity: baseCard.rarity || 'N', stars: oldInv[id] };
+            }
+            localStorage.setItem('aaInventoryEvo', JSON.stringify(inventory));
         }
 
         const menuArea = document.getElementById('menuArea');
@@ -333,12 +338,7 @@
         // 3. 核心化學邏輯與生成器 
         // ==========================================
         function isValidCombination(c, a) {
-            const blacklist = [
-                'NH4_OH', 'H_NO3', 'H_NO2', 'H_Cl', 'H_Br', 'H_I', 
-                'H_SO4', 'H_SO3', 'H_OH', 'H_O', 'H_CO3', 'H_PO4', 
-                'H_CN', 'H_MnO4', 'H_ClO3', 'H_ClO', 'H_CrO4', 'H_Cr2O7', 
-                'H_H', 'H_HSO4', 'H_HCO3' 
-            ];
+            const blacklist = ['NH4_OH', 'H_NO3', 'H_NO2', 'H_Cl', 'H_Br', 'H_I', 'H_SO4', 'H_SO3', 'H_OH', 'H_O', 'H_CO3', 'H_PO4', 'H_CN', 'H_MnO4', 'H_ClO3', 'H_ClO', 'H_CrO4', 'H_Cr2O7', 'H_H', 'H_HSO4', 'H_HCO3'];
             return !blacklist.includes(c.formula + '_' + a.formula);
         }
 
@@ -356,53 +356,32 @@
         }
 
         // ==========================================
-        // 4. 遊戲流程控制 (整合煉金模式)
+        // 4. 遊戲流程控制
         // ==========================================
         function startGame(mode) {
-            currentMode = mode;
-            score = 0; practiceCorrectCount = 0; usedQuestions.clear(); syncCoinDisplay();
-            menuArea.style.display = 'none'; labArea.style.display = 'none'; gameArea.style.display = 'block'; 
-            batteryLevel.style.width = '0%';
-            
-            // UI 復原
-            document.body.classList.remove('alchemy-active');
-            mainTitle.innerText = "🧪 A.A. Sir's Ion Master";
-            mainTitle.style.color = "white";
-            btnQuitGame.innerText = "放棄挑戰返回主選單";
-            btnQuitGame.style.background = "#95a5a6";
+            currentMode = mode; score = 0; practiceCorrectCount = 0; usedQuestions.clear(); syncCoinDisplay();
+            menuArea.style.display = 'none'; labArea.style.display = 'none'; gameArea.style.display = 'block'; batteryLevel.style.width = '0%';
+            document.body.classList.remove('alchemy-active'); mainTitle.innerText = "🧪 A.A. Sir's Ion Master"; mainTitle.style.color = "white";
+            btnQuitGame.innerText = "放棄挑戰返回主選單"; btnQuitGame.style.background = "#95a5a6";
 
             if (mode === 'speed') {
-                progressText.innerText = "進度: 0/10"; progressText.style.color = "var(--secondary)";
-                timerDisplay.style.display = 'block'; gameCoinDisplay.style.display = 'none';
-                startTime = Date.now();
-                timerInterval = setInterval(() => { timerDisplay.innerText = ((Date.now() - startTime) / 1000).toFixed(1) + "s"; }, 100);
+                progressText.innerText = "進度: 0/10"; progressText.style.color = "var(--secondary)"; timerDisplay.style.display = 'block'; gameCoinDisplay.style.display = 'none';
+                startTime = Date.now(); timerInterval = setInterval(() => { timerDisplay.innerText = ((Date.now() - startTime) / 1000).toFixed(1) + "s"; }, 100);
             } else if (mode === 'practice') {
-                progressText.innerText = "已答對: 0 題"; progressText.style.color = "var(--secondary)";
-                timerDisplay.style.display = 'none'; gameCoinDisplay.style.display = 'flex'; 
+                progressText.innerText = "已答對: 0 題"; progressText.style.color = "var(--secondary)"; timerDisplay.style.display = 'none'; gameCoinDisplay.style.display = 'flex'; 
             } else if (mode === 'alchemy') {
-                // 煉金高壓模式 UI
-                document.body.classList.add('alchemy-active');
-                mainTitle.innerText = "⚠️ 煉金試煉進行中 ⚠️";
-                mainTitle.style.color = "var(--legend)";
-                progressText.innerText = "煉金進度: 0/3"; progressText.style.color = "var(--legend)";
-                timerDisplay.style.display = 'none'; gameCoinDisplay.style.display = 'none';
-                btnQuitGame.innerText = "中斷試煉 (代幣不退還)";
-                btnQuitGame.style.background = "var(--legend)";
+                document.body.classList.add('alchemy-active'); mainTitle.innerText = "⚠️ 煉金試煉進行中 ⚠️"; mainTitle.style.color = "var(--legend)";
+                progressText.innerText = "煉金進度: 0/3"; progressText.style.color = "var(--legend)"; timerDisplay.style.display = 'none'; gameCoinDisplay.style.display = 'none';
+                btnQuitGame.innerText = "中斷試煉 (代幣不退還)"; btnQuitGame.style.background = "var(--legend)";
             }
             nextQuestion();
         }
 
         function quitToMenu() {
-            clearInterval(timerInterval);
-            document.body.classList.remove('alchemy-active');
-            document.body.classList.remove('screen-shake');
-            document.getElementById('resultModal').style.display = 'none';
-            document.getElementById('explosionModal').style.display = 'none';
-            gameArea.style.display = 'none'; gachaArea.style.display = 'none'; labArea.style.display = 'none';
-            menuArea.style.display = 'block';
-            mainTitle.innerText = "🧪 A.A. Sir's Ion Master";
-            mainTitle.style.color = "white";
-            syncCoinDisplay();
+            clearInterval(timerInterval); document.body.classList.remove('alchemy-active'); document.body.classList.remove('screen-shake');
+            document.getElementById('resultModal').style.display = 'none'; document.getElementById('explosionModal').style.display = 'none';
+            gameArea.style.display = 'none'; gachaArea.style.display = 'none'; labArea.style.display = 'none'; menuArea.style.display = 'block';
+            mainTitle.innerText = "🧪 A.A. Sir's Ion Master"; mainTitle.style.color = "white"; syncCoinDisplay();
         }
 
         function nextQuestion() {
@@ -413,156 +392,103 @@
 
             do {
                 if (currentMode === 'alchemy') {
-                    // 煉金模式強制使用目標離子
                     let isTargetCation = playableCations.some(c => c.id === alchemyTargetCard.id);
-                    if (isTargetCation) {
-                        curC = alchemyTargetCard;
-                        curA = playableAnions[Math.floor(Math.random() * playableAnions.length)];
-                    } else {
-                        curA = alchemyTargetCard;
-                        curC = playableCations[Math.floor(Math.random() * playableCations.length)];
-                    }
+                    if (isTargetCation) { curC = alchemyTargetCard; curA = playableAnions[Math.floor(Math.random() * playableAnions.length)]; } 
+                    else { curA = alchemyTargetCard; curC = playableCations[Math.floor(Math.random() * playableCations.length)]; }
                 } else {
                     curC = playableCations[Math.floor(Math.random() * playableCations.length)];
                     curA = playableAnions[Math.floor(Math.random() * playableAnions.length)];
                 }
-                comboSignature = curC.formula + "_" + curA.formula;
-                attempts++;
+                comboSignature = curC.formula + "_" + curA.formula; attempts++;
             } while ((usedQuestions.has(comboSignature) || !isValidCombination(curC, curA)) && attempts < 100);
             
             usedQuestions.add(comboSignature);
-            
-            let cSub = curA.charge, aSub = curC.charge;
-            let common = getGCD(cSub, aSub); cSub /= common; aSub /= common;
+            let cSub = curA.charge, aSub = curC.charge; let common = getGCD(cSub, aSub); cSub /= common; aSub /= common;
+            let scenario = Math.floor(Math.random() * 3); let options = []; let optionsSet = new Set();
 
-            let scenario = Math.floor(Math.random() * 3);
-            let options = []; let optionsSet = new Set();
-
-            if (scenario === 0 || scenario === 1) {
-                questionEl.innerHTML = `<span>${curC.html} &nbsp;+&nbsp; ${curA.html}</span>`;
-            } else {
-                questionEl.innerHTML = `<span style="font-size:26px;">${curC.name.replace(/ion/i,'').trim()} ion<br>+<br>${curA.name.replace(/ion/i,'').trim()} ion</span>`;
-            }
+            if (scenario === 0 || scenario === 1) { questionEl.innerHTML = `<span>${curC.html} &nbsp;+&nbsp; ${curA.html}</span>`; } 
+            else { questionEl.innerHTML = `<span style="font-size:26px;">${curC.name.replace(/ion/i,'').trim()} ion<br>+<br>${curA.name.replace(/ion/i,'').trim()} ion</span>`; }
 
             if (scenario === 0 || scenario === 2) {
-                let correctHTML = buildFormula(curC, curA, cSub, aSub);
-                options.push({html: correctHTML, isCorrect: true}); optionsSet.add(correctHTML);
-                while(options.length < 4) {
-                    let fakeHTML = buildFormula(curC, curA, Math.floor(Math.random()*3)+1, Math.floor(Math.random()*3)+1);
-                    if(!optionsSet.has(fakeHTML)) { optionsSet.add(fakeHTML); options.push({html: fakeHTML, isCorrect: false}); }
-                }
+                let correctHTML = buildFormula(curC, curA, cSub, aSub); options.push({html: correctHTML, isCorrect: true}); optionsSet.add(correctHTML);
+                while(options.length < 4) { let fakeHTML = buildFormula(curC, curA, Math.floor(Math.random()*3)+1, Math.floor(Math.random()*3)+1); if(!optionsSet.has(fakeHTML)) { optionsSet.add(fakeHTML); options.push({html: fakeHTML, isCorrect: false}); } }
             } else {
-                let correctHTML = buildName(curC, curA);
-                options.push({html: correctHTML, isCorrect: true}); optionsSet.add(correctHTML);
-                while(options.length < 4) {
-                    let fakeHTML = buildName(curC, playableAnions[Math.floor(Math.random() * playableAnions.length)]);
-                    if(!optionsSet.has(fakeHTML)) { optionsSet.add(fakeHTML); options.push({html: fakeHTML, isCorrect: false}); }
-                }
+                let correctHTML = buildName(curC, curA); options.push({html: correctHTML, isCorrect: true}); optionsSet.add(correctHTML);
+                while(options.length < 4) { let fakeHTML = buildName(curC, playableAnions[Math.floor(Math.random() * playableAnions.length)]); if(!optionsSet.has(fakeHTML)) { optionsSet.add(fakeHTML); options.push({html: fakeHTML, isCorrect: false}); } }
             }
 
             options.sort(() => 0.5 - Math.random()); optionsArea.innerHTML = '';
-            options.forEach(opt => {
-                let btn = document.createElement('button'); btn.className = 'option-btn'; btn.innerHTML = opt.html;
-                btn.onclick = () => handleAnswer(btn, opt.isCorrect); optionsArea.appendChild(btn);
-            });
+            options.forEach(opt => { let btn = document.createElement('button'); btn.className = 'option-btn'; btn.innerHTML = opt.html; btn.onclick = () => handleAnswer(btn, opt.isCorrect); optionsArea.appendChild(btn); });
         }
 
         function handleAnswer(btn, isCorrect) {
             if(isAnswered) return; isAnswered = true;
             if(isCorrect) {
                 btn.classList.add('correct'); score++;
-                if (currentMode === 'speed') {
-                    progressText.innerText = `進度: ${score}/10`; batteryLevel.style.width = (score * 10) + "%";
-                } else if (currentMode === 'alchemy') {
-                    progressText.innerText = `煉金進度: ${score}/3`; batteryLevel.style.width = (score * 33.3) + "%";
-                } else {
-                    progressText.innerText = `已答對: ${score} 題`; practiceCorrectCount++;
-                    if (practiceCorrectCount >= 5) { coins += 1; practiceCorrectCount = 0; syncCoinDisplay(); }
-                    let fillPercent = (score % 10) * 10; if (fillPercent === 0) fillPercent = 100;
-                    batteryLevel.style.width = fillPercent + "%";
-                }
+                if (currentMode === 'speed') { progressText.innerText = `進度: ${score}/10`; batteryLevel.style.width = (score * 10) + "%"; } 
+                else if (currentMode === 'alchemy') { progressText.innerText = `煉金進度: ${score}/3`; batteryLevel.style.width = (score * 33.3) + "%"; } 
+                else { progressText.innerText = `已答對: ${score} 題`; practiceCorrectCount++; if (practiceCorrectCount >= 5) { coins += 1; practiceCorrectCount = 0; syncCoinDisplay(); } let fillPercent = (score % 10) * 10; if (fillPercent === 0) fillPercent = 100; batteryLevel.style.width = fillPercent + "%"; }
                 setTimeout(nextQuestion, 400); 
             } else {
                 btn.classList.add('wrong');
-                if (currentMode === 'alchemy') {
-                    // 煉金失敗：直接觸發爆炸
-                    setTimeout(finishAlchemyFail, 300);
-                } else {
-                    setTimeout(() => { btn.classList.remove('wrong'); isAnswered = false; }, 1000); 
-                }
+                if (currentMode === 'alchemy') { setTimeout(finishAlchemyFail, 300); } 
+                else { setTimeout(() => { btn.classList.remove('wrong'); isAnswered = false; }, 1000); }
             }
         }
 
         function finishSpeedGame() {
-            clearInterval(timerInterval);
-            let finalTime = (Date.now() - startTime) / 1000;
-            let history = JSON.parse(localStorage.getItem('myIonHistory') || '[]');
-            let currentBest = history.length > 0 ? Math.min(...history.map(x => x.time)) : Infinity;
-            
-            if (history.length > 0 && finalTime < currentBest) {
-                currentBest = finalTime; coins += 2; syncCoinDisplay();
-                document.getElementById('newRecordReward').style.display = 'block'; 
-            } else {
-                if(finalTime < currentBest) currentBest = finalTime;
-                document.getElementById('newRecordReward').style.display = 'none';
-            }
-            
-            history.unshift({ time: finalTime });
-            localStorage.setItem('myIonHistory', JSON.stringify(history.slice(0, 5)));
-
-            document.getElementById('finalTime').innerText = finalTime.toFixed(2) + "s";
-            document.getElementById('bestTimeDisplay').innerText = currentBest.toFixed(2) + "s";
-            document.getElementById('resultModal').style.display = 'flex';
+            clearInterval(timerInterval); let finalTime = (Date.now() - startTime) / 1000;
+            let history = JSON.parse(localStorage.getItem('myIonHistory') || '[]'); let currentBest = history.length > 0 ? Math.min(...history.map(x => x.time)) : Infinity;
+            if (history.length > 0 && finalTime < currentBest) { currentBest = finalTime; coins += 2; syncCoinDisplay(); document.getElementById('newRecordReward').style.display = 'block'; } 
+            else { if(finalTime < currentBest) currentBest = finalTime; document.getElementById('newRecordReward').style.display = 'none'; }
+            history.unshift({ time: finalTime }); localStorage.setItem('myIonHistory', JSON.stringify(history.slice(0, 5)));
+            document.getElementById('finalTime').innerText = finalTime.toFixed(2) + "s"; document.getElementById('bestTimeDisplay').innerText = currentBest.toFixed(2) + "s"; document.getElementById('resultModal').style.display = 'flex';
         }
 
         // ==========================================
-        // 5. 煉金實驗室系統 (Synthesis Lab)
+        // 5. 煉金實驗室系統 (進化版)
         // ==========================================
-        function showLabMenu() {
-            menuArea.style.display = 'none'; labArea.style.display = 'block';
-            syncCoinDisplay(); updateLabGrid();
-        }
+        function showLabMenu() { menuArea.style.display = 'none'; labArea.style.display = 'block'; syncCoinDisplay(); updateLabGrid(); }
 
         function updateLabGrid() {
             const grid = document.getElementById('labGrid'); grid.innerHTML = '';
             
             cardPool.forEach(card => {
-                if(card.isSpecial) return; // 隱藏卡無法定向合成
+                if(card.isSpecial) return; 
 
-                const stars = inventory[card.id] || 0;
-                const isMax = stars >= 3;
+                const data = inventory[card.id];
+                const isOwned = !!data;
+                const rarity = isOwned ? data.rarity : 'N';
+                const stars = isOwned ? data.stars : 0;
+                const isMaxedOut = isOwned && rarity === 'SSR' && stars >= 3;
                 
                 const item = document.createElement('div');
-                let classes = `card-item ${isMax ? 'maxed-out' : 'locked'}`;
-                item.className = classes;
+                item.className = `card-item ${isMaxedOut ? 'maxed-out' : 'locked'}`; // 在煉金場一律顯示成選項狀態
                 
-                let imageHTML = card.img ? `<img src="${card.img}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" style="width:100%; height:100%; object-fit:contain;">
-                                    <div style="font-size:24px; display:none; font-family:'Times New Roman', serif;">${card.html}</div>` 
-                                    : `<div style="font-size:24px;">${card.html}</div>`;
+                let imgPath = `images/${card.fileKey}_${rarity.toLowerCase()}.png`;
+                let imageHTML = `<img src="${imgPath}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" style="width:100%; height:100%; object-fit:contain;">
+                                 <div style="font-size:24px; display:none; font-family:'Times New Roman', serif;">${card.html}</div>`;
                 
-                if (stars > 0) {
+                if (isOwned) {
                     item.innerHTML = `
                         <div class="gallery-img-box">${imageHTML}</div>
-                        <div style="font-size:11px; opacity:0.8; margin-bottom:2px; font-weight:bold;">${card.rarity}</div>
+                        <div style="font-size:11px; opacity:0.8; margin-bottom:2px; font-weight:bold;">${rarity}</div>
                         <div class="stars" style="color:var(--dark);">${getStarString(stars)}</div>
                     `;
                 } else {
-                    // 未解鎖的顯示灰階與問號，但看得出輪廓
                     item.innerHTML = `
-                        <div class="gallery-img-box" style="filter:grayscale(100%) opacity(0.5);">${imageHTML}</div>
-                        <div style="font-size:11px; opacity:0.8; margin-bottom:2px; font-weight:bold;">${card.rarity}</div>
+                        <div class="gallery-img-box" style="filter:blur(6px); opacity:0.6;">${imageHTML}</div>
+                        <div style="font-size:11px; opacity:0.8; margin-bottom:2px; font-weight:bold;">???</div>
                         <div style="font-size:12px; font-weight:bold;">未解鎖</div>
                     `;
                 }
 
-                if (!isMax) {
+                if (!isMaxedOut) {
                     item.onclick = () => {
                         if (coins < 15) { alert('🪙 AA代幣不足！需要 15 枚代幣才能開啟煉金陣。'); return; }
-                        if (confirm(`確定要消耗 15 🪙 來合成「${card.name}」嗎？\n(提示：需連續答對 3 題，答錯將沒收代幣！)`)) {
-                            coins -= 15;
-                            syncCoinDisplay();
-                            alchemyTargetCard = card;
-                            startGame('alchemy');
+                        let actionTxt = isOwned ? (stars >= 3 ? "跨階進化" : "升星") : "解鎖";
+                        if (confirm(`確定要消耗 15 🪙 來 ${actionTxt}「${card.name}」嗎？\n(提示：需連續答對 3 題，答錯將引發爆炸！)`)) {
+                            coins -= 15; syncCoinDisplay(); alchemyTargetCard = card; startGame('alchemy');
                         }
                     };
                 }
@@ -572,46 +498,50 @@
 
         function finishAlchemySuccess() {
             let card = alchemyTargetCard;
-            let currentStars = inventory[card.id] || 0;
-            let isNew = currentStars === 0;
-            
-            inventory[card.id] = isNew ? 1 : currentStars + 1;
-            let isMax = inventory[card.id] >= 3;
-            
-            localStorage.setItem('aaInventoryStar', JSON.stringify(inventory));
+            let currentData = inventory[card.id];
+            let newRarity = 'N'; let newStars = 1;
+            let isEvolution = false; let isNew = !currentData;
+
+            if (isNew) {
+                newRarity = 'N'; newStars = 1;
+            } else {
+                if (currentData.stars >= 3) {
+                    // 跨階進化
+                    let nextIdx = rarityNames.indexOf(currentData.rarity) + 1;
+                    if(nextIdx < rarityNames.length) { newRarity = rarityNames[nextIdx]; newStars = 1; isEvolution = true; }
+                } else {
+                    // 單純升星
+                    newRarity = currentData.rarity; newStars = currentData.stars + 1;
+                }
+            }
+
+            inventory[card.id] = { rarity: newRarity, stars: newStars };
+            localStorage.setItem('aaInventoryEvo', JSON.stringify(inventory));
             
             // 成功特效
             document.body.classList.remove('alchemy-active');
-            const animModal = document.getElementById('gachaAnimModal');
-            const flash = document.getElementById('whiteFlash');
-            animModal.querySelector('h3').innerText = "煉金大成功！";
-            animModal.style.display = 'flex'; 
+            const animModal = document.getElementById('gachaAnimModal'); const flash = document.getElementById('whiteFlash');
+            animModal.querySelector('h3').innerText = "煉金大成功！"; animModal.style.display = 'flex'; 
             
             setTimeout(() => {
                 flash.classList.add('active'); 
                 setTimeout(() => {
-                    animModal.style.display = 'none'; 
-                    animModal.querySelector('h3').innerText = "高能反應合成中..."; // 復原文字
-                    showCardModal(card, true, inventory[card.id], isNew, isMax, 0, true); // true 代表是煉金來的
-                    quitToMenu(); // 背景退回主選單
+                    animModal.style.display = 'none'; animModal.querySelector('h3').innerText = "高能反應合成中..."; 
+                    showCardModal(card, true, newRarity, newStars, isNew, isEvolution, 0, true); 
+                    quitToMenu(); 
                     setTimeout(() => { flash.classList.remove('active'); }, 100); 
                 }, 400); 
             }, 1500); 
         }
 
         function finishAlchemyFail() {
-            document.body.classList.add('screen-shake');
-            document.getElementById('explosionModal').style.display = 'flex';
+            document.body.classList.add('screen-shake'); document.getElementById('explosionModal').style.display = 'flex';
         }
 
         // ==========================================
-        // 6. 抽卡、過場動畫與圖鑑系統 
+        // 6. 抽卡、進化過場與圖鑑系統 
         // ==========================================
-        function showGachaMenu() {
-            menuArea.style.display = 'none'; gachaArea.style.display = 'block';
-            syncCoinDisplay(); updateGallery();
-        }
-
+        function showGachaMenu() { menuArea.style.display = 'none'; gachaArea.style.display = 'block'; syncCoinDisplay(); updateGallery(); }
         function getStarString(count) { return "⭐".repeat(count); }
 
         function updateGallery() {
@@ -619,30 +549,32 @@
             let count = Object.keys(inventory).length;
             
             cardPool.forEach(card => {
-                const stars = inventory[card.id] || 0;
-                const isOwned = stars > 0;
+                const data = inventory[card.id];
+                const isOwned = !!data;
+                const rarity = isOwned ? data.rarity : 'N';
+                const stars = isOwned ? data.stars : 0;
+                
                 const item = document.createElement('div');
-                let classes = `card-item ${isOwned ? 'owned ' + card.rarity.toLowerCase() : ''}`;
+                let classes = `card-item ${isOwned ? 'owned ' + rarity.toLowerCase() : 'locked'}`;
                 if (stars >= 3) classes += ' max-star'; 
                 item.className = classes;
                 
+                // 動態讀取圖片，找不到則顯示預設化學符號
+                let imgPath = `images/${card.fileKey}_${rarity.toLowerCase()}.png`;
+                let imageHTML = `<img src="${imgPath}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" style="width:100%; height:100%; object-fit:contain;">
+                                 <div style="font-size:28px; display:none; font-family:'Times New Roman', serif;">${card.html}</div>`;
+                
                 if (isOwned) {
-                    let imageHTML = `<img src="${card.img}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" style="width:100%; height:100%; object-fit:contain;">
-                                     <div style="font-size:28px; display:none; font-family:'Times New Roman', serif;">${card.html}</div>`;
-                    
                     item.innerHTML = `
                         <div class="gallery-img-box">${imageHTML}</div>
-                        <div style="font-size:11px; opacity:0.8; margin-bottom:2px; font-weight:bold;">${card.rarity}</div>
+                        <div style="font-size:11px; opacity:0.8; margin-bottom:2px; font-weight:bold;">${rarity}</div>
                         <div class="stars">${getStarString(stars)}</div>
                     `;
-                    item.onclick = () => showCardModal(card, false, stars); 
+                    item.onclick = () => showCardModal(card, false, rarity, stars); 
                 } else {
-                    // 未解鎖圖鑑顯示極度模糊 (Silhouette 效果)
-                    let imageHTML = card.img ? `<img src="${card.img}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" style="width:100%; height:100%; object-fit:contain; filter: brightness(0) invert(0.5); opacity: 0.3;">
-                                    <div style="font-size:28px; display:none; font-family:'Times New Roman', serif;">?</div>` 
-                                    : `<div style="font-size:30px;">?</div>`;
+                    // 極度模糊效果
                     item.innerHTML = `
-                        <div class="gallery-img-box" style="background:transparent;">${imageHTML}</div>
+                        <div class="gallery-img-box" style="filter: blur(6px); opacity: 0.6;">${imageHTML}</div>
                         <div style="font-size:12px; opacity:0.5;">未解鎖</div>
                     `;
                 }
@@ -652,46 +584,71 @@
         }
 
         function drawCard() {
-            if (coins < 5) { alert('🪙 AA代幣不足！去練習模式多答對幾題來賺取代幣吧。'); return; }
+            if (coins < 5) { alert('🪙 AA代幣不足！去練習模式多答對幾題吧。'); return; }
             coins -= 5; syncCoinDisplay();
 
             const rand = Math.random() * 100;
-            let targetRarity = 'N';
-            if (rand < 1.5) targetRarity = 'SSR';
-            else if (rand < 10) targetRarity = 'SR';
-            else if (rand < 30) targetRarity = 'R';
+            let drawnRarity = 'N';
+            if (rand < 1.5) drawnRarity = 'SSR'; else if (rand < 10) drawnRarity = 'SR'; else if (rand < 30) drawnRarity = 'R';
 
-            const possibleCards = cardPool.filter(c => c.rarity === targetRarity);
+            let possibleCards = cardPool;
+            if(drawnRarity === 'SSR') {
+                // 如果抽到SSR，有 10% 機率是 A.A. Sir (或其他特殊卡)
+                if(Math.random() < 0.1) possibleCards = cardPool.filter(c => c.isSpecial);
+                else possibleCards = playableCations.concat(playableAnions); // 排除特殊卡
+            } else {
+                possibleCards = playableCations.concat(playableAnions);
+            }
+
             const reward = possibleCards[Math.floor(Math.random() * possibleCards.length)];
 
-            let currentStars = inventory[reward.id] || 0;
-            let isNew = currentStars === 0;
-            let isMax = currentStars >= 3;
-            let refund = 0;
+            let currentData = inventory[reward.id];
+            let isNew = !currentData;
+            let isEvolution = false, isStarUp = false, refundAmt = 0;
+            let finalStars = 1;
 
-            if (isNew) { inventory[reward.id] = 1; } 
-            else if (!isMax) { inventory[reward.id]++; } 
-            else { refund = 2; coins += refund; }
+            if (isNew) {
+                inventory[reward.id] = { rarity: drawnRarity, stars: 1 };
+            } else {
+                let currentRarityVal = rarityMap[currentData.rarity];
+                let drawnRarityVal = rarityMap[drawnRarity];
 
-            localStorage.setItem('aaInventoryStar', JSON.stringify(inventory));
+                if (drawnRarityVal > currentRarityVal) {
+                    isEvolution = true;
+                    inventory[reward.id] = { rarity: drawnRarity, stars: 1 }; 
+                } else if (drawnRarityVal === currentRarityVal) {
+                    if (currentData.stars < 3) {
+                        isStarUp = true;
+                        inventory[reward.id].stars++;
+                        finalStars = inventory[reward.id].stars;
+                    } else {
+                        refundAmt = drawnRarityVal * 2; // 滿星退款，隨稀有度增加
+                    }
+                } else {
+                    refundAmt = 2; // 抽到較低稀有度，直接退2元安慰獎
+                }
+            }
+
+            if(!refundAmt) localStorage.setItem('aaInventoryEvo', JSON.stringify(inventory));
             syncCoinDisplay();
             
-            const animModal = document.getElementById('gachaAnimModal');
-            const flash = document.getElementById('whiteFlash');
+            // 🧪 觸發白光過場動畫
+            const animModal = document.getElementById('gachaAnimModal'); const flash = document.getElementById('whiteFlash');
             animModal.style.display = 'flex'; 
             
             setTimeout(() => {
                 flash.classList.add('active'); 
                 setTimeout(() => {
                     animModal.style.display = 'none'; 
-                    showCardModal(reward, true, inventory[reward.id], isNew, isMax, refund); 
+                    showCardModal(reward, true, drawnRarity, finalStars, isNew, isEvolution, refundAmt); 
                     setTimeout(() => { flash.classList.remove('active'); }, 100); 
                 }, 400); 
             }, 2000); 
         }
 
-        function showCardModal(card, isDrawAction, stars, isNew, isMax, refundAmt, isAlchemy = false) {
-            currentDrawnCard = card; 
+        // 統整的卡片展示 Modal
+        function showCardModal(card, isDrawAction, rarity, stars, isNew, isEvolution, refundAmt, isAlchemy = false) {
+            currentDrawnCard = { ...card, currentRarity: rarity, currentStars: stars }; 
             const modal = document.getElementById('gachaResultModal');
             const revealCard = document.getElementById('revealCard');
             const rarityText = document.getElementById('rarityText');
@@ -699,31 +656,32 @@
             const cardImageArea = document.getElementById('cardImageArea');
             const cardStars = document.getElementById('cardStars');
             
-            let color = 'white';
-            if(card.rarity === 'SSR') color = 'var(--rare)'; else if(card.rarity === 'SR') color = '#e056fd'; else if(card.rarity === 'R') color = '#7ed6df';
+            let color = 'white'; if(rarity === 'SSR') color = 'var(--rare)'; else if(rarity === 'SR') color = '#e056fd'; else if(rarity === 'R') color = '#7ed6df';
 
             statusText.innerText = ''; 
             
             if (isDrawAction) {
                 if (isAlchemy) {
-                    rarityText.innerHTML = `<span style="color:${color};">[${card.rarity}]</span> 煉金成功！`;
-                    statusText.innerText = isNew ? `🎉 成功合成未知的元素！` : `🌟 成功合成碎片，升級為 ${stars} 星！`;
+                    rarityText.innerHTML = `<span style="color:${color};">[${rarity}]</span> 煉金成功！`;
+                    statusText.innerText = isEvolution ? `🎉 跨階進化！晉升為 ${rarity} 級！` : (isNew ? `🎉 成功解鎖新元素！` : `🌟 升級為 ${stars} 星！`);
                 } else {
-                    if (isNew) { rarityText.innerHTML = `<span style="color:${color};">[${card.rarity}]</span> 發現新元素！`; } 
-                    else if (!isMax) { rarityText.innerHTML = `<span style="color:${color};">[${card.rarity}]</span> 卡片升星啦！`; statusText.innerText = `🌟 吸收重複碎片，升級為 ${stars} 星！`; } 
-                    else { rarityText.innerHTML = `<span style="color:${color};">[${card.rarity}]</span> 重複卡片分解`; statusText.innerText = `♻️ 已達最高星級！轉化為 ${refundAmt} 枚代幣退還。`; }
+                    if (isNew) { rarityText.innerHTML = `<span style="color:${color};">[${rarity}]</span> 發現新元素！`; } 
+                    else if (isEvolution) { rarityText.innerHTML = `<span style="color:${color};">[${rarity}]</span> 卡片進化啦！`; statusText.innerText = `🎉 覆蓋低階卡片，晉升為 ${rarity} 級！`;}
+                    else if (!refundAmt) { rarityText.innerHTML = `<span style="color:${color};">[${rarity}]</span> 卡片升星！`; statusText.innerText = `🌟 吸收重複碎片，升級為 ${stars} 星！`; } 
+                    else { rarityText.innerHTML = `<span style="color:#bdc3c7;">[${rarity}]</span> 重複卡片分解`; statusText.innerText = `♻️ 已轉換為 ${refundAmt} 枚代幣退還。`; }
                 }
             } else {
-                rarityText.innerHTML = `<span style="color:${color};">[${card.rarity}]</span> 元素卡片`;
+                rarityText.innerHTML = `<span style="color:${color};">[${rarity}]</span> 元素卡片`;
             }
             
-            cardImageArea.innerHTML = `<img src="${card.img}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+            let imgPath = `images/${card.fileKey}_${rarity.toLowerCase()}.png`;
+            cardImageArea.innerHTML = `<img src="${imgPath}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
                                        <div style="font-size:55px; display:none; font-family:'Times New Roman', serif;">${card.html}</div>`;
             
             document.getElementById('cardName').innerText = card.name;
             cardStars.innerText = getStarString(stars);
             
-            let cardClass = `reveal-card show ${card.rarity.toLowerCase()}`;
+            let cardClass = `reveal-card show ${rarity.toLowerCase()}`;
             if(stars >= 3) cardClass += ' max-star'; 
             revealCard.className = cardClass;
             
@@ -731,34 +689,24 @@
         }
 
         function closeGachaResult() {
-            document.getElementById('gachaResultModal').style.display = 'none';
-            document.getElementById('revealCard').classList.remove('show');
-            currentDrawnCard = null;
-            updateGallery();
-            if(labArea.style.display === 'block') updateLabGrid(); // 刷新煉金列表狀態
+            document.getElementById('gachaResultModal').style.display = 'none'; document.getElementById('revealCard').classList.remove('show');
+            currentDrawnCard = null; updateGallery(); if(labArea.style.display === 'block') updateLabGrid(); 
         }
 
         function shareCard() {
             if (!currentDrawnCard) return;
-            const stars = inventory[currentDrawnCard.id] || 1;
+            const stars = currentDrawnCard.currentStars || 1;
             const starStr = "⭐".repeat(stars);
-            const shareText = `🧪 我在 A.A. Sir 的化學挑戰中，收集到了 [${currentDrawnCard.rarity}] 級別的 ${starStr}「${currentDrawnCard.name}」！\n你能收集到比我更強的元素嗎？快來 3lite Education 挑戰：\nhttps://3liteeducation.github.io/IonMaster/`;
+            const shareText = `🧪 我在 A.A. Sir 的化學挑戰中，收集到了 [${currentDrawnCard.currentRarity}] 級別的 ${starStr}「${currentDrawnCard.name}」！\n你能收集到比我更強的元素嗎？快來 3lite Education 挑戰：\nhttps://3liteeducation.github.io/IonMaster/`;
 
-            if (navigator.share) {
-                navigator.share({ title: 'A.A. Sir Ion Master 收藏炫耀', text: shareText, url: 'https://3liteeducation.github.io/IonMaster/' })
-                .catch(err => console.log('分享被取消或失敗', err));
-            } else {
-                navigator.clipboard.writeText(shareText).then(() => { alert('📝 炫耀文字已複製到剪貼簿！'); })
-                .catch(err => { alert('複製失敗，請手動截圖分享吧！'); });
-            }
+            if (navigator.share) { navigator.share({ title: 'A.A. Sir Ion Master', text: shareText, url: 'https://3liteeducation.github.io/IonMaster/' }).catch(e=>{});
+            } else { navigator.clipboard.writeText(shareText).then(() => { alert('📝 炫耀文字已複製到剪貼簿！'); }); }
         }
 
         // ==========================================
         // 7. 防禦腳本
         // ==========================================
-        syncCoinDisplay();
-        document.addEventListener('contextmenu', e => e.preventDefault());
-        document.onselectstart = () => false;
+        syncCoinDisplay(); document.addEventListener('contextmenu', e => e.preventDefault()); document.onselectstart = () => false;
         document.onkeydown = e => { if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && e.keyCode == 73) || (e.ctrlKey && e.keyCode == 85)) return false; };
     </script>
 </body>
