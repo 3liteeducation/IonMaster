@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3lite Education - Ion Master 終極版 5.2 (視覺修復版)</title>
+    <title>3lite Education - Ion Master 終極版 5.3 (視覺完全修復版)</title>
     <style>
         :root { --primary: #2ecc71; --secondary: #3498db; --rare: #f1c40f; --epic: #9b59b6; --legend: #e74c3c; --dark: #2c3e50; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; margin: 0; display: flex; flex-direction: column; align-items: center; padding: 10px; overflow-x: hidden; transition: background 0.5s; }
@@ -45,25 +45,32 @@
         .option-btn.wrong { background: var(--legend); color: white; border-color: #c0392b; }
 
         /* =========================================
-           🎰 滿版 TCG 卡牌展示 CSS (修復高度塌陷 Bug)
+           🛡️ 完美修復：堅不可摧的滿版 TCG 卡牌結構
            ========================================= */
-        .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 15px; max-height: 400px; overflow-y: auto; padding: 5px; }
+        .gallery-grid { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 12px; 
+            margin-top: 15px; 
+            max-height: 400px; 
+            overflow-y: auto; 
+            padding: 10px; /* 留出空間給 hover 的陰影 */
+        }
         
         .card-item { 
             width: 100%;
-            aspect-ratio: 2.5 / 3.5; 
+            height: 0;
+            padding-bottom: 140%; /* 神級技巧：精準鎖死 2.5:3.5 的比例，永遠不塌陷！ */
             background: #eee; 
             border-radius: 10px; 
-            display: flex; 
-            flex-direction: column;
-            position: relative; 
+            position: relative; /* 內部所有元素以此為基準 */
             border: 3px solid transparent; 
             overflow: hidden; 
             transition: 0.2s; 
-            padding: 0; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+            cursor: pointer;
         }
         
-        .card-item.owned { cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.15); }
         .card-item.owned:hover { transform: scale(1.05); z-index: 10; border-color: var(--rare); box-shadow: 0 10px 15px rgba(0,0,0,0.3); }
         
         .card-item.n { border-color: #bdc3c7; }
@@ -72,30 +79,43 @@
         .card-item.ssr { border-color: var(--rare); animation: glow 1.5s infinite alternate; }
         .card-item.max-star { border-color: #f39c12; box-shadow: 0 0 15px rgba(243, 156, 18, 0.6); }
 
-        /* 滿版圖片設定 */
-        .full-card-img { width: 100%; height: 100%; object-fit: cover; display: block; transition: filter 0.3s; }
-        
-        /* 防呆文字排版 (修復：移除 absolute，改用 flex: 1 撐開空間) */
-        .fallback-content { 
-            flex: 1;
-            width: 100%; 
-            height: 100%; 
-            display: flex; 
-            flex-direction: column; 
-            justify-content: center; 
-            align-items: center; 
-            background: #fff; 
+        /* 絕對定位：覆蓋整張卡片 */
+        .full-card-img { 
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            width: 100%; height: 100%; 
+            object-fit: cover; 
+            z-index: 2;
+            transition: filter 0.3s;
         }
         
-        /* 懸浮星級疊加層 */
-        .stars-overlay { position: absolute; bottom: 0; left: 0; width: 100%; padding: 15px 0 5px 0; background: linear-gradient(transparent, rgba(0,0,0,0.8)); text-align: center; z-index: 5; }
+        /* 質感模糊濾鏡 */
+        .locked-blur {
+            filter: blur(5px) grayscale(60%) brightness(0.6);
+        }
+        
+        /* 防呆背景 (絕對定位，不影響高度) */
+        .fallback-content { 
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            display: flex; flex-direction: column; justify-content: center; align-items: center; 
+            background: #fff; z-index: 1; 
+        }
+        
+        /* 星級疊加 (在底部) */
+        .stars-overlay { 
+            position: absolute; bottom: 0; left: 0; right: 0;
+            padding: 15px 0 5px 0; background: linear-gradient(transparent, rgba(0,0,0,0.8)); 
+            text-align: center; z-index: 5; pointer-events: none;
+        }
         .stars { font-size: 14px; color: #f1c40f; letter-spacing: 2px; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
 
-        /* 未解鎖的鎖頭疊加層 */
-        .locked-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 35px; z-index: 5; opacity: 0.9; text-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+        /* 鎖頭疊加 (在正中間) */
+        .locked-overlay { 
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+            font-size: 35px; z-index: 10; opacity: 0.9; text-shadow: 0 2px 5px rgba(0,0,0,0.5); pointer-events: none;
+        }
         
         /* 煉金未解鎖狀態 */
-        .card-item.locked { cursor: pointer; border-color: #ccc; }
+        .card-item.locked { border-color: #ccc; }
         .card-item.locked:hover { transform: scale(1.05); border-color: var(--epic); }
         .card-item.maxed-out { opacity: 0.4; cursor: not-allowed; filter: grayscale(100%); border-color: transparent;}
         .card-item.maxed-out:hover { transform: none; }
@@ -120,21 +140,18 @@
         .white-flash { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.4s ease-in-out; }
         .white-flash.active { opacity: 1; }
 
-        /* 滿版卡片展示畫面 (抽卡結果) */
+        /* 滿版卡片展示畫面 (抽卡結果大圖) */
         .reveal-card { 
             width: 220px; 
-            height: 308px; /* 維持 2.5:3.5 比例 */
-            background: transparent; 
+            height: 308px; /* 固定尺寸 */
+            background: #fff; 
             border-radius: 12px; 
-            display: flex; 
-            flex-direction: column;
             position: relative;
             margin-bottom: 20px; 
             transform: scale(0); 
             transition: 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
             box-shadow: 0 20px 50px rgba(0,0,0,0.8); 
             overflow: hidden; 
-            padding: 0; 
         }
         .reveal-card.show { transform: scale(1); }
         .reveal-card.n { border: 4px solid #bdc3c7; }
@@ -263,7 +280,7 @@
 
     <script>
         // ==========================================
-        // 1. 完整化學數據庫 (保留了圖片路徑 fileKey)
+        // 1. 完整化學數據庫
         // ==========================================
         const cations = [
             { id: 1, name: "Sodium", formula: "Na", charge: 1, html: "Na<sup>+</sup>", fileKey: 'na' },
@@ -355,7 +372,6 @@
             const blacklist = ['NH4_OH', 'H_NO3', 'H_NO2', 'H_Cl', 'H_Br', 'H_I', 'H_SO4', 'H_SO3', 'H_OH', 'H_O', 'H_CO3', 'H_PO4', 'H_CN', 'H_MnO4', 'H_ClO3', 'H_ClO', 'H_CrO4', 'H_Cr2O7', 'H_H', 'H_HSO4', 'H_HCO3'];
             return !blacklist.includes(c.formula + '_' + a.formula);
         }
-
         function getGCD(a, b) { return b ? getGCD(b, a % b) : a; }
         function formatSub(text) { return text.replace(/([0-9]+)/g, '<sub>$1</sub>'); }
         function buildFormula(c, a, subC, subA) {
@@ -478,9 +494,9 @@
                         <div class="stars-overlay">${getStarString(stars)}</div>
                     `;
                 } else {
-                    let baseImgPath = `images/${card.fileKey}_n.png`; // 讀取最基礎的圖當模糊剪影
+                    let baseImgPath = `images/${card.fileKey}_n.png`;
                     item.innerHTML = `
-                        <img src="${baseImgPath}" class="full-card-img" style="filter: blur(5px) brightness(0.7);" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <img src="${baseImgPath}" class="full-card-img locked-blur" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                         <div class="fallback-content" style="display:none; background: #eee;"><div style="font-size:30px; color: #aaa;">?</div></div>
                         <div class="locked-overlay">🔒</div>
                     `;
@@ -544,7 +560,7 @@
                 } else {
                     let baseImgPath = `images/${card.fileKey}_n.png`;
                     item.innerHTML = `
-                        <img src="${baseImgPath}" class="full-card-img" style="filter: blur(5px) brightness(0.7);" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <img src="${baseImgPath}" class="full-card-img locked-blur" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                         <div class="fallback-content" style="display:none; background: #eee;"><div style="font-size:30px; color: #aaa;">?</div></div>
                         <div class="locked-overlay">🔒</div>
                     `;
@@ -611,7 +627,6 @@
                 }
             } else { rarityText.innerHTML = `<span style="color:${color};">[${rarity}]</span> 元素卡片`; }
             
-            // 滿版圖片與 Fallback
             let imgPath = `images/${card.fileKey}_${rarity.toLowerCase()}.png`;
             revealCard.innerHTML = `
                 <img src="${imgPath}" class="full-card-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
@@ -645,7 +660,6 @@
             } else { navigator.clipboard.writeText(shareText).then(() => { alert('📝 炫耀文字已複製到剪貼簿！'); }); }
         }
 
-        // 7. 防禦腳本
         syncCoinDisplay(); document.addEventListener('contextmenu', e => e.preventDefault()); document.onselectstart = () => false;
         document.onkeydown = e => { if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && e.keyCode == 73) || (e.ctrlKey && e.keyCode == 85)) return false; };
     </script>
