@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3lite Education - Ion Master 終極版 5.1 (完整修復版)</title>
+    <title>3lite Education - Ion Master 終極版 5.2 (視覺修復版)</title>
     <style>
         :root { --primary: #2ecc71; --secondary: #3498db; --rare: #f1c40f; --epic: #9b59b6; --legend: #e74c3c; --dark: #2c3e50; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; margin: 0; display: flex; flex-direction: column; align-items: center; padding: 10px; overflow-x: hidden; transition: background 0.5s; }
@@ -45,20 +45,22 @@
         .option-btn.wrong { background: var(--legend); color: white; border-color: #c0392b; }
 
         /* =========================================
-           🎰 滿版 TCG 卡牌展示 CSS (之前被我誤刪的關鍵代碼)
+           🎰 滿版 TCG 卡牌展示 CSS (修復高度塌陷 Bug)
            ========================================= */
         .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 15px; max-height: 400px; overflow-y: auto; padding: 5px; }
         
         .card-item { 
+            width: 100%;
             aspect-ratio: 2.5 / 3.5; 
             background: #eee; 
             border-radius: 10px; 
             display: flex; 
+            flex-direction: column;
             position: relative; 
             border: 3px solid transparent; 
-            overflow: hidden; /* 確保內容不會超出圓角 */
+            overflow: hidden; 
             transition: 0.2s; 
-            padding: 0; /* 移除留白，達到滿版效果 */
+            padding: 0; 
         }
         
         .card-item.owned { cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.15); }
@@ -73,8 +75,17 @@
         /* 滿版圖片設定 */
         .full-card-img { width: 100%; height: 100%; object-fit: cover; display: block; transition: filter 0.3s; }
         
-        /* 防呆文字排版 (沒有圖片時顯示的替代方案) */
-        .fallback-content { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #fff; z-index: 1; }
+        /* 防呆文字排版 (修復：移除 absolute，改用 flex: 1 撐開空間) */
+        .fallback-content { 
+            flex: 1;
+            width: 100%; 
+            height: 100%; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            background: #fff; 
+        }
         
         /* 懸浮星級疊加層 */
         .stars-overlay { position: absolute; bottom: 0; left: 0; width: 100%; padding: 15px 0 5px 0; background: linear-gradient(transparent, rgba(0,0,0,0.8)); text-align: center; z-index: 5; }
@@ -116,13 +127,14 @@
             background: transparent; 
             border-radius: 12px; 
             display: flex; 
+            flex-direction: column;
             position: relative;
             margin-bottom: 20px; 
             transform: scale(0); 
             transition: 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
             box-shadow: 0 20px 50px rgba(0,0,0,0.8); 
-            overflow: hidden; /* 滿版裁切 */
-            padding: 0; /* 移除內距 */
+            overflow: hidden; 
+            padding: 0; 
         }
         .reveal-card.show { transform: scale(1); }
         .reveal-card.n { border: 4px solid #bdc3c7; }
@@ -633,9 +645,7 @@
             } else { navigator.clipboard.writeText(shareText).then(() => { alert('📝 炫耀文字已複製到剪貼簿！'); }); }
         }
 
-        // ==========================================
         // 7. 防禦腳本
-        // ==========================================
         syncCoinDisplay(); document.addEventListener('contextmenu', e => e.preventDefault()); document.onselectstart = () => false;
         document.onkeydown = e => { if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && e.keyCode == 73) || (e.ctrlKey && e.keyCode == 85)) return false; };
     </script>
