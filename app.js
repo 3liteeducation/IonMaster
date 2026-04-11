@@ -380,10 +380,42 @@ const StorageManager = {
 };
 
 // ==========================================
-// 初始化啟動
+// Module 6: 最高級前端防護盾 (Security & Anti-Cheat)
+// ==========================================
+const Security = {
+    init() {
+        // 1. 禁用右鍵選單 (防止另存圖片 / 檢查元素)
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        
+        // 2. 禁用文字與元素選取 (防止反白複製)
+        document.addEventListener('selectstart', e => e.preventDefault());
+        
+        // 3. 禁用圖片與元素拖曳 (防止學生把圖片直接拖拉到桌面)
+        document.addEventListener('dragstart', e => e.preventDefault());
+        
+        // 4. 嚴格攔截開發者工具快捷鍵 (覆蓋 Windows 與 Mac)
+        document.addEventListener('keydown', e => {
+            if (
+                e.key === 'F12' || // 攔截 F12
+                (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c')) || // Win: Ctrl+Shift+I/J/C
+                (e.ctrlKey && (e.key === 'U' || e.key === 'u')) || // Win: Ctrl+U (檢視原始碼)
+                (e.metaKey && e.altKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'U' || e.key === 'u')) // Mac: Cmd+Option+I/J/U
+            ) {
+                e.preventDefault();
+                return false;
+            }
+        });
+    }
+};
+
+// ==========================================
+// 初始化啟動 (加入防護盾)
 // ==========================================
 window.onload = () => {
-    State.init(); UI.renderQuests();
+    Security.init(); // 啟動最高防護
+    State.init(); 
+    UI.renderQuests();
+    
     const pvpData = new URLSearchParams(window.location.search).get('pvp');
     if (pvpData) {
         try {
