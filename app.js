@@ -341,8 +341,9 @@ const Game = {
     shareCard() {
         if (!State.game.currentDrawnCard) return; AudioEngine.play('click');
         const s = State.game.currentDrawnCard; const starStr = "⭐".repeat(s.currentStars || 1); const title = State.getLevel().title;
-        const text = `🧪「${title}」收集到了 [${s.currentRarity}] 級別的 ${starStr}「${s.name}」！\n你能超越我嗎？來 3lite Education 挑戰：\nhttps://3liteeducation.github.io/IonMaster/`;
-        if (navigator.share) navigator.share({ title: 'Ion Master', text: text, url: 'https://3liteeducation.github.io/IonMaster/' }).catch(e=>{}); 
+        // 👇 這裡已經為您換上最新的 Cloudflare 網址
+        const text = `🧪「${title}」收集到了 [${s.currentRarity}] 級別的 ${starStr}「${s.name}」！\n你能超越我嗎？來 3lite Education 挑戰：\nhttps://ionmaster.threeliteeducation.workers.dev/`;
+        if (navigator.share) navigator.share({ title: 'Ion Master', text: text, url: 'https://ionmaster.threeliteeducation.workers.dev/' }).catch(e=>{}); 
         else navigator.clipboard.writeText(text).then(() => alert('📝 已複製到剪貼簿！'));
     },
     sharePvP(time) {
