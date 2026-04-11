@@ -202,3 +202,12 @@ body.bg-alchemy .battery::after { background: white; }
 .highlight-text { color: var(--apple-blue); }
 .timer-text { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 20px; color: var(--apple-red); }
 sub, sup { font-size: 0.6em; }
+
+/* 單行輸入框樣式 (禮物碼與存檔專用) */
+.ios-input {
+    width: 100%; height: 50px; margin: 15px 0; padding: 10px; border-radius: 12px; 
+    border: 1px solid rgba(0,0,0,0.1); font-family: monospace; font-size: 18px; 
+    font-weight: bold; text-align: center; text-transform: uppercase; box-sizing: border-box; 
+    background: rgba(255,255,255,0.8); color: #1c1c1e; outline: none; transition: 0.2s;
+}
+.ios-input:focus { border-color: var(--apple-blue); box-shadow: 0 0 0 3px rgba(0,122,255,0.2); background: white; }
