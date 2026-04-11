@@ -4,7 +4,8 @@
 const State = {
     data: {
         coins: 0, exp: 0, inventory: {}, quests: { date: "", list: [] }, 
-        myHistory: [], errorLog: {}, redeemedCodes: [] // 👈 包含已兌換紀錄
+        myHistory: [], errorLog: {}, redeemedCodes: [],
+        pityCount: 50 // 👈 新增大保底計數器，預設 50 抽
     },
     game: { mode: '', score: 0, combo: 0, startTime: null, timerInterval: null, isAnimating: false, targetCard: null },
     pvp: { active: false, targetTime: 0, deck: [], myRecord: [] },
@@ -16,7 +17,8 @@ const State = {
         this.data.quests = this.safeParse('aaQuests', { date: "", list: [] });
         this.data.myHistory = this.safeParse('myIonHistory', []);
         this.data.errorLog = this.safeParse('aaErrorLog', {});
-        this.data.redeemedCodes = this.safeParse('aaRedeemedCodes', []); // 👈 讀取兌換紀錄
+        this.data.redeemedCodes = this.safeParse('aaRedeemedCodes', []);
+        this.data.pityCount = this.safeParse('aaPityCount', 50); // 👈 讀取保底紀錄
         this.checkDailyQuests(); this.save();
     },
     safeParse(key, def) { try { let v = localStorage.getItem(key); return v ? JSON.parse(v) : def; } catch(e) { return def; } },
@@ -26,8 +28,13 @@ const State = {
         localStorage.setItem('aaQuests', JSON.stringify(this.data.quests));
         localStorage.setItem('myIonHistory', JSON.stringify(this.data.myHistory));
         localStorage.setItem('aaErrorLog', JSON.stringify(this.data.errorLog));
-        localStorage.setItem('aaRedeemedCodes', JSON.stringify(this.data.redeemedCodes)); // 👈 儲存兌換紀錄
+        localStorage.setItem('aaRedeemedCodes', JSON.stringify(this.data.redeemedCodes));
+        localStorage.setItem('aaPityCount', this.data.pityCount); // 👈 儲存保底紀錄
+       
         UI.updateProfile();
+        // 🔄 動態更新畫面上的保底文字
+        let pityEl = document.getElementById('pityDisplay');
+        if(pityEl) pityEl.innerText = `距離必中 SSR 還有 ${this.data.pityCount} 抽`;
     },
     addExp(amt) {
         let oldLvl = this.getLevel().lvl; this.data.exp += amt; this.save();
@@ -231,17 +238,24 @@ const Game = {
         alert(`🎉 兌換成功！獲得 ${reward} 🪙 AA 代幣！`);
     },
     start(mode) {
-        AudioEngine.play('click'); State.game.mode = mode; State.game.score = 0; State.game.combo = 0; State.game.timerInterval = null; State.pvp.myRecord = [];
+        AudioEngine.play('click'); 
+        State.game.mode = mode; State.game.score = 0; State.game.timerInterval = null; State.pvp.myRecord = [];
+        
+        // 🔋 新增電池連擊與狂熱狀態紀錄
+        State.game.battery = 0; 
+        State.game.feverCount = 0;
+
         document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
         document.getElementById('view-play').classList.add('active'); document.getElementById('activeGameArea').style.display = 'block'; document.querySelector('.game-modes').style.display = 'none';
         document.body.className = (mode === 'alchemy') ? 'bg-alchemy' : (mode === 'speed' || mode === 'pvp' ? 'bg-speed' : 'bg-main');
+        document.getElementById('batteryLevel').style.background = "var(--apple-green)"; // 確保電池顏色正常
         
         let pTxt = document.getElementById('progressText'); let tDisp = document.getElementById('timerDisplay');
         if (mode === 'speed' || mode === 'pvp') {
             pTxt.innerText = "進度: 0/10"; pTxt.style.color = "var(--secondary)"; tDisp.style.display = 'block';
             State.game.startTime = Date.now(); State.game.timerInterval = setInterval(() => { tDisp.innerText = ((Date.now() - State.game.startTime) / 1000).toFixed(1) + "s"; }, 100);
         } else if (mode === 'practice') {
-            pTxt.innerText = "已答對: 0 題"; pTxt.style.color = "var(--secondary)"; tDisp.style.display = 'none';
+            pTxt.innerText = "答對: 0 (連對: 0)"; pTxt.style.color = "var(--secondary)"; tDisp.style.display = 'none';
         } else if (mode === 'alchemy') {
             pTxt.innerText = "煉金進度: 0/3"; pTxt.style.color = "var(--rare)"; tDisp.style.display = 'none';
         }
@@ -294,15 +308,85 @@ const Game = {
     },
     handleAns(btn, isCorrect, c, a) {
         if(State.game.isAnswered) return; State.game.isAnswered = true; let m = State.game.mode;
+        
         if(isCorrect) {
             AudioEngine.play('correct'); btn.classList.add('correct'); State.game.score++;
-            if (m === 'speed' || m === 'pvp') { document.getElementById('progressText').innerText = `進度: ${State.game.score}/10`; document.getElementById('batteryLevel').style.width = (State.game.score * 10) + "%"; } 
-            else if (m === 'alchemy') { document.getElementById('progressText').innerText = `煉金: ${State.game.score}/3`; document.getElementById('batteryLevel').style.width = (State.game.score * 33.3) + "%"; } 
-            else { State.addExp(5); State.updateQuest('q_practice', 1); document.getElementById('progressText').innerText = `答對: ${State.game.score}`; State.game.combo++; if (State.game.combo >= 5) { State.data.coins++; State.game.combo = 0; State.save(); } document.getElementById('batteryLevel').style.width = ((State.game.score % 10) * 10 || 100) + "%"; }
+            
+            if (m === 'speed' || m === 'pvp') { 
+                document.getElementById('progressText').innerText = `進度: ${State.game.score}/10`; document.getElementById('batteryLevel').style.width = (State.game.score * 10) + "%"; 
+            } 
+            else if (m === 'alchemy') { 
+                document.getElementById('progressText').innerText = `煉金: ${State.game.score}/3`; document.getElementById('batteryLevel').style.width = (State.game.score * 33.3) + "%"; 
+            } 
+            else if (m === 'practice') { 
+                // 🔥 練習模式專屬：狂熱電池邏輯
+                State.updateQuest('q_practice', 1);
+                
+                if (State.game.feverCount > 0) {
+                    // 處於狂熱模式中：雙倍經驗 + 必掉代幣
+                    State.addExp(10); 
+                    State.data.coins += 1; 
+                    State.save();
+                    State.game.feverCount--;
+                    
+                    document.getElementById('progressText').innerText = `🔥 狂熱模式剩餘: ${State.game.feverCount} 題`;
+                    document.getElementById('batteryLevel').style.width = (State.game.feverCount * 20) + "%"; // 5題倒數
+                    
+                    if (State.game.feverCount === 0) {
+                        // 狂熱結束，回歸正常
+                        State.game.battery = 0;
+                        document.body.classList.remove('bg-fever');
+                        document.getElementById('progressText').innerText = `答對: ${State.game.score} (連對: 0)`;
+                        document.getElementById('progressText').style.color = "var(--secondary)";
+                        document.getElementById('batteryLevel').style.background = "var(--apple-green)";
+                    }
+                } else {
+                    // 正常充能中
+                    State.addExp(5);
+                    State.game.battery++;
+                    document.getElementById('progressText').innerText = `答對: ${State.game.score} (連對: ${State.game.battery})`;
+                    document.getElementById('batteryLevel').style.width = (State.game.battery * 10) + "%";
+                    
+                    if (State.game.battery >= 10) {
+                        // ⚡ 觸發狂熱模式！
+                        State.game.feverCount = 5;
+                        AudioEngine.play('ssr'); // 播放金卡音效震撼一下
+                        document.body.classList.add('bg-fever');
+                        
+                        let pTxt = document.getElementById('progressText');
+                        pTxt.innerText = `🔥 狂熱模式: 代幣 100% 掉落！`;
+                        pTxt.style.color = "var(--apple-orange)";
+                        
+                        let bLvl = document.getElementById('batteryLevel');
+                        bLvl.style.background = "var(--apple-orange)";
+                        bLvl.style.width = "100%";
+                        
+                        if(typeof confetti !== 'undefined') confetti({particleCount: 150, spread: 80, origin: {y: 0.6}});
+                    }
+                }
+            }
             setTimeout(()=>this.nextQuestion(), 400); 
         } else {
+            // 💀 答錯懲罰
             AudioEngine.play('wrong'); btn.classList.add('wrong'); State.logError(c, a);
-            if (m === 'alchemy') { setTimeout(()=>this.finishAlchemy(false), 300); } else { setTimeout(() => { btn.classList.remove('wrong'); State.game.isAnswered = false; }, 1000); }
+            
+            if (m === 'alchemy') { 
+                setTimeout(()=>this.finishAlchemy(false), 300); 
+            } else { 
+                if (m === 'practice') {
+                    // 電池清空，狂熱中斷
+                    State.game.battery = 0;
+                    if (State.game.feverCount > 0) {
+                        State.game.feverCount = 0;
+                        document.body.classList.remove('bg-fever');
+                        document.getElementById('progressText').style.color = "var(--secondary)";
+                        document.getElementById('batteryLevel').style.background = "var(--apple-green)";
+                    }
+                    document.getElementById('batteryLevel').style.width = "0%";
+                    document.getElementById('progressText').innerText = `答對: ${State.game.score} 💀 (連對中斷)`;
+                }
+                setTimeout(() => { btn.classList.remove('wrong'); State.game.isAnswered = false; }, 1000); 
+            }
         }
     },
     finishSpeed() {
@@ -335,18 +419,71 @@ const Game = {
         UI.setLock(true); document.body.className = 'bg-main'; document.getElementById('gachaAnimText').innerText = "煉金大成功！"; UI.toggleModal('gachaAnimModal', true); AudioEngine.play('draw');
         setTimeout(() => { document.getElementById('whiteFlash').classList.add('active'); setTimeout(() => { UI.toggleModal('gachaAnimModal', false); document.getElementById('gachaAnimText').innerText = "高能反應合成中..."; this.showGachaResult(c, c.targetRarity, State.data.inventory[c.uniqueId], isNew, 0, true); this.quit(); setTimeout(() => { document.getElementById('whiteFlash').classList.remove('active'); UI.setLock(false);}, 100); }, 400); }, 1500); 
     },
-    drawCard(times) {
-        if(State.game.isAnimating) return; AudioEngine.play('click'); let cost = times * 5; if (State.data.coins < cost) { alert(`🪙 代幣不足！需要 ${cost} 枚。`); return; }
-        State.data.coins -= cost; State.updateQuest('q_gacha', times); State.save(); UI.setLock(true);
+   drawCard(times) {
+        if(State.game.isAnimating) return; 
+        AudioEngine.play('click'); 
+        
+        // 💰 1. 十連抽九折優惠 (45 代幣)
+        let cost = (times === 10) ? 45 : times * 5; 
+        if (State.data.coins < cost) { alert(`🪙 代幣不足！需要 ${cost} 枚。`); return; }
+        
+        State.data.coins -= cost; 
+        State.updateQuest('q_gacha', times); 
+        UI.setLock(true);
+        
         let res = []; let refund = 0;
-        for(let i=0; i<times; i++) {
-            let r = 'N'; let rand = Math.random() * 100; if(rand<1.5) r='SSR'; else if(rand<10) r='SR'; else if(rand<30) r='R';
-            let pool = Database.expandedPool.filter(x => x.targetRarity === r); if(r==='SSR') pool = pool.filter(x => (Math.random()<0.1) ? x.isSpecial : !x.isSpecial); else pool = pool.filter(x => !x.isSpecial);
-            let c = pool[Math.floor(Math.random() * pool.length)]; let stars = State.data.inventory[c.uniqueId] || 0; let isNew = stars === 0; let ref = 0;
-            if(isNew) { State.data.inventory[c.uniqueId] = 1; State.addExp(10); } else if(stars<3) { State.data.inventory[c.uniqueId]++; State.addExp(5); } else { ref = Database.config.refunds[r]; refund += ref; }
+        let hasGoldOrPurple = false; // 紀錄本次十連抽是否已經有出好卡
+
+        for(let i = 0; i < times; i++) {
+            let r = 'N'; 
+            let rand = Math.random() * 100; 
+            
+            // 🎯 2. 扣除大保底次數
+            State.data.pityCount--;
+
+            if (State.data.pityCount <= 0) {
+                // 觸發大保底：強制給 SSR
+                r = 'SSR';
+            } else {
+                // 正常機率抽卡
+                if(rand < 1.5) r = 'SSR'; 
+                else if(rand < 10) r = 'SR'; 
+                else if(rand < 30) r = 'R';
+            }
+
+            // 🎯 3. 十連抽小保底機制：如果抽到第10張，且前面都沒出過 SR 或 SSR，強制保底一張 SR
+            if (times === 10 && i === 9 && !hasGoldOrPurple && r !== 'SSR') {
+                r = 'SR';
+            }
+
+            // 紀錄這 10 抽裡面是否出了 SR 或 SSR
+            if (r === 'SSR' || r === 'SR') hasGoldOrPurple = true;
+
+            // 🎯 4. 如果出了 SSR (不管是運氣好還是保底)，立刻重置大保底計數器
+            if (r === 'SSR') {
+                State.data.pityCount = 50;
+            }
+
+            // 根據決定的稀有度去卡池撈卡
+            let pool = Database.expandedPool.filter(x => x.targetRarity === r); 
+            if(r === 'SSR') pool = pool.filter(x => (Math.random() < 0.1) ? x.isSpecial : !x.isSpecial); 
+            else pool = pool.filter(x => !x.isSpecial);
+            
+            let c = pool[Math.floor(Math.random() * pool.length)]; 
+            let stars = State.data.inventory[c.uniqueId] || 0; 
+            let isNew = stars === 0; let ref = 0;
+            
+            // 結算與碎片退款
+            if(isNew) { State.data.inventory[c.uniqueId] = 1; State.addExp(10); } 
+            else if(stars < 3) { State.data.inventory[c.uniqueId]++; State.addExp(5); } 
+            else { ref = Database.config.refunds[r]; refund += ref; }
+            
             res.push({ c, isNew, stars: State.data.inventory[c.uniqueId] || 3, ref });
         }
-        State.data.coins += refund; State.save();
+        
+        State.data.coins += refund; 
+        State.save(); // 儲存所有狀態 (包含新的保底計數)
+        
         UI.toggleModal('gachaAnimModal', true); AudioEngine.play('draw');
         setTimeout(() => { document.getElementById('whiteFlash').classList.add('active'); setTimeout(() => { UI.toggleModal('gachaAnimModal', false); if(times===1) this.showGachaResult(res[0].c, res[0].c.targetRarity, res[0].stars, res[0].isNew, res[0].ref, false); else this.showTenDraw(res, refund); setTimeout(() => { document.getElementById('whiteFlash').classList.remove('active'); UI.setLock(false);}, 100); }, 400); }, 2000); 
     },
@@ -424,6 +561,7 @@ const StorageManager = {
                 aaQuests: localStorage.getItem('aaQuests'), 
                 aaErrorLog: localStorage.getItem('aaErrorLog'),
                 aaRedeemedCodes: localStorage.getItem('aaRedeemedCodes') // 👈 確保匯出時包含兌換紀錄
+                aaPityCount: localStorage.getItem('aaPityCount')
             };
             document.getElementById('saveCodeInput').value = btoa(encodeURIComponent(JSON.stringify(data)));
             document.getElementById('saveCodeInput').select(); document.execCommand('copy'); alert('✅ 存檔碼已複製！');
