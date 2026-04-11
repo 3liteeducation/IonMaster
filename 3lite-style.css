@@ -211,3 +211,13 @@ sub, sup { font-size: 0.6em; }
     background: rgba(255,255,255,0.8); color: #1c1c1e; outline: none; transition: 0.2s;
 }
 .ios-input:focus { border-color: var(--apple-blue); box-shadow: 0 0 0 3px rgba(0,122,255,0.2); background: white; }
+
+/* 🔥 狂熱模式 (Fever Time) 專屬視覺特效 */
+body.bg-fever .fluid-bg { 
+    background: radial-gradient(circle at 50% 50%, #f6d365, #fda085, #ffecd2); 
+    animation: flow 3s linear infinite; /* 背景流動速度激增 */
+}
+body.bg-fever .glass-panel {
+    border-color: rgba(243, 156, 18, 0.5); /* 面板邊框透出金光 */
+    box-shadow: 0 8px 32px rgba(243, 156, 18, 0.2);
+}
