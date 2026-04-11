@@ -104,7 +104,7 @@
             <h2 class="ios-title">⚙️ 數據管理</h2>
             <p class="ios-desc">您的存檔包含了隱性學習數據(錯誤紀錄)。</p>
             <textarea id="saveCodeInput" class="ios-textarea" placeholder="存檔碼..."></textarea>
-            <div class="modal-actions">
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
                 <button class="ios-btn primary-btn" onclick="StorageManager.export()">📤 匯出</button>
                 <button class="ios-btn danger-btn" onclick="StorageManager.import()">📥 匯入</button>
             </div>
@@ -115,6 +115,22 @@
     <div id="resultModal" class="modal glass-modal"><div class="modal-content glass-panel" id="resultContent"></div></div>
     <div id="gachaModal" class="modal glass-modal"><div class="modal-content glass-panel transparent-panel" id="gachaContent"></div></div>
     <div id="ptModal" class="modal glass-modal"><div class="modal-content glass-panel"><img src="images/periodic_table.png" style="width:100%;"><button class="ios-btn cancel-btn mt-2" onclick="UI.toggleModal('ptModal', false)">關閉</button></div></div>
+
+    <div id="whiteFlash" class="white-flash"></div>
+
+    <div id="gachaAnimModal" class="modal glass-modal" style="z-index: 150;">
+        <div class="gacha-anim-container">🧪</div>
+        <h3 id="gachaAnimText" style="color: white; margin-top: 40px; letter-spacing: 3px; text-shadow: 0 2px 5px rgba(0,0,0,0.5);">高能反應合成中...</h3>
+    </div>
+
+    <div id="explosionModal" class="modal glass-modal" style="z-index: 200;">
+        <div class="modal-content glass-panel" style="background: rgba(30, 20, 20, 0.9); border: 2px solid var(--legend);">
+            <div class="explosion-anim">💥</div>
+            <h2 style="color: var(--legend); margin-top: 10px;">煉金爐爆炸！</h2>
+            <p style="color: #ccc; margin-bottom: 25px;">合成失敗... 代幣已化為灰燼。</p>
+            <button onclick="UI.toggleModal('explosionModal', false); Game.quit()" class="ios-btn danger-btn">收拾殘局</button>
+        </div>
+    </div>
 
     <script src="data.js"></script>
     <script src="app.js"></script>
