@@ -2,705 +2,121 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3lite Education - Ion Master 7.1 穩定版</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ion Master 8.0 - 3lite Education</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#ffffff">
+    <link rel="stylesheet" href="3lite-style.css">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <style>
-        :root { --primary: #2ecc71; --secondary: #3498db; --rare: #f1c40f; --epic: #9b59b6; --legend: #e74c3c; --dark: #2c3e50; }
-        
-        /* 動態背景系統 */
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; padding: 10px; overflow-x: hidden; transition: background 0.8s, box-shadow 0.8s; background-color: #f4f7f6; min-height: 100vh;}
-        
-        body.bg-main { background: linear-gradient(135deg, #e0eafc, #cfdef3); }
-        body.bg-speed { background: linear-gradient(135deg, #ff9a9e, #fecfef); animation: heartbeat 2s infinite; }
-        @keyframes heartbeat { 0% { box-shadow: inset 0 0 0px rgba(231,76,60,0); } 50% { box-shadow: inset 0 0 50px rgba(231,76,60,0.3); } 100% { box-shadow: inset 0 0 0px rgba(231,76,60,0); } }
-        body.bg-alchemy { background: linear-gradient(to bottom, #1a0b0b, #2c1010); box-shadow: inset 0 -100px 100px rgba(142, 68, 173, 0.2); }
-
-        .card { background: rgba(255, 255, 255, 0.95); padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); text-align: center; width: 95%; max-width: 600px; box-sizing: border-box; border-top: 6px solid var(--primary); margin-bottom: 80px; transition: 0.5s; backdrop-filter: blur(10px); }
-        body.bg-alchemy .card { background: rgba(30, 20, 20, 0.95); border-top: 6px solid var(--legend); box-shadow: 0 10px 40px rgba(231, 76, 60, 0.4); color: white;}
-
-        /* 玩家名片區 */
-        .player-profile { display: flex; justify-content: space-between; align-items: center; background: linear-gradient(90deg, #34495e, #2c3e50); color: white; padding: 12px 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
-        .player-title { font-size: 14px; font-weight: bold; color: var(--rare); letter-spacing: 1px; text-transform: uppercase;}
-        .player-level { font-size: 24px; font-weight: bold; }
-        .exp-bar-container { width: 100%; height: 6px; background: rgba(255,255,255,0.2); border-radius: 3px; margin-top: 5px; overflow: hidden; }
-        .exp-bar { height: 100%; width: 0%; background: var(--primary); transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
-
-        /* 按鈕系統 */
-        .menu-btn { width: 100%; padding: 15px; margin: 8px 0; font-size: 18px; font-weight: bold; border: none; border-radius: 12px; cursor: pointer; color: white; transition: 0.2s; position: relative; overflow: hidden;}
-        .menu-btn::after { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: rgba(255,255,255,0.2); transform: rotate(45deg); opacity: 0; transition: 0.3s; }
-        .menu-btn:hover::after { opacity: 1; transform: rotate(45deg) translate(50%, 50%); }
-        .btn-speed { background: var(--legend); box-shadow: 0 4px #c0392b; } .btn-speed:active { transform: translateY(4px); box-shadow: 0 0 #c0392b; }
-        .btn-practice { background: var(--secondary); box-shadow: 0 4px #2980b9; } .btn-practice:active { transform: translateY(4px); box-shadow: 0 0 #2980b9; }
-        .btn-gacha-menu { background: var(--rare); color: var(--dark); box-shadow: 0 4px #f39c12; } .btn-gacha-menu:active { transform: translateY(4px); box-shadow: 0 0 #f39c12; }
-        .btn-lab { background: var(--epic); box-shadow: 0 4px #8e44ad; } .btn-lab:active { transform: translateY(4px); box-shadow: 0 0 #8e44ad; }
-        .btn-back { background: #95a5a6; padding: 10px 20px; margin-top: 20px; border: none; border-radius: 8px; color: white; cursor: pointer; font-size: 16px; width: 100%; transition: 0.2s;} .btn-back:hover { background: #7f8c8d; }
-
-        /* 遊戲區域 */
-        .status-bar { display: flex; justify-content: space-between; align-items: center; background: #fdfdfd; padding: 10px 15px; border-radius: 10px; margin-bottom: 15px; font-weight: bold; border: 1px solid #eee; }
-        body.bg-alchemy .status-bar { background: #2a1515; border-color: #3a1c1c; color: white; }
-        .coin-display { color: #d35400; font-size: 18px; display: flex; align-items: center; gap: 5px; }
-        body.bg-alchemy .coin-display { color: #f39c12; }
-        
-        .ion-display { font-size: 32px; font-weight: bold; color: var(--dark); margin: 15px 0; min-height: 100px; display: flex; justify-content: center; align-items: center; flex-direction: column; background: #f9f9f9; border-radius: 12px; border: 1px solid #ddd; font-family: 'Times New Roman', serif; line-height: 1.3; }
-        body.bg-alchemy .ion-display { background: #2c1e1e; border-color: var(--legend); color: white; }
-        
-        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-        .option-btn { background: #fff; border: 2px solid #bdc3c7; padding: 15px 5px; font-size: 20px; font-family: 'Times New Roman', serif; border-radius: 10px; cursor: pointer; transition: 0.2s; min-height: 75px; color: var(--dark); }
-        body.bg-alchemy .option-btn { background: #3a2525; border-color: #5c3a3a; color: white; }
-        .option-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .option-btn.correct { background: var(--primary) !important; color: white !important; border-color: #27ae60 !important; }
-        .option-btn.wrong { background: var(--legend) !important; color: white !important; border-color: #c0392b !important; }
-
-        /* 智能篩選器 (Smart Filters) */
-        .filter-container { display: flex; overflow-x: auto; gap: 8px; padding: 5px 2px; margin-bottom: 10px; scrollbar-width: none; }
-        .filter-container::-webkit-scrollbar { display: none; }
-        .filter-btn { padding: 6px 12px; background: #ecf0f1; border: none; border-radius: 20px; font-size: 12px; font-weight: bold; color: #7f8c8d; cursor: pointer; transition: 0.2s; white-space: nowrap; }
-        body.bg-alchemy .filter-btn { background: #3a2525; color: #aaa; }
-        .filter-btn.active { background: var(--dark); color: white; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
-        body.bg-alchemy .filter-btn.active { background: var(--epic); color: white; }
-
-        /* 滿版 TCG 卡牌展示 CSS */
-        .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; max-height: 450px; overflow-y: auto; padding: 10px 5px; }
-        
-        .card-item { width: 100%; height: 0; padding-bottom: 140%; background: #eee; border-radius: 10px; position: relative; border: 3px solid transparent; overflow: hidden; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.15); cursor: pointer; }
-        .card-item.owned:hover { transform: scale(1.05); z-index: 10; border-color: var(--rare); box-shadow: 0 10px 15px rgba(0,0,0,0.3); }
-        
-        .card-item.n { border-color: #bdc3c7; } .card-item.r { border-color: var(--secondary); } .card-item.sr { border-color: var(--epic); }
-        .card-item.ssr { border-color: var(--rare); animation: glow 1.5s infinite alternate; }
-        .card-item.max-star { border-color: #f39c12; box-shadow: 0 0 15px rgba(243, 156, 18, 0.6); }
-
-        .full-card-img { position: absolute; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%; object-fit: cover; z-index: 2; transition: filter 0.3s; }
-        .locked-blur { filter: blur(5px) grayscale(50%) brightness(0.6); }
-        .fallback-content { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #fff; z-index: 1; color: var(--dark); }
-        .stars-overlay { position: absolute; bottom: 0; left: 0; right: 0; padding: 15px 0 5px 0; background: linear-gradient(transparent, rgba(0,0,0,0.8)); text-align: center; z-index: 5; pointer-events: none; }
-        .stars { font-size: 14px; color: #f1c40f; letter-spacing: 2px; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
-        .locked-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 35px; z-index: 10; opacity: 0.9; text-shadow: 0 2px 5px rgba(0,0,0,0.5); pointer-events: none; }
-        
-        .card-item.locked { border-color: #ccc; }
-        .card-item.locked:hover { transform: scale(1.05); border-color: var(--epic); }
-        .card-item.maxed-out { opacity: 0.4; cursor: not-allowed; filter: grayscale(100%); border-color: transparent;} .card-item.maxed-out:hover { transform: none; }
-
-        @keyframes glow { from { box-shadow: 0 0 5px var(--rare); } to { box-shadow: 0 0 20px var(--rare); } }
-
-        /* 彈窗與特效 */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 100; justify-content: center; align-items: center; flex-direction: column; color: white; backdrop-filter: blur(5px);}
-        .modal-content { background: white; color: var(--dark); padding: 25px; border-radius: 20px; width: 85%; max-width: 400px; text-align: center; position: relative; box-shadow: 0 20px 40px rgba(0,0,0,0.4);}
-        .reward-badge { display: none; background: var(--legend); color: white; padding: 8px 15px; border-radius: 20px; font-weight: bold; font-size: 16px; margin: 10px auto; animation: bounce 1s infinite alternate; width: fit-content; box-shadow: 0 4px 10px rgba(231, 76, 60, 0.4); }
-        @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-5px); } }
-        
-        .gacha-anim-container { font-size: 100px; text-shadow: 0 0 30px var(--primary); animation: gachaShake 2s cubic-bezier(.36,.07,.19,.97) both; transform-origin: bottom center;}
-        @keyframes gachaShake { 0% { transform: scale(1) rotate(0deg); } 20% { transform: scale(1.1) rotate(-10deg); filter: hue-rotate(45deg); } 40% { transform: scale(1.2) rotate(10deg); filter: hue-rotate(90deg); } 60% { transform: scale(1.4) rotate(-15deg); filter: hue-rotate(180deg); } 80% { transform: scale(1.6) rotate(15deg); filter: hue-rotate(270deg); } 100% { transform: scale(2) rotate(0deg); filter: brightness(200%); } }
-        .explosion-anim { font-size: 120px; animation: explode 0.5s ease-out both; }
-        @keyframes explode { 0% { transform: scale(0.5); opacity: 0; } 50% { transform: scale(1.5); opacity: 1; filter: brightness(200%);} 100% { transform: scale(1); opacity: 1; } }
-        .screen-shake { animation: sShake 0.4s ease-in-out; }
-        @keyframes sShake { 0% { transform: translate(0, 0); } 25% { transform: translate(10px, -10px); } 50% { transform: translate(-10px, 10px); } 75% { transform: translate(10px, 10px); } 100% { transform: translate(0, 0); } }
-
-        .white-flash { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.4s ease-in-out; }
-        .white-flash.active { opacity: 1; }
-        .anim-lock { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; display: none; } /* 絕對防護罩 */
-
-        /* 單抽展示 */
-        .reveal-card { width: 220px; height: 308px; background: #fff; border-radius: 12px; position: relative; margin-bottom: 20px; transform: scale(0); transition: 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 20px 50px rgba(0,0,0,0.8); overflow: hidden; }
-        .reveal-card.show { transform: scale(1); }
-        .reveal-card.n { border: 4px solid #bdc3c7; } .reveal-card.r { border: 4px solid var(--secondary); box-shadow: 0 0 20px var(--secondary); } .reveal-card.sr { border: 4px solid var(--epic); box-shadow: 0 0 30px var(--epic); } .reveal-card.ssr { border: 4px solid var(--rare); box-shadow: 0 0 50px var(--rare); animation: glow 1.5s infinite alternate;}
-        
-        /* 10連抽展示 Grid */
-        .ten-draw-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; width: 95%; max-width: 800px; margin-bottom: 20px; }
-        @media (max-width: 600px) { .ten-draw-grid { grid-template-columns: repeat(3, 1fr); } }
-        .ten-draw-item { width: 100%; height: 0; padding-bottom: 140%; background: #fff; border-radius: 8px; position: relative; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.5); opacity: 0; transform: translateY(20px); transition: 0.4s; }
-        .ten-draw-item.show { opacity: 1; transform: translateY(0); }
-
-        .btn-share { margin-top: 10px; padding: 12px 25px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; box-shadow: 0 4px #27ae60; transition: 0.2s; }
-        .btn-share:hover { transform: translateY(-2px); box-shadow: 0 6px #27ae60; }
-        .btn-share:active { transform: translateY(2px); box-shadow: 0 0px #27ae60; }
-
-        .fab-btn { position: fixed; bottom: 25px; right: 25px; width: 65px; height: 65px; background: #34495e; color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 30px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); cursor: pointer; z-index: 50; transition: 0.3s; border: 3px solid white;}
-        .fab-btn:hover { transform: scale(1.1) rotate(15deg); background: var(--rare); color: var(--dark); border-color: var(--rare);}
-        #ptModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 150; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
-        .pt-content { background: white; padding: 10px; border-radius: 15px; width: 95%; max-width: 800px; max-height: 80vh; overflow: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.5); text-align: center;}
-        
-        sub, sup { font-size: 0.6em; }
-    </style>
 </head>
-<body class="bg-main">
+<body>
+    <div class="fluid-bg" id="appBackground"></div>
+
     <div id="animLock" class="anim-lock"></div>
 
-    <h2 style="margin: 10px 0; color: #2c3e50; text-shadow: 0 2px 4px rgba(255,255,255,0.5);" id="mainTitle">🧪 A.A. Sir's Ion Master</h2>
+    <div class="fab-btn glass-panel" onclick="UI.toggleModal('ptModal', true)">📊</div>
 
-    <div class="fab-btn" onclick="openPT()">📊</div>
-    <div id="ptModal" onclick="closePT()"><div class="pt-content" onclick="event.stopPropagation()"><img src="images/periodic_table.png" style="width:100%; height:auto;" onerror="this.outerHTML='<div style=\'padding:50px; border:2px dashed #ccc;\'>請在此放置 images/periodic_table.png</div>'"><button class="btn-back" onclick="closePT()" style="width: auto; margin-top: 10px;">關閉 (Close)</button></div></div>
-
-    <div class="card" id="mainCard">
-        <div class="player-profile">
-            <div style="text-align: left;">
+    <div class="app-container">
+        <header class="glass-panel player-profile">
+            <div class="profile-left">
                 <div class="player-title" id="playerTitle">Lab Rookie</div>
-                <div style="font-size: 12px; opacity: 0.8;">化學等級</div>
+                <div class="player-subtitle">3lite Education</div>
             </div>
-            <div style="text-align: right; width: 50%;">
+            <div class="profile-right">
                 <div class="player-level">Lv.<span id="playerLevel">1</span></div>
                 <div class="exp-bar-container"><div class="exp-bar" id="expBar"></div></div>
             </div>
-        </div>
+            <div class="coin-badge glass-panel">🪙 <span id="mainCoinCount">0</span></div>
+        </header>
 
-        <div id="menuArea">
-            <div class="status-bar" style="justify-content: center; border-color: var(--rare); background: #fffcf3;">
-                <div class="coin-display" style="font-size: 22px; font-weight: 900;">🪙 AA 代幣: <span id="mainCoinCount">0</span></div>
+        <main id="view-home" class="view-section active">
+            <h1 class="ios-title">首頁</h1>
+            <div id="pvpBanner" class="glass-panel pvp-banner" style="display:none;">
+                ⚔️ 挑戰信！目標：<span id="pvpTargetTime"></span>秒 <br>
+                <button class="ios-btn primary-btn mt-2" onclick="Game.start('pvp')">接受決鬥</button>
             </div>
-            <button class="menu-btn btn-speed" onclick="startGame('speed')">⚡ 速度模式 (10題計時)</button>
-            <button class="menu-btn btn-practice" onclick="startGame('practice')">🧠 練習模式 (賺取代幣)</button>
-            <button class="menu-btn btn-lab" onclick="showLabMenu()">🧪 煉金實驗室 (定向合成)</button>
-            <button class="menu-btn btn-gacha-menu" onclick="showGachaMenu()">🎰 隨機抽卡與圖鑑</button>
-        </div>
+            
+            <div class="glass-panel quest-board">
+                <h3 class="ios-subtitle">📋 每日委託 (Daily Quests)</h3>
+                <div id="questList" class="quest-list"></div>
+            </div>
 
-        <div id="gameArea" style="display: none;">
-            <div class="status-bar">
-                <div id="progressText" style="color: var(--secondary);">進度: 0/10</div>
-                <div class="timer" id="timerDisplay" style="display:none;">00:00.0</div>
-                <div class="coin-display" id="gameCoinDisplay" style="display:none;">🪙 <span id="gameCoinCount">0</span></div>
-                <div class="battery"><div class="battery-level" id="batteryLevel"></div></div>
-            </div>
-            <div class="ion-display" id="question"><span>載入中...</span></div>
-            <div class="options-grid" id="optionsArea"></div>
-            <button class="btn-back" onclick="quitToMenu()" id="btnQuitGame">放棄挑戰返回主選單</button>
-        </div>
+            <button class="ios-btn secondary-btn mt-3" onclick="UI.toggleModal('saveModal', true)">⚙️ 存檔與數據管理 (Export/Import)</button>
+        </main>
 
-        <div id="gachaArea" style="display: none;">
-            <div class="status-bar">
-                <div class="coin-display">🪙 餘額: <span id="gachaCoinCount">0</span></div>
-                <div style="font-size: 15px; color: var(--secondary); font-weight: bold;">收集: <span id="collectionCount">0</span>/184</div>
+        <main id="view-play" class="view-section">
+            <h1 class="ios-title">測驗</h1>
+            <div class="game-modes">
+                <button class="ios-btn danger-btn" onclick="Game.start('speed')">⚡ 速度模式 (10題計時)</button>
+                <button class="ios-btn info-btn" onclick="Game.start('practice')">🧠 練習模式 (賺取代幣)</button>
             </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
-                <button class="menu-btn" style="background: #f39c12; margin:0;" onclick="drawCard(1)">單抽 (5🪙)</button>
-                <button class="menu-btn" style="background: linear-gradient(45deg, #f1c40f, #e67e22); margin:0; box-shadow: 0 0 10px rgba(241,196,15,0.5);" onclick="drawCard(10)">十連抽 (50🪙)</button>
+            
+            <div id="activeGameArea" style="display:none; margin-top:20px;">
+                <div class="glass-panel status-bar">
+                    <span id="progressText" class="highlight-text">進度: 0/10</span>
+                    <span id="timerDisplay" class="timer-text">00:00.0</span>
+                    <div class="battery"><div class="battery-level" id="batteryLevel"></div></div>
+                </div>
+                <div class="glass-panel ion-display" id="question"><span>載入中...</span></div>
+                <div class="options-grid" id="optionsArea"></div>
+                <button class="ios-btn cancel-btn mt-3" onclick="Game.quit()">放棄並返回</button>
             </div>
-            <div class="filter-container" id="galleryFilters">
-                <button class="filter-btn active" onclick="applyFilter('all', 'gallery')">全部</button>
-                <button class="filter-btn" onclick="applyFilter('ssr', 'gallery')">SSR</button>
-                <button class="filter-btn" onclick="applyFilter('cation', 'gallery')">陽離子</button>
-                <button class="filter-btn" onclick="applyFilter('anion', 'gallery')">陰離子</button>
-                <button class="filter-btn" onclick="applyFilter('locked', 'gallery')">未解鎖</button>
+        </main>
+
+        <main id="view-lab" class="view-section">
+            <h1 class="ios-title">煉金</h1>
+            <div class="glass-panel filter-scroll">
+                <button class="filter-chip active" onclick="UI.filterLab('all')">全部</button>
+                <button class="filter-chip" onclick="UI.filterLab('n')">N (15🪙)</button>
+                <button class="filter-chip" onclick="UI.filterLab('r')">R (25🪙)</button>
+                <button class="filter-chip" onclick="UI.filterLab('sr')">SR (40🪙)</button>
+                <button class="filter-chip" onclick="UI.filterLab('ssr')">SSR (60🪙)</button>
+            </div>
+            <div class="gallery-grid" id="labGrid"></div>
+        </main>
+
+        <main id="view-gallery" class="view-section">
+            <h1 class="ios-title">圖鑑 <span class="collection-count" id="collectionCount">0/184</span></h1>
+            <div class="draw-actions">
+                <button class="ios-btn warning-btn" onclick="Game.drawCard(1)">單抽 (5🪙)</button>
+                <button class="ios-btn epic-btn" onclick="Game.drawCard(10)">十連抽 (50🪙)</button>
+            </div>
+            <div class="glass-panel filter-scroll mt-2">
+                <button class="filter-chip active" onclick="UI.filterGallery('all')">全部</button>
+                <button class="filter-chip" onclick="UI.filterGallery('ssr')">SSR</button>
+                <button class="filter-chip" onclick="UI.filterGallery('cation')">陽離子</button>
+                <button class="filter-chip" onclick="UI.filterGallery('anion')">陰離子</button>
+                <button class="filter-chip" onclick="UI.filterGallery('locked')">未解鎖</button>
             </div>
             <div class="gallery-grid" id="galleryGrid"></div>
-            <button class="btn-back" onclick="quitToMenu()">返回主選單</button>
-        </div>
+        </main>
+    </div>
 
-        <div id="labArea" style="display: none;">
-            <div class="status-bar">
-                <div class="coin-display">🪙 餘額: <span id="labCoinCount">0</span></div>
-                <div style="font-size: 14px; color: #aaa;">定向煉金陣</div>
+    <nav class="glass-panel bottom-tab-bar">
+        <div class="tab-item active" onclick="UI.switchView('home', this)">🏠<br><span>首頁</span></div>
+        <div class="tab-item" onclick="UI.switchView('play', this)">⚡<br><span>測驗</span></div>
+        <div class="tab-item" onclick="UI.switchView('lab', this)">🧪<br><span>煉金</span></div>
+        <div class="tab-item" onclick="UI.switchView('gallery', this)">📚<br><span>圖鑑</span></div>
+    </nav>
+
+    <div id="saveModal" class="modal glass-modal">
+        <div class="modal-content glass-panel">
+            <h2 class="ios-title">⚙️ 數據管理</h2>
+            <p class="ios-desc">您的存檔包含了隱性學習數據(錯誤紀錄)。</p>
+            <textarea id="saveCodeInput" class="ios-textarea" placeholder="存檔碼..."></textarea>
+            <div class="modal-actions">
+                <button class="ios-btn primary-btn" onclick="StorageManager.export()">📤 匯出</button>
+                <button class="ios-btn danger-btn" onclick="StorageManager.import()">📥 匯入</button>
             </div>
-            <div class="filter-container" id="labFilters">
-                <button class="filter-btn active" onclick="applyFilter('all', 'lab')">全部</button>
-                <button class="filter-btn" onclick="applyFilter('n', 'lab')">N (15🪙)</button>
-                <button class="filter-btn" onclick="applyFilter('r', 'lab')">R (25🪙)</button>
-                <button class="filter-btn" onclick="applyFilter('sr', 'lab')">SR (40🪙)</button>
-                <button class="filter-btn" onclick="applyFilter('ssr', 'lab')">SSR (60🪙)</button>
-            </div>
-            <p style="font-size: 12px; color: #aaa; margin: 5px 0;">需連續答對 3 題。失敗代幣不退還！</p>
-            <div class="gallery-grid" id="labGrid"></div>
-            <button class="btn-back" onclick="quitToMenu()">返回主選單</button>
+            <button class="ios-btn cancel-btn mt-2" onclick="UI.toggleModal('saveModal', false)">關閉</button>
         </div>
     </div>
+    
+    <div id="resultModal" class="modal glass-modal"><div class="modal-content glass-panel" id="resultContent"></div></div>
+    <div id="gachaModal" class="modal glass-modal"><div class="modal-content glass-panel transparent-panel" id="gachaContent"></div></div>
+    <div id="ptModal" class="modal glass-modal"><div class="modal-content glass-panel"><img src="images/periodic_table.png" style="width:100%;"><button class="ios-btn cancel-btn mt-2" onclick="UI.toggleModal('ptModal', false)">關閉</button></div></div>
 
-    <div id="resultModal" class="modal">
-        <div class="modal-content">
-            <h2 style="margin-top: 0;">🎯 挑戰完成！</h2>
-            <div id="newRecordReward" class="reward-badge">🎉 破紀錄！+2🪙 +100 EXP</div>
-            <p style="margin: 5px 0;">本次時間：</p>
-            <div id="finalTime" style="font-size:36px; color:var(--legend); font-weight:bold; margin-bottom: 10px;"></div>
-            <div class="best-time-box"><div style="color: #f39c12; font-weight: bold;">👑 歷史最佳紀錄 (PB)</div><div id="bestTimeDisplay" style="font-size: 24px; font-weight: bold; color: var(--dark);">--</div></div>
-            <button onclick="quitToMenu()" class="btn-back" style="background: var(--secondary);">返回主選單</button>
-        </div>
-    </div>
-
-    <div id="explosionModal" class="modal" style="z-index: 200;">
-        <div class="modal-content" style="background: #1a0b0b; border: 2px solid var(--legend);">
-            <div class="explosion-anim">💥</div>
-            <h2 style="color: var(--legend); margin-top: 10px;">煉金爐爆炸！</h2>
-            <p style="color: #ccc; margin-bottom: 25px;">合成失敗... 代幣已化為灰燼。</p>
-            <button onclick="quitToMenu()" class="btn-back" style="background: var(--legend);">收拾殘局</button>
-        </div>
-    </div>
-
-    <div id="whiteFlash" class="white-flash"></div>
-    <div id="gachaAnimModal" class="modal" style="z-index: 150;">
-        <div class="gacha-anim-container">🧪</div>
-        <h3 id="gachaAnimText" style="color: white; margin-top: 40px; letter-spacing: 3px; text-shadow: 0 2px 5px rgba(0,0,0,0.5);">高能反應合成中...</h3>
-    </div>
-
-    <div id="gachaResultModal" class="modal">
-        <div id="gachaStatusText" style="font-size: 16px; font-weight: bold; color: #f1c40f; margin-bottom: 5px;"></div>
-        <div id="rarityText" style="font-size: 28px; font-weight: bold; margin-bottom: 15px; text-shadow: 0 2px 4px rgba(0,0,0,0.5);"></div>
-        <div class="reveal-card" id="revealCard"></div>
-        <button class="btn-share" onclick="shareCard()">📤 炫耀我的收藏！</button>
-        <p style="opacity: 0.8; font-size: 14px; margin-top: 25px; cursor: pointer; text-decoration: underline;" onclick="closeGachaResult()">點擊這裡關閉</p>
-    </div>
-
-    <div id="tenDrawModal" class="modal">
-        <h2 style="color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.5); margin-bottom: 5px;">十連抽結果</h2>
-        <div id="tenDrawRefund" style="color: #f1c40f; font-weight: bold; margin-bottom: 15px; text-shadow: 0 1px 3px rgba(0,0,0,0.8); min-height: 20px;"></div>
-        <div class="ten-draw-grid" id="tenDrawGrid"></div>
-        <button class="btn-share" style="margin-top: 20px; font-size: 18px; padding: 15px 40px;" onclick="closeTenDraw()">確認收穫</button>
-    </div>
-
-    <script>
-        // ==========================================
-        // 0. 全域錯誤捕捉 (優雅防呆機制)
-        // ==========================================
-        window.addEventListener('error', function(e) {
-            if(e.target && e.target.tagName && e.target.tagName.toLowerCase() === 'img') {
-                if(e.target.classList.contains('full-card-img')) {
-                    e.target.style.display = 'none';
-                    if(e.target.nextElementSibling) e.target.nextElementSibling.style.display = 'flex';
-                }
-            }
-        }, true);
-
-        // ==========================================
-        // 1. Web Audio 音效引擎 (防彈版 Lazy Load)
-        // ==========================================
-        let audioCtx = null;
-        function getAudioCtx() {
-            try {
-                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                if (audioCtx.state === 'suspended') audioCtx.resume();
-                return audioCtx;
-            } catch(e) { return null; }
-        }
-
-        function playTone(freq, type, duration, vol=0.1) {
-            try {
-                const ctx = getAudioCtx();
-                if(!ctx) return;
-                const osc = ctx.createOscillator(); const gain = ctx.createGain();
-                osc.type = type; osc.frequency.setValueAtTime(freq, ctx.currentTime);
-                gain.gain.setValueAtTime(vol, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration);
-                osc.connect(gain); gain.connect(ctx.destination);
-                osc.start(); osc.stop(ctx.currentTime + duration);
-            } catch(e) { /* 靜默失敗，不影響遊戲 */ }
-        }
-        
-        const sfx = {
-            correct: () => { playTone(600, 'sine', 0.1); setTimeout(()=>playTone(800, 'sine', 0.2), 100); },
-            wrong: () => { playTone(150, 'sawtooth', 0.3, 0.2); },
-            click: () => { playTone(400, 'sine', 0.05); },
-            draw: () => { playTone(800, 'square', 0.1, 0.05); playTone(1200, 'sine', 0.3, 0.05); },
-            ssr: () => { playTone(400,'sine',0.2); setTimeout(()=>playTone(600,'sine',0.2),150); setTimeout(()=>playTone(900,'sine',0.4),300); },
-            explode: () => { playTone(100, 'square', 0.5, 0.3); playTone(50, 'sawtooth', 0.6, 0.3); }
-        };
-        // 用戶第一次互動時溫和解鎖音效
-        document.body.addEventListener('click', () => { getAudioCtx(); }, {once:true});
-
-        // ==========================================
-        // 2. 化學數據庫與擴充卡池
-        // ==========================================
-        const cations = [
-            { id: 1, name: "Sodium", formula: "Na", charge: 1, html: "Na<sup>+</sup>", fileKey: 'na' }, { id: 2, name: "Potassium", formula: "K", charge: 1, html: "K<sup>+</sup>", fileKey: 'k' },
-            { id: 3, name: "Copper(I)", formula: "Cu", charge: 1, html: "Cu<sup>+</sup>", fileKey: 'cu1' }, { id: 4, name: "Silver", formula: "Ag", charge: 1, html: "Ag<sup>+</sup>", fileKey: 'ag' },
-            { id: 5, name: "Mercury(I)", formula: "Hg", charge: 1, html: "Hg<sup>+</sup>", fileKey: 'hg1' }, { id: 6, name: "Hydrogen", formula: "H", charge: 1, html: "H<sup>+</sup>", fileKey: 'h' },
-            { id: 7, name: "Ammonium", formula: "NH4", charge: 1, html: "NH<sub>4</sub><sup>+</sup>", poly: true, fileKey: 'nh4' }, { id: 8, name: "Magnesium", formula: "Mg", charge: 2, html: "Mg<sup>2+</sup>", fileKey: 'mg' },
-            { id: 9, name: "Calcium", formula: "Ca", charge: 2, html: "Ca<sup>2+</sup>", fileKey: 'ca' }, { id: 10, name: "Barium", formula: "Ba", charge: 2, html: "Ba<sup>2+</sup>", fileKey: 'ba' },
-            { id: 11, name: "Lead(II)", formula: "Pb", charge: 2, html: "Pb<sup>2+</sup>", fileKey: 'pb' }, { id: 12, name: "Iron(II)", formula: "Fe", charge: 2, html: "Fe<sup>2+</sup>", fileKey: 'fe2' },
-            { id: 13, name: "Cobalt(II)", formula: "Co", charge: 2, html: "Co<sup>2+</sup>", fileKey: 'co' }, { id: 14, name: "Nickel(II)", formula: "Ni", charge: 2, html: "Ni<sup>2+</sup>", fileKey: 'ni' },
-            { id: 15, name: "Manganese(II)", formula: "Mn", charge: 2, html: "Mn<sup>2+</sup>", fileKey: 'mn' }, { id: 16, name: "Copper(II)", formula: "Cu", charge: 2, html: "Cu<sup>2+</sup>", fileKey: 'cu2' },
-            { id: 17, name: "Zinc", formula: "Zn", charge: 2, html: "Zn<sup>2+</sup>", fileKey: 'zn' }, { id: 18, name: "Mercury(II)", formula: "Hg", charge: 2, html: "Hg<sup>2+</sup>", fileKey: 'hg2' },
-            { id: 19, name: "Aluminium", formula: "Al", charge: 3, html: "Al<sup>3+</sup>", fileKey: 'al' }, { id: 20, name: "Iron(III)", formula: "Fe", charge: 3, html: "Fe<sup>3+</sup>", fileKey: 'fe3' },
-            { id: 21, name: "Chromium(III)", formula: "Cr", charge: 3, html: "Cr<sup>3+</sup>", fileKey: 'cr' }, { id: 99, name: "A.A. Sir", formula: "AA", charge: 0, html: "🔋", fileKey: 'aa_sir', isSpecial: true } 
-        ];
-        const anions = [
-            { id: 22, name: "Hydride", formula: "H", charge: 1, html: "H<sup>-</sup>", fileKey: 'hydride' }, { id: 23, name: "Chloride", formula: "Cl", charge: 1, html: "Cl<sup>-</sup>", fileKey: 'cl' }, 
-            { id: 24, name: "Bromide", formula: "Br", charge: 1, html: "Br<sup>-</sup>", fileKey: 'br' }, { id: 25, name: "Iodide", formula: "I", charge: 1, html: "I<sup>-</sup>", fileKey: 'i' },
-            { id: 26, name: "Hydroxide", formula: "OH", charge: 1, html: "OH<sup>-</sup>", poly: true, fileKey: 'oh' }, { id: 27, name: "Nitrate", formula: "NO3", charge: 1, html: "NO<sub>3</sub><sup>-</sup>", poly: true, fileKey: 'no3' },
-            { id: 28, name: "Nitrite", formula: "NO2", charge: 1, html: "NO<sub>2</sub><sup>-</sup>", poly: true, fileKey: 'no2' }, { id: 29, name: "Hydrogencarbonate", formula: "HCO3", charge: 1, html: "HCO<sub>3</sub><sup>-</sup>", poly: true, fileKey: 'hco3' },
-            { id: 30, name: "Hydrogensulphate", formula: "HSO4", charge: 1, html: "HSO<sub>4</sub><sup>-</sup>", poly: true, fileKey: 'hso4' }, { id: 31, name: "Cyanide", formula: "CN", charge: 1, html: "CN<sup>-</sup>", poly: true, fileKey: 'cn' },
-            { id: 32, name: "Permanganate", formula: "MnO4", charge: 1, html: "MnO<sub>4</sub><sup>-</sup>", poly: true, fileKey: 'mno4' }, { id: 33, name: "Chlorate", formula: "ClO3", charge: 1, html: "ClO<sub>3</sub><sup>-</sup>", poly: true, fileKey: 'clo3' },
-            { id: 34, name: "Hypochlorite", formula: "ClO", charge: 1, html: "ClO<sup>-</sup>", poly: true, fileKey: 'clo' }, { id: 35, name: "Oxide", formula: "O", charge: 2, html: "O<sup>2-</sup>", fileKey: 'o' },
-            { id: 36, name: "Sulphide", formula: "S", charge: 2, html: "S<sup>2-</sup>", fileKey: 's' }, { id: 37, name: "Sulphate", formula: "SO4", charge: 2, html: "SO<sub>4</sub><sup>2-</sup>", poly: true, fileKey: 'so4' },
-            { id: 38, name: "Sulphite", formula: "SO3", charge: 2, html: "SO<sub>3</sub><sup>2-</sup>", poly: true, fileKey: 'so3' }, { id: 39, name: "Silicate", formula: "SiO3", charge: 2, html: "SiO<sub>3</sub><sup>2-</sup>", poly: true, fileKey: 'sio3' },
-            { id: 40, name: "Carbonate", formula: "CO3", charge: 2, html: "CO<sub>3</sub><sup>2-</sup>", poly: true, fileKey: 'co3' }, { id: 41, name: "Chromate", formula: "CrO4", charge: 2, html: "CrO<sub>4</sub><sup>2-</sup>", poly: true, fileKey: 'cro4' },
-            { id: 42, name: "Dichromate", formula: "Cr2O7", charge: 2, html: "Cr<sub>2</sub>O<sub>7</sub><sup>2-</sup>", poly: true, fileKey: 'cr2o7' }, { id: 43, name: "Nitride", formula: "N", charge: 3, html: "N<sup>3-</sup>", fileKey: 'n' },
-            { id: 44, name: "Phosphide", formula: "P", charge: 3, html: "P<sup>3-</sup>", fileKey: 'p' }, { id: 45, name: "Phosphate", formula: "PO4", charge: 3, html: "PO<sub>4</sub><sup>3-</sup>", poly: true, fileKey: 'po4' }
-        ];
-
-        const playableCations = cations.filter(c => !c.isSpecial); const playableAnions = anions.filter(a => !a.isSpecial);
-        const rarityNames = ['N', 'R', 'SR', 'SSR']; const rarityRefunds = { 'N': 2, 'R': 4, 'SR': 6, 'SSR': 10 };
-        const alchemyCosts = { 'N': 15, 'R': 25, 'SR': 40, 'SSR': 60 };
-
-        const expandedPool = [];
-        [...cations, ...anions].forEach(card => { rarityNames.forEach(r => { expandedPool.push({ ...card, uniqueId: card.id + '_' + r, targetRarity: r }); }); });
-
-        // ==========================================
-        // 3. 狀態與防護罩系統 (Local Storage Safe Parse)
-        // ==========================================
-        let currentMode = '', score = 0, practiceCorrectCount = 0, startTime, timerInterval;
-        let isAnswered = false, isAnimating = false, alchemyTargetCard = null, currentDrawnCard = null; 
-
-        function safeParse(key, defaultVal) {
-            try { let val = localStorage.getItem(key); return val ? JSON.parse(val) : defaultVal; } 
-            catch(e) { console.error("Storage Error, resetting: ", key); return defaultVal; }
-        }
-
-        let coins = parseInt(localStorage.getItem('aaCoins')) || 0;
-        let playerExp = parseInt(localStorage.getItem('aaExp')) || 0;
-        let inventory = safeParse('aaInventorySep', {});
-
-        function syncData() {
-            localStorage.setItem('aaCoins', coins); localStorage.setItem('aaExp', playerExp);
-            document.getElementById('mainCoinCount').innerText = coins; document.getElementById('gameCoinCount').innerText = coins;
-            document.getElementById('gachaCoinCount').innerText = coins; document.getElementById('labCoinCount').innerText = coins;
-            updateLevelDisplay();
-        }
-
-        function getLevelInfo(exp) {
-            let lvl = Math.floor(Math.sqrt(exp / 15)) + 1;
-            let title = "Lab Rookie";
-            if(lvl >= 50) title = "A.A. Sir's Top Student"; else if(lvl >= 30) title = "Precipitation Master"; else if(lvl >= 10) title = "Ion Catcher";
-            let nextLvlExp = 15 * Math.pow(lvl, 2); let prevLvlExp = 15 * Math.pow(lvl - 1, 2);
-            let progress = ((exp - prevLvlExp) / (nextLvlExp - prevLvlExp)) * 100;
-            return { lvl, title, progress: Math.min(progress, 100) };
-        }
-
-        function updateLevelDisplay() {
-            const info = getLevelInfo(playerExp);
-            document.getElementById('playerLevel').innerText = info.lvl;
-            document.getElementById('playerTitle').innerText = info.title;
-            document.getElementById('expBar').style.width = info.progress + '%';
-            if(info.lvl >= 50) document.getElementById('playerTitle').style.color = 'var(--rare)';
-        }
-
-        function addExp(amount) {
-            let oldLvl = getLevelInfo(playerExp).lvl; playerExp += amount; syncData();
-            if(getLevelInfo(playerExp).lvl > oldLvl) { sfx.ssr(); if(typeof confetti !== 'undefined') confetti({particleCount: 150, spread: 80, origin: {y: 0.3}}); }
-        }
-
-        function openPT() { sfx.click(); document.getElementById('ptModal').style.display = 'flex'; }
-        function closePT() { sfx.click(); document.getElementById('ptModal').style.display = 'none'; }
-        function setLock(state) { isAnimating = state; document.getElementById('animLock').style.display = state ? 'block' : 'none'; }
-
-        // ==========================================
-        // 4. 化學邏輯 (精準配對演算法)
-        // ==========================================
-        function isValidCombination(c, a) {
-            const blacklist = ['NH4_OH', 'H_NO3', 'H_NO2', 'H_Cl', 'H_Br', 'H_I', 'H_SO4', 'H_SO3', 'H_OH', 'H_O', 'H_CO3', 'H_PO4', 'H_CN', 'H_MnO4', 'H_ClO3', 'H_ClO', 'H_CrO4', 'H_Cr2O7', 'H_H', 'H_HSO4', 'H_HCO3'];
-            return !blacklist.includes(c.formula + '_' + a.formula);
-        }
-        function getValidPartners(targetIon, isCation) {
-            let pool = isCation ? playableAnions : playableCations;
-            return pool.filter(p => isCation ? isValidCombination(targetIon, p) : isValidCombination(p, targetIon));
-        }
-        function getGCD(a, b) { return b ? getGCD(b, a % b) : a; }
-        function formatSub(text) { return text.replace(/([0-9]+)/g, '<sub>$1</sub>'); }
-        function buildFormula(c, a, subC, subA) {
-            let cp = formatSub(c.formula); if(subC > 1) cp = c.poly ? `(${cp})<sub>${subC}</sub>` : `${cp}<sub>${subC}</sub>`;
-            let ap = formatSub(a.formula); if(subA > 1) ap = a.poly ? `(${ap})<sub>${subA}</sub>` : `${ap}<sub>${subA}</sub>`;
-            return cp + ap;
-        }
-        function buildName(c, a) { return `<span style="font-size:22px;">${c.name.replace(/ion/i,'').trim()} ${a.name.replace(/ion/i,'').trim().toLowerCase()}</span>`; }
-
-        // ==========================================
-        // 5. 遊戲流程控制
-        // ==========================================
-        function startGame(mode) {
-            sfx.click(); currentMode = mode; score = 0; practiceCorrectCount = 0; usedQuestions.clear(); syncData();
-            document.getElementById('menuArea').style.display = 'none'; document.getElementById('labArea').style.display = 'none'; document.getElementById('gameArea').style.display = 'block'; document.getElementById('batteryLevel').style.width = '0%';
-            document.body.className = (mode === 'alchemy') ? 'bg-alchemy' : (mode === 'speed' ? 'bg-speed' : 'bg-main');
-            
-            const title = document.getElementById('mainTitle'); const btnQ = document.getElementById('btnQuitGame');
-            if (mode === 'speed') {
-                document.getElementById('progressText').innerText = "進度: 0/10"; document.getElementById('progressText').style.color = "var(--secondary)"; document.getElementById('timerDisplay').style.display = 'block'; document.getElementById('gameCoinDisplay').style.display = 'none';
-                title.innerText = "⚡ 速度模式"; title.style.color = "white"; btnQ.innerText = "放棄挑戰"; btnQ.style.background = "#95a5a6";
-                startTime = Date.now(); timerInterval = setInterval(() => { document.getElementById('timerDisplay').innerText = ((Date.now() - startTime) / 1000).toFixed(1) + "s"; }, 100);
-            } else if (mode === 'practice') {
-                document.getElementById('progressText').innerText = "已答對: 0 題"; document.getElementById('progressText').style.color = "var(--secondary)"; document.getElementById('timerDisplay').style.display = 'none'; document.getElementById('gameCoinDisplay').style.display = 'flex'; 
-                title.innerText = "🧠 練習模式"; title.style.color = "white"; btnQ.innerText = "返回主選單"; btnQ.style.background = "#95a5a6";
-            } else if (mode === 'alchemy') {
-                document.getElementById('progressText').innerText = "煉金進度: 0/3"; document.getElementById('progressText').style.color = "var(--legend)"; document.getElementById('timerDisplay').style.display = 'none'; document.getElementById('gameCoinDisplay').style.display = 'none';
-                title.innerText = "⚠️ 煉金試煉進行中 ⚠️"; title.style.color = "var(--legend)"; btnQ.innerText = "中斷試煉 (代幣不退還)"; btnQ.style.background = "var(--legend)";
-            }
-            nextQuestion();
-        }
-
-        function quitToMenu() {
-            sfx.click(); clearInterval(timerInterval); document.body.className = 'bg-main'; document.body.classList.remove('screen-shake');
-            document.getElementById('resultModal').style.display = 'none'; document.getElementById('explosionModal').style.display = 'none';
-            document.getElementById('gameArea').style.display = 'none'; document.getElementById('gachaArea').style.display = 'none'; document.getElementById('labArea').style.display = 'none'; document.getElementById('menuArea').style.display = 'block';
-            document.getElementById('mainTitle').innerText = "🧪 A.A. Sir's Ion Master"; document.getElementById('mainTitle').style.color = "white"; syncData();
-        }
-
-        function nextQuestion() {
-            if (currentMode === 'speed' && score >= 10) { finishSpeedGame(); return; }
-            if (currentMode === 'alchemy' && score >= 3) { finishAlchemySuccess(); return; }
-            isAnswered = false; let curC, curA, comboSignature = "";
-
-            if (currentMode === 'alchemy') {
-                let isTargetCation = playableCations.some(c => c.id === alchemyTargetCard.id);
-                let partners = getValidPartners(alchemyTargetCard, isTargetCation);
-                if(isTargetCation) { curC = alchemyTargetCard; curA = partners[Math.floor(Math.random() * partners.length)]; } 
-                else { curA = alchemyTargetCard; curC = partners[Math.floor(Math.random() * partners.length)]; }
-            } else {
-                do {
-                    curC = playableCations[Math.floor(Math.random() * playableCations.length)]; curA = playableAnions[Math.floor(Math.random() * playableAnions.length)];
-                } while (!isValidCombination(curC, curA));
-            }
-            
-            let cSub = curA.charge, aSub = curC.charge; let common = getGCD(cSub, aSub); cSub /= common; aSub /= common;
-            let scenario = Math.floor(Math.random() * 3); let options = []; let optionsSet = new Set();
-            const qEl = document.getElementById('question');
-            if (scenario === 0 || scenario === 1) { qEl.innerHTML = `<span>${curC.html} &nbsp;+&nbsp; ${curA.html}</span>`; } 
-            else { qEl.innerHTML = `<span style="font-size:26px;">${curC.name.replace(/ion/i,'').trim()} ion<br>+<br>${curA.name.replace(/ion/i,'').trim()} ion</span>`; }
-
-            if (scenario === 0 || scenario === 2) {
-                let correctHTML = buildFormula(curC, curA, cSub, aSub); options.push({html: correctHTML, isCorrect: true}); optionsSet.add(correctHTML);
-                while(options.length < 4) { let fakeHTML = buildFormula(curC, curA, Math.floor(Math.random()*3)+1, Math.floor(Math.random()*3)+1); if(!optionsSet.has(fakeHTML)) { optionsSet.add(fakeHTML); options.push({html: fakeHTML, isCorrect: false}); } }
-            } else {
-                let correctHTML = buildName(curC, curA); options.push({html: correctHTML, isCorrect: true}); optionsSet.add(correctHTML);
-                while(options.length < 4) { let fakeHTML = buildName(curC, playableAnions[Math.floor(Math.random() * playableAnions.length)]); if(!optionsSet.has(fakeHTML)) { optionsSet.add(fakeHTML); options.push({html: fakeHTML, isCorrect: false}); } }
-            }
-
-            options.sort(() => 0.5 - Math.random()); const oArea = document.getElementById('optionsArea'); oArea.innerHTML = '';
-            options.forEach(opt => { let btn = document.createElement('button'); btn.className = 'option-btn'; btn.innerHTML = opt.html; btn.onclick = () => handleAnswer(btn, opt.isCorrect); oArea.appendChild(btn); });
-        }
-
-        function handleAnswer(btn, isCorrect) {
-            if(isAnswered) return; isAnswered = true;
-            if(isCorrect) {
-                sfx.correct(); btn.classList.add('correct'); score++;
-                if (currentMode === 'speed') { document.getElementById('progressText').innerText = `進度: ${score}/10`; document.getElementById('batteryLevel').style.width = (score * 10) + "%"; } 
-                else if (currentMode === 'alchemy') { document.getElementById('progressText').innerText = `煉金進度: ${score}/3`; document.getElementById('batteryLevel').style.width = (score * 33.3) + "%"; } 
-                else { addExp(5); document.getElementById('progressText').innerText = `已答對: ${score} 題`; practiceCorrectCount++; if (practiceCorrectCount >= 5) { coins += 1; practiceCorrectCount = 0; syncData(); } let fillPercent = (score % 10) * 10; if (fillPercent === 0) fillPercent = 100; document.getElementById('batteryLevel').style.width = fillPercent + "%"; }
-                setTimeout(nextQuestion, 400); 
-            } else {
-                sfx.wrong(); btn.classList.add('wrong');
-                if (currentMode === 'alchemy') { setTimeout(finishAlchemyFail, 300); } else { setTimeout(() => { btn.classList.remove('wrong'); isAnswered = false; }, 1000); }
-            }
-        }
-
-        function finishSpeedGame() {
-            clearInterval(timerInterval); let finalTime = (Date.now() - startTime) / 1000;
-            let history = safeParse('myIonHistory', []); let currentBest = history.length > 0 ? Math.min(...history.map(x => x.time)) : Infinity;
-            addExp(50);
-            if (history.length > 0 && finalTime < currentBest) { 
-                currentBest = finalTime; coins += 2; addExp(100); syncData(); sfx.ssr(); if(typeof confetti !== 'undefined') confetti({particleCount: 100, spread: 70, origin: {y: 0.6}});
-                document.getElementById('newRecordReward').style.display = 'block'; 
-            } else { if(finalTime < currentBest) currentBest = finalTime; document.getElementById('newRecordReward').style.display = 'none'; }
-            
-            history.unshift({ time: finalTime }); localStorage.setItem('myIonHistory', JSON.stringify(history.slice(0, 5)));
-            document.getElementById('finalTime').innerText = finalTime.toFixed(2) + "s"; document.getElementById('bestTimeDisplay').innerText = currentBest.toFixed(2) + "s"; document.getElementById('resultModal').style.display = 'flex';
-        }
-
-        // ==========================================
-        // 6. UI: 渲染卡片共用模組
-        // ==========================================
-        function getStarString(count) { return "⭐".repeat(count); }
-        function createCardElement(card, stars, isOwned, onClickCallback) {
-            const item = document.createElement('div');
-            let classes = `card-item ${isOwned ? 'owned ' + card.targetRarity.toLowerCase() : 'locked'}`;
-            if (stars >= 3) classes += ' max-star'; 
-            item.className = classes;
-            let imgPath = `images/${card.fileKey}_${card.targetRarity.toLowerCase()}.png`;
-            
-            if (isOwned) {
-                item.innerHTML = `
-                    <img src="${imgPath}" class="full-card-img">
-                    <div class="fallback-content" style="display:none;">
-                        <div style="font-size:24px; color:var(--dark); font-family:'Times New Roman', serif;">${card.html}</div>
-                        <div style="font-size:12px; font-weight:bold; margin-top:5px; color:#7f8c8d;">${card.targetRarity}</div>
-                    </div>
-                    <div class="stars-overlay">${getStarString(stars)}</div>
-                `;
-                item.onclick = onClickCallback; 
-            } else {
-                let baseImgPath = `images/${card.fileKey}_n.png`;
-                item.innerHTML = `
-                    <img src="${baseImgPath}" class="full-card-img locked-blur">
-                    <div class="fallback-content" style="display:none; background: #eee;">
-                        <div style="font-size:18px; color: #7f8c8d; font-family:'Times New Roman', serif;">${card.html}</div>
-                        <div style="font-size:10px; margin-top:2px; color:#95a5a6;">${card.targetRarity}</div>
-                    </div>
-                    <div class="locked-overlay">🔒</div>
-                `;
-                if(onClickCallback) item.onclick = onClickCallback; 
-            }
-            return item;
-        }
-
-        // ==========================================
-        // 7. 煉金實驗室 
-        // ==========================================
-        function showLabMenu() { sfx.click(); document.getElementById('menuArea').style.display = 'none'; document.getElementById('labArea').style.display = 'block'; syncData(); applyFilter('all', 'lab'); }
-        
-        function updateLabGrid(filterType = 'all') {
-            const grid = document.getElementById('labGrid'); grid.innerHTML = '';
-            expandedPool.forEach(card => {
-                if(card.isSpecial) return; 
-                if(filterType !== 'all' && card.targetRarity.toLowerCase() !== filterType) return;
-
-                const stars = inventory[card.uniqueId] || 0; const isMaxedOut = stars >= 3;
-                let item = createCardElement(card, stars, stars > 0, null);
-                if(isMaxedOut) { item.className = 'card-item maxed-out'; }
-
-                if (!isMaxedOut) {
-                    item.onclick = () => {
-                        sfx.click();
-                        let cost = alchemyCosts[card.targetRarity];
-                        if (coins < cost) { alert(`🪙 AA代幣不足！合成 ${card.targetRarity} 級卡牌需要 ${cost} 枚代幣。`); return; }
-                        let actionTxt = (stars > 0) ? "升星" : "解鎖";
-                        if (confirm(`確定消耗 ${cost} 🪙 來 ${actionTxt}「${card.targetRarity}級的 ${card.name}」嗎？\n(需連續答對 3 題，答錯引發爆炸！)`)) {
-                            coins -= cost; syncData(); alchemyTargetCard = card; startGame('alchemy');
-                        }
-                    };
-                }
-                grid.appendChild(item);
-            });
-        }
-
-        function finishAlchemySuccess() {
-            let card = alchemyTargetCard; let currentStars = inventory[card.uniqueId] || 0; let isNew = currentStars === 0;
-            inventory[card.uniqueId] = currentStars + 1; localStorage.setItem('aaInventorySep', JSON.stringify(inventory)); addExp(30);
-            
-            setLock(true); document.body.className = 'bg-main'; const animModal = document.getElementById('gachaAnimModal'); const flash = document.getElementById('whiteFlash');
-            document.getElementById('gachaAnimText').innerText = "煉金大成功！"; animModal.style.display = 'flex'; sfx.draw();
-            setTimeout(() => { flash.classList.add('active'); setTimeout(() => { animModal.style.display = 'none'; document.getElementById('gachaAnimText').innerText = "高能反應合成中..."; showSingleResult(card, card.targetRarity, inventory[card.uniqueId], isNew, 0, true); quitToMenu(); setTimeout(() => { flash.classList.remove('active'); setLock(false);}, 100); }, 400); }, 1500); 
-        }
-        function finishAlchemyFail() { sfx.explode(); document.body.classList.add('screen-shake'); document.getElementById('explosionModal').style.display = 'flex'; }
-
-        // ==========================================
-        // 8. 智能篩選圖鑑與抽卡系統 
-        // ==========================================
-        function showGachaMenu() { sfx.click(); document.getElementById('menuArea').style.display = 'none'; document.getElementById('gachaArea').style.display = 'block'; syncData(); applyFilter('all', 'gallery'); }
-        
-        function applyFilter(type, context) {
-            sfx.click();
-            const container = document.getElementById(context === 'gallery' ? 'galleryFilters' : 'labFilters');
-            container.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-            if(context === 'gallery') updateGallery(type); else updateLabGrid(type);
-        }
-
-        function updateGallery(filterType = 'all') {
-            const grid = document.getElementById('galleryGrid'); grid.innerHTML = ''; let unlockCount = 0;
-            
-            expandedPool.forEach(card => {
-                const stars = inventory[card.uniqueId] || 0; const isOwned = stars > 0;
-                if(isOwned) unlockCount++;
-
-                if (filterType === 'locked' && isOwned) return;
-                if (filterType === 'ssr' && card.targetRarity !== 'SSR') return;
-                if (filterType === 'cation' && card.charge < 0) return;
-                if (filterType === 'anion' && card.charge > 0) return;
-
-                let item = createCardElement(card, stars, isOwned, isOwned ? () => {sfx.click(); showSingleResult(card, card.targetRarity, stars, false, 0, false);} : null);
-                grid.appendChild(item);
-            });
-            document.getElementById('collectionCount').innerText = unlockCount; // 修復 0/184/184 Bug
-        }
-
-        function drawCard(times) {
-            if(isAnimating) return; sfx.click();
-            let cost = times * 5; if (coins < cost) { alert(`🪙 AA代幣不足！需要 ${cost} 枚代幣。`); return; }
-            coins -= cost; syncData(); setLock(true);
-
-            let results = []; let totalRefund = 0;
-            for(let i=0; i<times; i++) {
-                const rand = Math.random() * 100; let drawnRarity = 'N';
-                if (rand < 1.5) drawnRarity = 'SSR'; else if (rand < 10) drawnRarity = 'SR'; else if (rand < 30) drawnRarity = 'R';
-                let possibleCards = expandedPool.filter(c => c.targetRarity === drawnRarity);
-                if(drawnRarity === 'SSR') { if(Math.random() < 0.1) possibleCards = possibleCards.filter(c => c.isSpecial); else possibleCards = possibleCards.filter(c => !c.isSpecial); } 
-                else { possibleCards = possibleCards.filter(c => !c.isSpecial); }
-
-                const reward = possibleCards[Math.floor(Math.random() * possibleCards.length)];
-                let currentStars = inventory[reward.uniqueId] || 0; let isNew = currentStars === 0; let refundAmt = 0;
-
-                if (isNew) { inventory[reward.uniqueId] = 1; addExp(10); } 
-                else if (currentStars < 3) { inventory[reward.uniqueId]++; addExp(5); } 
-                else { refundAmt = rarityRefunds[drawnRarity]; totalRefund += refundAmt; }
-                
-                results.push({ card: reward, isNew: isNew, stars: inventory[reward.uniqueId] || 3, refund: refundAmt });
-            }
-
-            if(totalRefund === 0) localStorage.setItem('aaInventorySep', JSON.stringify(inventory));
-            else { coins += totalRefund; syncData(); localStorage.setItem('aaInventorySep', JSON.stringify(inventory)); }
-            
-            const animModal = document.getElementById('gachaAnimModal'); const flash = document.getElementById('whiteFlash');
-            animModal.style.display = 'flex'; sfx.draw();
-            
-            setTimeout(() => {
-                flash.classList.add('active'); 
-                setTimeout(() => {
-                    animModal.style.display = 'none'; 
-                    if(times === 1) showSingleResult(results[0].card, results[0].card.targetRarity, results[0].stars, results[0].isNew, results[0].refund, false);
-                    else showTenDrawResult(results, totalRefund);
-                    setTimeout(() => { flash.classList.remove('active'); setLock(false);}, 100); 
-                }, 400); 
-            }, 2000); 
-        }
-
-        function showSingleResult(card, rarity, stars, isNew, refundAmt, isAlchemy) {
-            currentDrawnCard = { ...card, currentRarity: rarity, currentStars: stars }; 
-            const modal = document.getElementById('gachaResultModal'); const revealCard = document.getElementById('revealCard');
-            const rarityText = document.getElementById('rarityText'); const statusText = document.getElementById('gachaStatusText');
-            
-            let color = 'white'; if(rarity === 'SSR') { color = 'var(--rare)'; if(isNew || isAlchemy) sfx.ssr(); else if(!refundAmt) sfx.correct(); } else if(rarity === 'SR') color = '#e056fd'; else if(rarity === 'R') color = '#7ed6df';
-            statusText.innerText = ''; 
-            
-            if (isAlchemy || isNew || refundAmt !== undefined) { 
-                if (isAlchemy) { rarityText.innerHTML = `<span style="color:${color};">[${rarity}]</span> 煉金成功！`; statusText.innerText = isNew ? `🎉 成功解鎖！` : `🌟 成功升級為 ${stars} 星！`; } 
-                else {
-                    if (isNew) { rarityText.innerHTML = `<span style="color:${color};">[${rarity}]</span> 發現新卡牌！`; if(typeof confetti !== 'undefined') confetti({particleCount: 50, spread: 60});} 
-                    else if (refundAmt === 0) { rarityText.innerHTML = `<span style="color:${color};">[${rarity}]</span> 卡片升星！`; statusText.innerText = `🌟 吸收碎片，升級為 ${stars} 星！`; } 
-                    else { rarityText.innerHTML = `<span style="color:#bdc3c7;">[${rarity}]</span> 重複卡片分解`; statusText.innerText = `♻️ 已轉換為 ${refundAmt} 🪙 退還。`; }
-                }
-            } else { rarityText.innerHTML = `<span style="color:${color};">[${rarity}]</span> 元素卡片`; }
-            
-            revealCard.innerHTML = createCardElement(card, stars, true, null).innerHTML;
-            let cardClass = `reveal-card show ${rarity.toLowerCase()}`; if(stars >= 3) cardClass += ' max-star'; revealCard.className = cardClass;
-            modal.style.display = 'flex';
-        }
-
-        function showTenDrawResult(results, totalRefund) {
-            const modal = document.getElementById('tenDrawModal'); const grid = document.getElementById('tenDrawGrid'); grid.innerHTML = '';
-            document.getElementById('tenDrawRefund').innerText = totalRefund > 0 ? `♻️ 重複分解退款：共 ${totalRefund} 🪙` : '';
-            
-            let hasSSR = false;
-            results.forEach((res, index) => {
-                if(res.card.targetRarity === 'SSR') hasSSR = true;
-                let item = createCardElement(res.card, res.stars, true, null);
-                item.className = `ten-draw-item ${res.card.targetRarity.toLowerCase()}`;
-                if(res.stars >= 3) item.classList.add('max-star');
-                
-                let badge = document.createElement('div');
-                badge.style.cssText = "position:absolute; top:5px; right:5px; padding:2px 5px; border-radius:5px; font-size:10px; font-weight:bold; color:white; z-index:10;";
-                if(res.isNew) { badge.innerText = "NEW!"; badge.style.background = "var(--epic)"; }
-                else if(res.refund > 0) { badge.innerText = `+${res.refund}🪙`; badge.style.background = "#95a5a6"; }
-                else { badge.innerText = "⭐UP"; badge.style.background = "var(--rare)"; color="var(--dark)"; }
-                item.appendChild(badge);
-
-                grid.appendChild(item);
-                setTimeout(() => { item.classList.add('show'); sfx.click(); }, index * 150); 
-            });
-            if(hasSSR) { setTimeout(() => { sfx.ssr(); if(typeof confetti !== 'undefined') confetti({particleCount: 200, spread: 100, origin: {y: 0.5}}); }, 1500); }
-            modal.style.display = 'flex';
-        }
-
-        function closeGachaResult() { sfx.click(); document.getElementById('gachaResultModal').style.display = 'none'; document.getElementById('revealCard').classList.remove('show'); currentDrawnCard = null; applyFilter('all', 'gallery'); }
-        function closeTenDraw() { sfx.click(); document.getElementById('tenDrawModal').style.display = 'none'; document.getElementById('tenDrawGrid').innerHTML = ''; applyFilter('all', 'gallery'); }
-
-        function shareCard() {
-            if (!currentDrawnCard) return; sfx.click();
-            const stars = currentDrawnCard.currentStars || 1; const starStr = "⭐".repeat(stars);
-            const title = document.getElementById('playerTitle').innerText;
-            const shareText = `🧪「${title}」在 A.A. Sir 的化學挑戰中，收集到了 [${currentDrawnCard.currentRarity}] 級別的 ${starStr}「${currentDrawnCard.name}」！\n你能收集到比我更強的元素嗎？快來 3lite Education 挑戰：\nhttps://3liteeducation.github.io/IonMaster/`;
-
-            if (navigator.share) { navigator.share({ title: 'A.A. Sir Ion Master', text: shareText, url: 'https://3liteeducation.github.io/IonMaster/' }).catch(e=>{}); } 
-            else { navigator.clipboard.writeText(shareText).then(() => { alert('📝 炫耀文字已複製到剪貼簿！'); }); }
-        }
-
-        // ==========================================
-        // 9. 初始化與防禦腳本
-        // ==========================================
-        syncData(); document.addEventListener('contextmenu', e => e.preventDefault()); document.onselectstart = () => false;
-        document.onkeydown = e => { if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && e.keyCode == 73) || (e.ctrlKey && e.keyCode == 85)) return false; };
-    </script>
+    <script src="data.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
