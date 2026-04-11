@@ -99,6 +99,8 @@
         <div class="tab-item" onclick="UI.switchView('gallery', this)">📚<br><span>圖鑑</span></div>
     </nav>
 
+    <button class="ios-btn warning-btn mt-3" onclick="UI.toggleModal('redeemModal', true)">🎁 兌換禮物碼 (Redeem Code)</button>
+    
     <div id="saveModal" class="modal glass-modal">
         <div class="modal-content glass-panel">
             <h2 class="ios-title">⚙️ 數據管理</h2>
@@ -109,6 +111,16 @@
                 <button class="ios-btn danger-btn" onclick="StorageManager.import()">📥 匯入</button>
             </div>
             <button class="ios-btn cancel-btn mt-2" onclick="UI.toggleModal('saveModal', false)">關閉</button>
+        </div>
+    </div>
+
+    <div id="redeemModal" class="modal glass-modal">
+        <div class="modal-content glass-panel">
+            <h2 class="ios-title">🎁 兌換獎勵</h2>
+            <p class="ios-desc">請輸入 A.A. Sir 發布的專屬限時禮物碼！</p>
+            <input type="text" id="redeemInput" class="ios-input" placeholder="輸入禮物碼..." autocomplete="off">
+            <button class="ios-btn primary-btn mt-3" onclick="Game.redeemCode()">✅ 確認兌換</button>
+            <button class="ios-btn cancel-btn mt-2" onclick="UI.toggleModal('redeemModal', false)">關閉</button>
         </div>
     </div>
     
