@@ -560,7 +560,7 @@ const StorageManager = {
                 myIonHistory: localStorage.getItem('myIonHistory'), 
                 aaQuests: localStorage.getItem('aaQuests'), 
                 aaErrorLog: localStorage.getItem('aaErrorLog'),
-                aaRedeemedCodes: localStorage.getItem('aaRedeemedCodes') // 👈 確保匯出時包含兌換紀錄
+                aaRedeemedCodes: localStorage.getItem('aaRedeemedCodes'), // 👈 加上逗號了！
                 aaPityCount: localStorage.getItem('aaPityCount')
             };
             document.getElementById('saveCodeInput').value = btoa(encodeURIComponent(JSON.stringify(data)));
