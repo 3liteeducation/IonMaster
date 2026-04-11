@@ -77,10 +77,11 @@
 
         <main id="view-gallery" class="view-section">
             <h1 class="ios-title">圖鑑 <span class="collection-count" id="collectionCount">0/184</span></h1>
-            <div class="draw-actions">
+         <div class="draw-actions">
                 <button class="ios-btn warning-btn" onclick="Game.drawCard(1)">單抽 (5🪙)</button>
-                <button class="ios-btn epic-btn" onclick="Game.drawCard(10)">十連抽 (50🪙)</button>
+                <button class="ios-btn epic-btn" onclick="Game.drawCard(10)">十連抽 (45🪙) 🔥九折</button>
             </div>
+            <div id="pityDisplay" style="text-align:center; font-size:14px; color:var(--apple-purple); font-weight:bold; margin-top:10px;">距離必中 SSR 還有 50 抽</div>
             <div class="glass-panel filter-scroll mt-2">
                 <button class="filter-chip active" onclick="UI.filterGallery('all')">全部</button>
                 <button class="filter-chip" onclick="UI.filterGallery('ssr')">SSR</button>
