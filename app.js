@@ -487,7 +487,7 @@ const Game = {
         UI.toggleModal('gachaAnimModal', true); AudioEngine.play('draw');
         setTimeout(() => { document.getElementById('whiteFlash').classList.add('active'); setTimeout(() => { UI.toggleModal('gachaAnimModal', false); if(times===1) this.showGachaResult(res[0].c, res[0].c.targetRarity, res[0].stars, res[0].isNew, res[0].ref, false); else this.showTenDraw(res, refund); setTimeout(() => { document.getElementById('whiteFlash').classList.remove('active'); UI.setLock(false);}, 100); }, 400); }, 2000); 
     },
-    showGachaResult(card, rarity, stars, isNew, refundAmt, isAlchemy) {
+showGachaResult(card, rarity, stars, isNew, refundAmt, isAlchemy) {
         State.game.currentDrawnCard = { ...card, currentRarity: rarity, currentStars: stars }; 
         let color = rarity==='SSR' ? 'var(--rare)' : (rarity==='SR' ? 'var(--apple-purple)' : 'var(--secondary)');
         if(rarity==='SSR') { if(isNew||isAlchemy) AudioEngine.play('ssr'); else if(!refundAmt) AudioEngine.play('correct'); }
@@ -507,7 +507,16 @@ const Game = {
         cardDiv.innerHTML = UI.createCardNode(card, stars, true, null).innerHTML;
         
         let wrapper = document.createElement('div'); wrapper.innerHTML = html; wrapper.appendChild(cardDiv);
-        wrapper.innerHTML += `<button class="ios-btn primary-btn mt-3" onclick="Game.shareCard()">📤 炫耀收藏</button><button class="ios-btn cancel-btn mt-2" onclick="UI.toggleModal('gachaModal', false); UI.filterGallery('all');">關閉</button>`;
+        
+        // 📋 升級：加入並排的「分享」與「複製」按鈕
+        wrapper.innerHTML += `
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <button class="ios-btn primary-btn" onclick="Game.shareCard()">📤 分享</button>
+                <button class="ios-btn info-btn" onclick="Game.copyShareText()">📋 複製文字</button>
+            </div>
+            <button class="ios-btn cancel-btn mt-2" onclick="UI.toggleModal('gachaModal', false); UI.filterGallery('all');">關閉</button>
+        `;
+        
         document.getElementById('gachaContent').innerHTML = ''; document.getElementById('gachaContent').appendChild(wrapper); UI.toggleModal('gachaModal', true);
     },
     showTenDraw(results, totalRefund) {
@@ -528,23 +537,44 @@ const Game = {
         });
         if(hasSSR) setTimeout(() => { AudioEngine.play('ssr'); if(typeof confetti !== 'undefined') confetti({particleCount: 200, spread: 100, origin: {y: 0.5}}); }, 1500);
     },
+   // 原本的分享機制 (叫出手機原生分享選單)
     shareCard() {
         if (!State.game.currentDrawnCard) return; AudioEngine.play('click');
         const s = State.game.currentDrawnCard; const starStr = "⭐".repeat(s.currentStars || 1); const title = State.getLevel().title;
-        // 👇 這裡已經為您換上最新的 Cloudflare 網址
         const text = `🧪「${title}」收集到了 [${s.currentRarity}] 級別的 ${starStr}「${s.name}」！\n你能超越我嗎？來 3lite Education 挑戰：\nhttps://ionmaster.threeliteeducation.workers.dev/`;
-        if (navigator.share) navigator.share({ title: 'Ion Master', text: text, url: 'https://ionmaster.threeliteeducation.workers.dev/' }).catch(e=>{}); 
-        else navigator.clipboard.writeText(text).then(() => alert('📝 已複製到剪貼簿！'));
+        
+        if (navigator.share) {
+            navigator.share({ title: 'Ion Master', text: text, url: 'https://ionmaster.threeliteeducation.workers.dev/' }).catch(e=>{}); 
+        } else {
+            this.copyShareText(); // 不支援原生分享的電腦，自動轉為複製
+        }
     },
+   // 📋 新增：專屬的一鍵複製函數
+    copyShareText() {
+        if (!State.game.currentDrawnCard) return; AudioEngine.play('click');
+        const s = State.game.currentDrawnCard; const starStr = "⭐".repeat(s.currentStars || 1); const title = State.getLevel().title;
+        const text = `🧪「${title}」收集到了 [${s.currentRarity}] 級別的 ${starStr}「${s.name}」！\n你能超越我嗎？來 3lite Education 挑戰：\nhttps://ionmaster.threeliteeducation.workers.dev/`;
+        
+        navigator.clipboard.writeText(text).then(() => {
+            alert('📋 已成功複製到剪貼簿！快去貼給同學吧！');
+        }).catch(err => {
+            alert('❌ 複製失敗，請手動框選文字複製。');
+        });
+    },
+
+    // PvP 挑戰也加上一鍵複製
     sharePvP(time) {
         AudioEngine.play('click');
         let encoded = btoa(JSON.stringify({ t: parseFloat(time), d: State.pvp.myRecord }));
         let url = window.location.origin + window.location.pathname + "?pvp=" + encoded;
         const text = `⚔️「${State.getLevel().title}」向你發起合成決鬥！\n🎯 目標時間：${time} 秒\n點擊接受挑戰：\n${url}`;
-        if (navigator.share) navigator.share({ title: 'PvP 挑戰', text: text, url: url }).catch(e=>{}); 
-        else navigator.clipboard.writeText(text).then(() => alert('📝 挑戰連結已複製！'));
+        
+        navigator.clipboard.writeText(text).then(() => {
+            alert('📋 挑戰連結已成功複製到剪貼簿！快去貼給同學吧！');
+        }).catch(err => {
+            alert('❌ 複製失敗，請手動框選文字複製。');
+        });
     }
-};
 
 // ==========================================
 // Module 5: 數據存檔模組
