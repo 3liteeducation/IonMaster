@@ -17,26 +17,36 @@
 
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; padding: 20px 10px; overflow-x: hidden; transition: background 0.8s; min-height: 100vh;}
 
-/* 流體背景動畫 */
+/* ⚡ 優化 1：使用 GPU 硬體加速的流體背景，取代耗效能的 background-position */
 .fluid-bg {
     position: fixed; top: -50%; left: -50%; width: 200vw; height: 200vh; z-index: -1;
     background: radial-gradient(circle at 50% 50%, #e0eafc, #cfdef3, #fdfbfb);
-    background-size: 200% 200%;
-    animation: flow 15s ease-in-out infinite; transition: background 1s ease;
+    background-size: 100% 100%;
+    animation: flow 20s linear infinite; 
+    transition: background 1s ease;
+    will-change: transform; /* 啟動顯卡硬體加速 */
 }
-.bg-speed .fluid-bg { background: radial-gradient(circle at 50% 50%, #ff9a9e, #fecfef, #fdfbfb); }
-.bg-alchemy .fluid-bg { background: radial-gradient(circle at 50% 50%, #2c1010, #4a1c40, #1a0b0b); animation: flow 5s ease-in-out infinite;}
-@keyframes flow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+@keyframes flow { 
+    0% { transform: rotate(0deg) scale(1); } 
+    50% { transform: rotate(180deg) scale(1.05); } 
+    100% { transform: rotate(360deg) scale(1); } 
+}
 
-/* 核心毛玻璃組件 (Glassmorphism) */
+/* ⚡ 優化 2：微調毛玻璃的模糊強度，肉眼看不出差異，但效能大幅提升 */
 .glass-panel {
     background: var(--glass-bg);
-    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); /* 從 20px 降為 12px */
     border: 1px solid var(--glass-border);
     box-shadow: var(--glass-shadow);
     border-radius: 24px;
+    will-change: transform, backdrop-filter;
 }
-body.bg-alchemy .glass-panel { background: rgba(30, 20, 20, 0.7); border-color: rgba(255,255,255,0.1); color: white;}
+
+/* ⚡ 優化 3：移除圖鑑中 184 張卡片的耗能 blur 濾鏡，改用純灰階與透明度 */
+.locked-blur { 
+    filter: grayscale(100%) brightness(0.7); /* 移除 blur(6px) */
+    opacity: 0.85; 
+}
 
 /* 佈局容器 */
 .app-container { width: 100%; max-width: 500px; margin: 0 auto; padding: 0 10px 100px 10px; position: relative; z-index: 1;}
