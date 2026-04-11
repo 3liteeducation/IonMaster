@@ -4,7 +4,7 @@
 const State = {
     data: {
         coins: 0, exp: 0, inventory: {}, quests: { date: "", list: [] }, 
-        myHistory: [], errorLog: {} 
+        myHistory: [], errorLog: {}, redeemedCodes: [] // 👈 包含已兌換紀錄
     },
     game: { mode: '', score: 0, combo: 0, startTime: null, timerInterval: null, isAnimating: false, targetCard: null },
     pvp: { active: false, targetTime: 0, deck: [], myRecord: [] },
@@ -16,6 +16,7 @@ const State = {
         this.data.quests = this.safeParse('aaQuests', { date: "", list: [] });
         this.data.myHistory = this.safeParse('myIonHistory', []);
         this.data.errorLog = this.safeParse('aaErrorLog', {});
+        this.data.redeemedCodes = this.safeParse('aaRedeemedCodes', []); // 👈 讀取兌換紀錄
         this.checkDailyQuests(); this.save();
     },
     safeParse(key, def) { try { let v = localStorage.getItem(key); return v ? JSON.parse(v) : def; } catch(e) { return def; } },
@@ -25,6 +26,7 @@ const State = {
         localStorage.setItem('aaQuests', JSON.stringify(this.data.quests));
         localStorage.setItem('myIonHistory', JSON.stringify(this.data.myHistory));
         localStorage.setItem('aaErrorLog', JSON.stringify(this.data.errorLog));
+        localStorage.setItem('aaRedeemedCodes', JSON.stringify(this.data.redeemedCodes)); // 👈 儲存兌換紀錄
         UI.updateProfile();
     },
     addExp(amt) {
@@ -176,6 +178,57 @@ const Game = {
     claimQuest(idx) {
         let q = State.data.quests.list[idx];
         if(q.progress >= q.target && !q.isClaimed) { AudioEngine.play('ssr'); q.isClaimed = true; State.data.coins += q.reward; State.save(); UI.renderQuests(); if(typeof confetti !== 'undefined') confetti({particleCount: 50, spread: 60, origin: {y: 0.8}});}
+    },
+    redeemCode() {
+        AudioEngine.play('click');
+        const input = document.getElementById('redeemInput');
+        const code = input.value.trim().toUpperCase();
+        if (!code) { alert('❌ 請輸入禮物碼！'); return; }
+
+        // 🎁 在這裡自由設定您的禮物碼、獎勵、以及過期時間！
+        // 格式：'禮物碼': { reward: 代幣數量, expires: 'YYYY-MM-DDTHH:mm:ss' 或 null }
+        const validCodes = {
+            'AASIR-PRO': { reward: 100, expires: '2026-05-01T23:59:59' }, 
+            'CHEM-GOD': { reward: 50, expires: '2026-12-31T23:59:59' },
+            'WELCOME-3LITE': { reward: 10, expires: null } // null 代表永久有效
+        };
+
+        if (!validCodes.hasOwnProperty(code)) {
+            alert('❌ 無效的禮物碼！請確認是否輸入正確。');
+            return;
+        }
+
+        const codeData = validCodes[code];
+
+        // ⏳ 檢查時間限制機制
+        if (codeData.expires !== null) {
+            const now = new Date(); 
+            const expiryDate = new Date(codeData.expires); 
+            
+            if (now > expiryDate) {
+                AudioEngine.play('wrong');
+                alert('⏳ 哎呀！這個禮物碼已經過期啦！下次請早點來兌換喔。');
+                return;
+            }
+        }
+
+        // 檢查是否已經兌換過
+        if (State.data.redeemedCodes.includes(code)) {
+            alert('⚠️ 這個禮物碼您已經兌換過囉！把機會留給別人吧。');
+            return;
+        }
+
+        // 兌換成功邏輯
+        const reward = codeData.reward;
+        State.data.coins += reward;
+        State.data.redeemedCodes.push(code); // 紀錄已使用
+        State.save();
+        
+        input.value = ''; // 清空輸入框
+        UI.toggleModal('redeemModal', false);
+        AudioEngine.play('ssr');
+        if(typeof confetti !== 'undefined') confetti({particleCount: 200, spread: 100, origin: {y: 0.3}});
+        alert(`🎉 兌換成功！獲得 ${reward} 🪙 AA 代幣！`);
     },
     start(mode) {
         AudioEngine.play('click'); State.game.mode = mode; State.game.score = 0; State.game.combo = 0; State.game.timerInterval = null; State.pvp.myRecord = [];
@@ -363,7 +416,15 @@ const StorageManager = {
     export() {
         AudioEngine.play('click');
         try {
-            const data = { aaCoins: localStorage.getItem('aaCoins'), aaExp: localStorage.getItem('aaExp'), aaInventorySep: localStorage.getItem('aaInventorySep'), myIonHistory: localStorage.getItem('myIonHistory'), aaQuests: localStorage.getItem('aaQuests'), aaErrorLog: localStorage.getItem('aaErrorLog') };
+            const data = { 
+                aaCoins: localStorage.getItem('aaCoins'), 
+                aaExp: localStorage.getItem('aaExp'), 
+                aaInventorySep: localStorage.getItem('aaInventorySep'), 
+                myIonHistory: localStorage.getItem('myIonHistory'), 
+                aaQuests: localStorage.getItem('aaQuests'), 
+                aaErrorLog: localStorage.getItem('aaErrorLog'),
+                aaRedeemedCodes: localStorage.getItem('aaRedeemedCodes') // 👈 確保匯出時包含兌換紀錄
+            };
             document.getElementById('saveCodeInput').value = btoa(encodeURIComponent(JSON.stringify(data)));
             document.getElementById('saveCodeInput').select(); document.execCommand('copy'); alert('✅ 存檔碼已複製！');
         } catch(e) { alert('❌ 匯出失敗。'); }
