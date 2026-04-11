@@ -4,7 +4,7 @@
 const State = {
     data: {
         coins: 0, exp: 0, inventory: {}, quests: { date: "", list: [] }, 
-        myHistory: [], errorLog: {} // 隱性學習數據追蹤
+        myHistory: [], errorLog: {} 
     },
     game: { mode: '', score: 0, combo: 0, startTime: null, timerInterval: null, isAnimating: false, targetCard: null },
     pvp: { active: false, targetTime: 0, deck: [], myRecord: [] },
@@ -112,19 +112,26 @@ const UI = {
         });
     },
     getStarStr(n) { return "⭐".repeat(n); },
+    
+    // 【核心修復】精準讀取未解鎖卡牌的圖片
     createCardNode(card, stars, isOwned, onClick) {
         const item = document.createElement('div');
         item.className = `card-item ${isOwned ? 'owned ' + card.targetRarity.toLowerCase() : 'locked'} ${stars >= 3 ? 'max-star' : ''}`;
+        
+        // 確保不論解鎖與否，都讀取精確的稀有度路徑
         let imgPath = `images/${card.fileKey}_${card.targetRarity.toLowerCase()}.png`;
+        
         if (isOwned) {
             item.innerHTML = `<img src="${imgPath}" class="full-card-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"><div class="fallback-content" style="display:none;"><div style="font-size:24px;">${card.html}</div><div style="font-size:12px; margin-top:5px;">${card.targetRarity}</div></div><div class="stars-overlay">${this.getStarStr(stars)}</div>`;
             item.onclick = onClick; 
         } else {
-            item.innerHTML = `<img src="images/${card.fileKey}_n.png" class="full-card-img locked-blur" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"><div class="fallback-content" style="display:none; background: #eee;"><div style="font-size:18px; color: #7f8c8d;">${card.html}</div><div style="font-size:10px;">${card.targetRarity}</div></div><div class="locked-overlay">🔒</div>`;
+            // 這裡已經將原本寫死的 _n.png 改成了 ${imgPath}
+            item.innerHTML = `<img src="${imgPath}" class="full-card-img locked-blur" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"><div class="fallback-content" style="display:none; background: #eee;"><div style="font-size:18px; color: #7f8c8d;">${card.html}</div><div style="font-size:10px;">${card.targetRarity}</div></div><div class="locked-overlay">🔒</div>`;
             if(onClick) item.onclick = onClick; 
         }
         return item;
     },
+    
     filterGallery(type) {
         AudioEngine.play('click');
         document.querySelectorAll('#view-gallery .filter-chip').forEach(el => el.classList.remove('active')); event.target.classList.add('active');
