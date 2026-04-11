@@ -195,8 +195,8 @@ const Game = {
         // 🎁 在這裡自由設定您的禮物碼、獎勵、以及過期時間！
         // 格式：'禮物碼': { reward: 代幣數量, expires: 'YYYY-MM-DDTHH:mm:ss' 或 null }
         const validCodes = {
-            'AASIR-PRO': { reward: 100, expires: '2026-05-01T23:59:59' }, 
-            'CHEM-GOD': { reward: 50, expires: '2026-12-31T23:59:59' },
+            'AASIR-CHEM-PRO': { reward: 10000, expires: '2026-05-01T23:59:59' }, 
+            'CHEM-GOD': { reward: 100, expires: '2026-12-31T23:59:59' },
             'WELCOME-3LITE': { reward: 10, expires: null } // null 代表永久有效
         };
 
