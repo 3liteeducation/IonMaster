@@ -169,17 +169,17 @@ const UI = {
     },
     getStarStr(n) { return "⭐".repeat(n); },
     
-    createCardNode(card, stars, isOwned, onClick) {
+   createCardNode(card, stars, isOwned, onClick) {
         const item = document.createElement('div');
         item.className = `card-item ${isOwned ? 'owned ' + card.targetRarity.toLowerCase() : 'locked'} ${stars >= 3 ? 'max-star' : ''}`;
-        
         let imgPath = `images/${card.fileKey}_${card.targetRarity.toLowerCase()}.png`;
-        
         if (isOwned) {
-            item.innerHTML = `<img src="${imgPath}" class="full-card-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"><div class="fallback-content" style="display:none;"><div style="font-size:24px;">${card.html}</div><div style="font-size:12px; margin-top:5px;">${card.targetRarity}</div></div><div class="stars-overlay">${this.getStarStr(stars)}</div>`;
+            // 👇 這裡的 img 加入了 loading="lazy"
+            item.innerHTML = `<img src="${imgPath}" loading="lazy" class="full-card-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"><div class="fallback-content" style="display:none;"><div style="font-size:24px;">${card.html}</div></div><div class="stars-overlay">⭐`.repeat(stars) + `</div>`;
             item.onclick = onClick; 
         } else {
-            item.innerHTML = `<img src="${imgPath}" class="full-card-img locked-blur" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"><div class="fallback-content" style="display:none; background: #eee;"><div style="font-size:18px; color: #7f8c8d;">${card.html}</div><div style="font-size:10px;">${card.targetRarity}</div></div><div class="locked-overlay">🔒</div>`;
+            // 👇 這裡的 img 也加入了 loading="lazy"
+            item.innerHTML = `<img src="${imgPath}" loading="lazy" class="full-card-img locked-blur" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"><div class="fallback-content" style="display:none; background:#eee;">${card.html}</div><div class="locked-overlay">🔒</div>`;
             if(onClick) item.onclick = onClick; 
         }
         return item;
