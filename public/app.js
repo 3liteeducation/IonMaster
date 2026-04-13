@@ -1,8 +1,6 @@
-// ==========================================
-// Module 1: 集中式狀態管理 (Centralized State)
-// ==========================================
 const State = {
-    username: "", // ☁️ 新增：儲存目前登入的學號/暱稱
+    username: "", 
+    passcode: "", 
     data: {
         coins: 0, exp: 0, inventory: {}, quests: { date: "", list: [] }, 
         myHistory: [], errorLog: {}, redeemedCodes: [], pityCount: 50
@@ -23,41 +21,56 @@ const State = {
         this.data.errorLog = this.safeParse('aaErrorLog', {});
         this.data.redeemedCodes = this.safeParse('aaRedeemedCodes', []);
         this.data.pityCount = this.safeParse('aaPityCount', 50); 
-        this.checkDailyQuests(); 
-        this.save();
     },
 
-    // ☁️ 新增：雲端登入系統
     async login() {
-        let user = prompt("🧪 歡迎來到 Ion Master！\n請輸入您的學號或暱稱以登入雲端：");
-        if (!user || user.trim() === "") return this.login(); // 強制輸入
-        this.username = user.trim().toUpperCase();
+        const uInput = document.getElementById('loginUsername');
+        const pInput = document.getElementById('loginPasscode');
+        const btn = document.getElementById('loginBtn');
+        
+        let user = uInput.value.trim().toUpperCase();
+        let pass = pInput.value.trim();
+
+        if (!user || !pass) { alert("⚠️ 帳號與密碼不得為空！"); return; }
+        
+        btn.innerText = "驗證中..."; btn.disabled = true;
 
         try {
             const res = await fetch('/api/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: this.username })
+                body: JSON.stringify({ username: user, passcode: pass })
             });
             const result = await res.json();
             
-            if (result.data) {
-                this.data = result.data; // 覆蓋為雲端存檔
-                alert(`👋 歡迎回來，${this.username}！雲端存檔已同步。`);
+            if (result.success) {
+                this.username = user;
+                this.passcode = pass;
+                if (result.data) this.data = result.data; 
+
+                this.checkDailyQuests(); 
+                
+                document.getElementById('loginModal').style.display = 'none';
+                document.getElementById('profileName').innerText = this.username;
+                
+                this.save(); 
+                UI.renderQuests(); 
+                
+                if(result.isNew) alert(`✨ 註冊成功！已為您建立雲端帳號：${this.username}`);
+                AudioEngine.play('ssr');
             } else {
-                alert(`✨ 偵測到新實驗員！已為您建立雲端帳號：${this.username}`);
+                alert(result.message); 
+                btn.innerText = "進入系統"; btn.disabled = false;
             }
-            this.save(); // 初始化 UI 並存檔
         } catch (e) {
-            alert("❌ 無法連線至雲端伺服器，目前為單機遊玩模式。");
+            alert("❌ 雲端連線失敗，請檢查網路。");
+            btn.innerText = "進入系統"; btn.disabled = false;
         }
     },
 
     safeParse(key, def) { try { let v = localStorage.getItem(key); return v ? JSON.parse(v) : def; } catch(e) { return def; } },
     
-    // 🔄 修改：儲存時同步到雲端
     save() {
-        // 1. 先存本地備份
         localStorage.setItem('aaCoins', this.data.coins); 
         localStorage.setItem('aaExp', this.data.exp);
         localStorage.setItem('aaInventorySep', JSON.stringify(this.data.inventory));
@@ -71,12 +84,16 @@ const State = {
         let pityEl = document.getElementById('pityDisplay');
         if(pityEl) pityEl.innerText = `距離必中 SSR 還有 ${this.data.pityCount} 抽`;
 
-        // 2. ☁️ 同步到 Cloudflare 伺服器
         if (this.username) {
             fetch('/api/save', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: this.username, data: this.data })
+                body: JSON.stringify({ 
+                    username: this.username, 
+                    passcode: this.passcode, 
+                    data: this.data,
+                    lvl: this.getLevel().lvl 
+                })
             }).catch(e => console.log('雲端同步失敗', e));
         }
     },
@@ -89,7 +106,13 @@ const State = {
         let exp = this.data.exp; let lvl = Math.floor(Math.sqrt(exp / 15)) + 1; 
         let title = lvl >= 50 ? "A.A. Sir's Top Student" : (lvl >= 30 ? "Precipitation Master" : (lvl >= 10 ? "Ion Catcher" : "Lab Rookie"));
         let next = 15 * Math.pow(lvl, 2); let prev = 15 * Math.pow(lvl - 1, 2);
-        return { lvl, title, progress: Math.min(((exp - prev) / (next - prev)) * 100, 100) };
+        
+        return { 
+            lvl, title, 
+            progress: Math.min(((exp - prev) / (next - prev)) * 100, 100),
+            currExp: exp - prev, 
+            reqExp: next - prev 
+        };
     },
     checkDailyQuests() {
         const today = new Date().toDateString();
@@ -97,6 +120,7 @@ const State = {
             let shuffled = Database.config.questTemplates.sort(() => 0.5 - Math.random()).slice(0, 3);
             this.data.quests = { date: today, list: shuffled.map(q => ({ ...q, progress: 0, isClaimed: false })) };
             let login = this.data.quests.list.find(q => q.id === 'q_login'); if(login) login.progress = 1;
+            this.save();
         }
     },
     updateQuest(id, amt=1) {
@@ -106,38 +130,20 @@ const State = {
     logError(c, a) { let key = c.formula+"_"+a.formula; this.data.errorLog[key] = (this.data.errorLog[key]||0)+1; this.save(); }
 };
 
-// ==========================================
-// Module 2: 音效引擎 (Lazy Load)
-// ==========================================
 const AudioEngine = {
     ctx: null,
-    init() { 
-        try { 
-            if(!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); 
-            if(this.ctx.state === 'suspended') this.ctx.resume(); 
-        } catch(e){} 
-    },
+    init() { try { if(!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); if(this.ctx.state === 'suspended') this.ctx.resume(); } catch(e){} },
     tone(freq, type, dur, vol=0.1) {
-        this.init(); 
-        if(!this.ctx) return; 
-        try {
-            const osc = this.ctx.createOscillator(); 
-            const gain = this.ctx.createGain();
-            osc.type = type; 
-            osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-            gain.gain.setValueAtTime(vol, this.ctx.currentTime); 
-            gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + dur);
-            osc.connect(gain); 
-            gain.connect(this.ctx.destination); 
-            osc.start(); 
-            osc.stop(this.ctx.currentTime + dur);
-        } catch(e){}
+        this.init(); if(!this.ctx) return;
+        const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
+        osc.type = type; osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+        gain.gain.setValueAtTime(vol, this.ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + dur);
+        osc.connect(gain); gain.connect(this.ctx.destination); osc.start(); osc.stop(this.ctx.currentTime + dur);
     },
     play(sound) {
         const s = {
             correct: () => { this.tone(600,'sine',0.1); setTimeout(()=>this.tone(800,'sine',0.2),100); },
-            wrong: () => { this.tone(150,'sawtooth',0.3,0.2); }, 
-            click: () => { this.tone(400,'sine',0.05); },
+            wrong: () => { this.tone(150,'sawtooth',0.3,0.2); }, click: () => { this.tone(400,'sine',0.05); },
             draw: () => { this.tone(800,'square',0.1,0.05); this.tone(1200,'sine',0.3,0.05); },
             ssr: () => { this.tone(400,'sine',0.2); setTimeout(()=>this.tone(600,'sine',0.2),150); setTimeout(()=>this.tone(900,'sine',0.4),300); },
             explode: () => { this.tone(100,'square',0.5,0.3); this.tone(50,'sawtooth',0.6,0.3); }
@@ -147,9 +153,6 @@ const AudioEngine = {
 };
 document.body.addEventListener('click', () => AudioEngine.init(), {once:true});
 
-// ==========================================
-// Module 3: 介面渲染管理器 (DOM Optimization)
-// ==========================================
 const UI = {
     switchView(viewId, btnElem) {
         AudioEngine.play('click');
@@ -160,53 +163,65 @@ const UI = {
         if(viewId === 'gallery') this.filterGallery('all');
         if(viewId === 'lab') this.filterLab('all');
     },
-    toggleModal(id, show) { 
-        if(show) AudioEngine.play('click'); 
-        document.getElementById(id).style.display = show ? 'flex' : 'none'; 
-    },
-    setLock(locked) { 
-        State.game.isAnimating = locked; 
-        document.getElementById('animLock').style.display = locked ? 'block' : 'none'; 
-    },
+    toggleModal(id, show) { if(show) AudioEngine.play('click'); document.getElementById(id).style.display = show ? 'flex' : 'none'; },
+    setLock(locked) { State.game.isAnimating = locked; document.getElementById('animLock').style.display = locked ? 'block' : 'none'; },
     updateProfile() {
         document.getElementById('mainCoinCount').innerText = State.data.coins;
         let info = State.getLevel();
         document.getElementById('playerLevel').innerText = info.lvl;
         let titleEl = document.getElementById('playerTitle'); titleEl.innerText = info.title;
-        titleEl.style.color = info.lvl >= 50 ? 'var(--rare)' : 'white';
+        titleEl.style.color = info.lvl >= 50 ? 'var(--rare)' : 'var(--apple-blue)';
+        
         document.getElementById('expBar').style.width = info.progress + '%';
+        document.getElementById('expText').innerText = `${info.currExp} / ${info.reqExp} EXP`;
     },
     renderQuests() {
         const list = document.getElementById('questList'); list.innerHTML = '';
+        if(State.data.quests.list.length === 0) { list.innerHTML = "<p class='ios-desc'>載入中...</p>"; return; }
+        
         State.data.quests.list.forEach((q, i) => {
-            let btn = q.isClaimed ? `<button class="ios-btn" style="background:transparent; color:var(--rare); padding:0; width:auto; box-shadow:none;">✔️</button>` : 
-                     (q.progress >= q.target ? `<button class="ios-btn primary-btn" style="padding:8px 12px; font-size:14px; width:auto;" onclick="Game.claimQuest(${i})">領取 ${q.reward}🪙</button>` : 
-                     `<span style="font-size:14px; font-weight:bold; color:var(--apple-gray);">${q.progress}/${q.target}</span>`);
-            list.innerHTML += `<div class="quest-item"><div class="quest-info"><div class="ios-subtitle" style="margin:0;">${q.title}</div><div class="ios-desc">${q.desc}</div></div>${btn}</div>`;
+            let btn = q.isClaimed ? `✔️` : (q.progress >= q.target ? `<button class="ios-btn primary-btn" onclick="Game.claimQuest(${i})">領取 ${q.reward}🪙</button>` : `${q.progress}/${q.target}`);
+            list.innerHTML += `<div class="quest-item"><div class="quest-info"><div class="ios-subtitle">${q.title}</div><div class="ios-desc">${q.desc}</div></div>${btn}</div>`;
         });
     },
-    getStarStr(n) { return "⭐".repeat(n); },
-    
-   createCardNode(card, stars, isOwned, onClick) {
+    async showLeaderboard() {
+        AudioEngine.play('click');
+        UI.toggleModal('leaderboardModal', true);
+        const lbContent = document.getElementById('leaderboardContent');
+        lbContent.innerHTML = "載入中...";
+        try {
+            const res = await fetch('/api/leaderboard');
+            const result = await res.json();
+            if(result.success && result.leaderboard.length > 0) {
+                lbContent.innerHTML = "";
+                result.leaderboard.forEach((player, i) => {
+                    let rankDisplay = (i===0) ? '🥇' : (i===1) ? '🥈' : (i===2) ? '🥉' : `${i+1}`;
+                    let cls = (i<3) ? `top-${i+1}` : '';
+                    lbContent.innerHTML += `<div class="lb-row ${cls}"><div class="lb-rank">${rankDisplay}</div><div class="lb-name">${player.username}</div><div class="lb-lvl">Lv.${player.lvl}</div></div>`;
+                });
+            } else {
+                lbContent.innerHTML = "<p class='ios-desc' style='text-align:center;'>目前尚無排名數據</p>";
+            }
+        } catch(e) {
+            lbContent.innerHTML = "<p class='ios-desc' style='text-align:center;'>網路異常，無法讀取排行榜</p>";
+        }
+    },
+    createCardNode(card, stars, isOwned, onClick) {
         const item = document.createElement('div');
         item.className = `card-item ${isOwned ? 'owned ' + card.targetRarity.toLowerCase() : 'locked'} ${stars >= 3 ? 'max-star' : ''}`;
         let imgPath = `images/${card.fileKey}_${card.targetRarity.toLowerCase()}.png`;
         if (isOwned) {
-            // 👇 這裡的 img 加入了 loading="lazy"
-            item.innerHTML = `<img src="${imgPath}" loading="lazy" class="full-card-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"><div class="fallback-content" style="display:none;"><div style="font-size:24px;">${card.html}</div></div><div class="stars-overlay">⭐`.repeat(stars) + `</div>`;
+            item.innerHTML = `<img src="${imgPath}" loading="lazy" class="full-card-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"><div class="fallback-content" style="display:none;"><div style="font-size:24px;">${card.html}</div><div style="font-size:12px; margin-top:3px; color:var(--apple-gray);">${card.targetRarity}</div></div><div class="stars-overlay">⭐`.repeat(stars) + `</div>`;
             item.onclick = onClick; 
         } else {
-            // 👇 這裡的 img 也加入了 loading="lazy"
-            item.innerHTML = `<img src="${imgPath}" loading="lazy" class="full-card-img locked-blur" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"><div class="fallback-content" style="display:none; background:#eee;">${card.html}</div><div class="locked-overlay">🔒</div>`;
+            item.innerHTML = `<img src="${imgPath}" loading="lazy" class="full-card-img locked-blur" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"><div class="fallback-content" style="display:none; background:#eee;"><div style="font-size:18px; color:#7f8c8d;">${card.html}</div><div style="font-size:10px; margin-top:3px;">${card.targetRarity}</div></div><div class="locked-overlay">🔒</div>`;
             if(onClick) item.onclick = onClick; 
         }
         return item;
     },
-    
     filterGallery(type) {
         AudioEngine.play('click');
-        document.querySelectorAll('#view-gallery .filter-chip').forEach(el => el.classList.remove('active')); 
-        event.target.classList.add('active');
+        document.querySelectorAll('#view-gallery .filter-chip').forEach(el => el.classList.remove('active')); event.target.classList.add('active');
         const grid = document.getElementById('galleryGrid'); grid.innerHTML = ''; let unlockCount = 0;
         const fragment = document.createDocumentFragment(); 
         Database.expandedPool.forEach(card => {
@@ -220,8 +235,7 @@ const UI = {
     },
     filterLab(type) {
         AudioEngine.play('click');
-        document.querySelectorAll('#view-lab .filter-chip').forEach(el => el.classList.remove('active')); 
-        event.target.classList.add('active');
+        document.querySelectorAll('#view-lab .filter-chip').forEach(el => el.classList.remove('active')); event.target.classList.add('active');
         const grid = document.getElementById('labGrid'); grid.innerHTML = ''; const fragment = document.createDocumentFragment();
         Database.expandedPool.forEach(card => {
             if(card.isSpecial) return; if(type !== 'all' && card.targetRarity.toLowerCase() !== type) return;
@@ -235,7 +249,7 @@ const UI = {
                     let target = targets[card.targetRarity];
                     
                     if (State.data.coins < cost) { alert(`🪙 餘額不足！需要 ${cost} 枚代幣。`); return; }
-                    if (confirm(`確定消耗 ${cost} 🪙 來 ${(stars > 0)?"升星":"解鎖"}「${card.targetRarity}級 ${card.name}」？\n⚠️ 警告：這是一場高壓反應！需連對 ${target} 題，且每題限時 5 秒，只要錯一題或超時就直接爆炸！`)) {
+                    if (confirm(`確定消耗 ${cost} 🪙 來 ${(stars > 0)?"升星":"解鎖"}「${card.targetRarity}級 ${card.name}」？\n⚠️ 警告：這是一場高壓反應！需連對 ${target} 題，且每題限時 5 秒！`)) {
                         State.data.coins -= cost; 
                         State.save(); 
                         State.game.targetCard = card; 
@@ -250,45 +264,32 @@ const UI = {
     }
 };
 
-// ==========================================
-// Module 4: 遊戲核心邏輯 (Game Controller)
-// ==========================================
 const Game = {
     claimQuest(idx) {
         let q = State.data.quests.list[idx];
         if(q.progress >= q.target && !q.isClaimed) { AudioEngine.play('ssr'); q.isClaimed = true; State.data.coins += q.reward; State.save(); UI.renderQuests(); if(typeof confetti !== 'undefined') confetti({particleCount: 50, spread: 60, origin: {y: 0.8}});}
     },
-   async redeemCode() {
+    async redeemCode() {
         AudioEngine.play('click');
         const input = document.getElementById('redeemInput');
         const code = input.value.trim().toUpperCase();
         if (!code) { alert('❌ 請輸入禮物碼！'); return; }
 
-        // 先檢查是不是已經兌換過了 (存在本地端)
         if (State.data.redeemedCodes.includes(code)) {
-            alert('⚠️ 這個禮物碼您已經兌換過囉！把機會留給別人吧。');
+            alert('⚠️ 這個禮物碼您已經兌換過囉！');
             return;
         }
 
         try {
-            // 🚀 核心升級：派跑腿小弟去敲後端 API 的門
             const response = await fetch('/api/redeem', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ code: code }) // 把學生輸入的字傳給伺服器
+                body: JSON.stringify({ code: code }) 
             });
-            
-            // 聽取伺服器回答
             const result = await response.json();
 
-            // 如果伺服器說錯了
-            if (!result.success) {
-                AudioEngine.play('wrong');
-                alert(`❌ ${result.message}`);
-                return;
-            }
+            if (!result.success) { AudioEngine.play('wrong'); alert(`❌ ${result.message}`); return; }
 
-            // 🛡️ 伺服器核對正確！發放伺服器計算好的獎勵
             const reward = result.reward;
             State.data.coins += reward;
             State.data.redeemedCodes.push(code); 
@@ -300,14 +301,12 @@ const Game = {
             if(typeof confetti !== 'undefined') confetti({particleCount: 200, spread: 100, origin: {y: 0.3}});
             alert(`🎉 兌換成功！獲得 ${reward} 🪙 AA 代幣！`);
 
-        } catch (error) {
-            alert('❌ 無法連線到教員室(伺服器)，請確認網路或稍後再試。');
-        }
+        } catch (error) { alert('❌ 無法連線到伺服器。'); }
     },
     start(mode) {
         AudioEngine.play('click'); 
         State.game.mode = mode; State.game.score = 0; State.game.timerInterval = null; State.pvp.myRecord = [];
-        State.game.battery = 0; State.game.feverCount = 0;
+        State.game.combo = 0; State.game.battery = 0; State.game.feverCount = 0;
 
         document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
         document.getElementById('view-play').classList.add('active'); document.getElementById('activeGameArea').style.display = 'block'; document.querySelector('.game-modes').style.display = 'none';
@@ -319,7 +318,7 @@ const Game = {
             pTxt.innerText = "進度: 0/10"; pTxt.style.color = "var(--secondary)"; tDisp.style.display = 'block';
             State.game.startTime = Date.now(); State.game.timerInterval = setInterval(() => { tDisp.innerText = ((Date.now() - State.game.startTime) / 1000).toFixed(1) + "s"; }, 100);
         } else if (mode === 'practice' || mode === 'color') {
-            pTxt.innerText = "答對: 0 (連對: 0)"; 
+            pTxt.innerText = "答對: 0 (連擊: 0)"; 
             pTxt.style.color = mode === 'color' ? "var(--apple-purple)" : "var(--secondary)"; 
             tDisp.style.display = 'none';
         } else if (mode === 'alchemy') {
@@ -333,6 +332,7 @@ const Game = {
     quit() {
         AudioEngine.play('click'); clearInterval(State.game.timerInterval); document.body.className = 'bg-main'; document.body.classList.remove('screen-shake');
         document.getElementById('activeGameArea').style.display = 'none'; document.querySelector('.game-modes').style.display = 'block';
+        document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); 
         if(State.pvp.active) { window.history.pushState({}, '', window.location.pathname); State.pvp.active = false; document.getElementById('pvpBanner').style.display = 'none'; }
         UI.switchView('home');
     },
@@ -362,7 +362,6 @@ const Game = {
         
         if (m === 'speed') State.pvp.myRecord.push({ c: (scenario === 3 ? colorIdx : curC.id), a: (curA ? curA.id : 0), s: scenario });
         
-        // ⏱️ 煉金死亡倒數計時器
         if (m === 'alchemy') {
             clearInterval(State.game.timerInterval);
             State.game.alchemyTimeLeft = 50; 
@@ -409,7 +408,8 @@ const Game = {
         if (m === 'alchemy') clearInterval(State.game.timerInterval);
         
         if(isCorrect) {
-            AudioEngine.play('correct'); if(btn) btn.classList.add('correct'); State.game.score++;
+            AudioEngine.play('correct'); if(btn) btn.classList.add('correct'); 
+            State.game.score++; State.game.combo++; 
             
             if (m === 'speed' || m === 'pvp') { 
                 document.getElementById('progressText').innerText = `進度: ${State.game.score}/10`; document.getElementById('batteryLevel').style.width = (State.game.score * 10) + "%"; 
@@ -422,34 +422,40 @@ const Game = {
                 State.updateQuest('q_practice', 1);
                 
                 if (State.game.feverCount > 0) {
-                    State.addExp(10); State.data.coins += 1; State.save(); State.game.feverCount--;
-                    document.getElementById('progressText').innerText = `🔥 狂熱模式剩餘: ${State.game.feverCount} 題`;
+                    State.addExp(m === 'color' ? 20 : 10); 
+                    State.data.coins += (m === 'color' ? 3 : 1); 
+                    State.game.feverCount--;
+                    
+                    document.getElementById('progressText').innerText = `🔥 狂熱剩餘: ${State.game.feverCount} 題`;
                     document.getElementById('batteryLevel').style.width = (State.game.feverCount * 20) + "%"; 
                     
                     if (State.game.feverCount === 0) {
                         State.game.battery = 0; document.body.classList.remove('bg-fever');
-                        document.getElementById('progressText').innerText = `答對: ${State.game.score} (連對: 0)`;
+                        document.getElementById('progressText').innerText = `答對: ${State.game.score} (連擊: ${State.game.combo})`;
                         document.getElementById('progressText').style.color = m === 'color' ? "var(--apple-purple)" : "var(--secondary)";
                         document.getElementById('batteryLevel').style.background = "var(--apple-green)";
                     }
                 } else {
-                    State.addExp(5); State.game.battery++;
-                    document.getElementById('progressText').innerText = `答對: ${State.game.score} (連對: ${State.game.battery})`;
+                    State.addExp(m === 'color' ? 10 : 5); 
+                    if (m === 'color') State.data.coins += 1; 
+                    State.game.battery++; 
+                    
+                    document.getElementById('progressText').innerText = `答對: ${State.game.score} (連擊: ${State.game.combo})`;
                     document.getElementById('batteryLevel').style.width = (State.game.battery * 10) + "%";
                     
-                    if (State.game.battery >= 10) {
-                        State.game.feverCount = 5; AudioEngine.play('ssr'); document.body.classList.add('bg-fever');
-                        let pTxt = document.getElementById('progressText');
-                        pTxt.innerText = `🔥 狂熱模式: 代幣 100% 掉落！`; pTxt.style.color = "var(--apple-orange)";
-                        let bLvl = document.getElementById('batteryLevel');
-                        bLvl.style.background = "var(--apple-orange)"; bLvl.style.width = "100%";
+                    if (State.game.battery >= 10) { 
+                        State.game.feverCount = 5; document.body.classList.add('bg-fever'); AudioEngine.play('ssr'); 
+                        let pTxt = document.getElementById('progressText'); pTxt.innerText = `🔥 狂熱啟動: 代幣暴增！`; pTxt.style.color = "var(--apple-orange)";
+                        let bLvl = document.getElementById('batteryLevel'); bLvl.style.background = "var(--apple-orange)"; bLvl.style.width = "100%";
                         if(typeof confetti !== 'undefined') confetti({particleCount: 150, spread: 80, origin: {y: 0.6}});
                     }
                 }
+                State.save();
             }
             setTimeout(()=>this.nextQuestion(), 400); 
         } else {
             AudioEngine.play('wrong'); if(btn) btn.classList.add('wrong'); 
+            State.game.combo = 0; 
             if (!isTimeout && c && a && m !== 'color') State.logError(c, a); 
             
             if (m === 'alchemy') { 
@@ -464,7 +470,7 @@ const Game = {
                         document.getElementById('batteryLevel').style.background = "var(--apple-green)";
                     }
                     document.getElementById('batteryLevel').style.width = "0%";
-                    document.getElementById('progressText').innerText = `答對: ${State.game.score} 💀 (連對中斷)`;
+                    document.getElementById('progressText').innerText = `答對: ${State.game.score} 💀 (連擊中斷)`;
                 }
                 setTimeout(() => { if(btn) btn.classList.remove('wrong'); State.game.isAnswered = false; }, 1000); 
             }
@@ -591,94 +597,56 @@ const Game = {
     }
 };
 
-// ==========================================
-// Module 5: 數據存檔模組 (100% 完整)
-// ==========================================
 const StorageManager = {
     export() {
         AudioEngine.play('click');
         try {
             const data = { 
-                aaCoins: localStorage.getItem('aaCoins'), 
-                aaExp: localStorage.getItem('aaExp'), 
-                aaInventorySep: localStorage.getItem('aaInventorySep'), 
-                myIonHistory: localStorage.getItem('myIonHistory'), 
-                aaQuests: localStorage.getItem('aaQuests'), 
-                aaErrorLog: localStorage.getItem('aaErrorLog'),
-                aaRedeemedCodes: localStorage.getItem('aaRedeemedCodes'),
-                aaPityCount: localStorage.getItem('aaPityCount')
+                aaCoins: localStorage.getItem('aaCoins'), aaExp: localStorage.getItem('aaExp'), 
+                aaInventorySep: localStorage.getItem('aaInventorySep'), myIonHistory: localStorage.getItem('myIonHistory'), 
+                aaQuests: localStorage.getItem('aaQuests'), aaErrorLog: localStorage.getItem('aaErrorLog'),
+                aaRedeemedCodes: localStorage.getItem('aaRedeemedCodes'), aaPityCount: localStorage.getItem('aaPityCount')
             };
             document.getElementById('saveCodeInput').value = btoa(encodeURIComponent(JSON.stringify(data)));
-            document.getElementById('saveCodeInput').select(); 
-            document.execCommand('copy'); 
-            alert('✅ 存檔碼已複製！');
-        } catch(e) { 
-            alert('❌ 匯出失敗。'); 
-        }
+            document.getElementById('saveCodeInput').select(); document.execCommand('copy'); alert('✅ 存檔碼已複製！');
+        } catch(e) { alert('❌ 匯出失敗。'); }
     },
     import() {
-        AudioEngine.play('click'); 
-        const input = document.getElementById('saveCodeInput').value.trim();
-        if(!input) return alert('❌ 請貼上存檔碼！'); 
-        if(!confirm('⚠️ 警告：這將覆蓋現有進度！')) return;
+        AudioEngine.play('click'); const input = document.getElementById('saveCodeInput').value.trim();
+        if(!input) return alert('❌ 請貼上存檔碼！'); if(!confirm('⚠️ 警告：這將覆蓋現有進度！')) return;
         try {
             const data = JSON.parse(decodeURIComponent(atob(input)));
-            for(let key in data) { 
-                if(data[key] !== undefined) localStorage.setItem(key, data[key]); 
-            }
-            State.init(); 
-            UI.toggleModal('saveModal', false); 
-            alert('✅ 讀取成功！');
-        } catch(e) { 
-            alert('❌ 讀取失敗！存檔碼損毀。'); 
-        }
+            for(let key in data) { if(data[key] !== undefined) localStorage.setItem(key, data[key]); }
+            State.init(); UI.toggleModal('saveModal', false); alert('✅ 讀取成功！');
+            State.save(); 
+        } catch(e) { alert('❌ 讀取失敗！存檔碼損毀。'); }
     }
 };
 
-// ==========================================
-// Module 6: 最高級前端防護盾 (100% 完整)
-// ==========================================
 const Security = {
     init() {
         document.addEventListener('contextmenu', e => e.preventDefault());
         document.addEventListener('selectstart', e => e.preventDefault());
         document.addEventListener('dragstart', e => e.preventDefault());
-        
         document.addEventListener('keydown', e => {
-            if (
-                e.key === 'F12' || 
-                (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c')) || 
-                (e.ctrlKey && (e.key === 'U' || e.key === 'u')) || 
-                (e.metaKey && e.altKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'U' || e.key === 'u')) 
-            ) {
-                e.preventDefault();
-                return false;
-            }
+            if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c')) || (e.ctrlKey && (e.key === 'U' || e.key === 'u')) || (e.metaKey && e.altKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'U' || e.key === 'u'))) { e.preventDefault(); return false; }
         });
     }
 };
 
-// ==========================================
-// 初始化啟動
-// ==========================================
-window.onload = async () => {
+window.onload = () => {
     Security.init(); 
+    State.init(); 
     
-    // ☁️ 呼叫雲端登入
-    await State.login(); 
-    
-    UI.renderQuests();
+    document.getElementById('loginModal').style.display = 'flex';
     
     const pvpData = new URLSearchParams(window.location.search).get('pvp');
     if (pvpData) {
         try {
             const parsed = JSON.parse(atob(pvpData));
             if(parsed.t && parsed.d && parsed.d.length === 10) {
-                State.pvp.active = true; 
-                State.pvp.deck = parsed.d; 
-                State.pvp.targetTime = parsed.t;
-                document.getElementById('pvpBanner').style.display = 'block'; 
-                document.getElementById('pvpTargetTime').innerText = parsed.t;
+                State.pvp.active = true; State.pvp.deck = parsed.d; State.pvp.targetTime = parsed.t;
+                document.getElementById('pvpBanner').style.display = 'block'; document.getElementById('pvpTargetTime').innerText = parsed.t;
             }
         } catch(e) {}
     }
