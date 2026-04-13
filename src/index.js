@@ -3,32 +3,26 @@ export default {
     const url = new URL(request.url);
     const headers = { 'Content-Type': 'application/json' };
 
-    // 🔒 API 1: 登入與註冊驗證 (新增密碼系統)
     if (url.pathname === '/api/login' && request.method === 'POST') {
       const { username, passcode } = await request.json();
       let rawData = await env.IONMASTER_DATA.get(`user_${username}`);
       
       if (rawData) {
         let userObj = JSON.parse(rawData);
-        // 檢查密碼是否正確
         if (userObj.passcode !== passcode) {
-          return new Response(JSON.stringify({ success: false, message: '密碼錯誤！請確認您的身份。' }), { headers });
+          return new Response(JSON.stringify({ success: false, message: '❌ 密碼錯誤！請確認您的身份。' }), { headers });
         }
         return new Response(JSON.stringify({ success: true, data: userObj.data }), { headers });
       } else {
-        // 新玩家自動註冊
         return new Response(JSON.stringify({ success: true, isNew: true }), { headers });
       }
     }
 
-    // 💾 API 2: 同步存檔 & 更新排行榜
     if (url.pathname === '/api/save' && request.method === 'POST') {
       const { username, passcode, data, lvl } = await request.json();
       
-      // 1. 存儲玩家個人資料
       await env.IONMASTER_DATA.put(`user_${username}`, JSON.stringify({ passcode, data }));
       
-      // 2. 更新全服排行榜 (GLOBAL_LEADERBOARD)
       let lbRaw = await env.IONMASTER_DATA.get('GLOBAL_LEADERBOARD');
       let lb = lbRaw ? JSON.parse(lbRaw) : [];
       
@@ -39,7 +33,6 @@ export default {
           lb.push({ username, exp: data.exp, lvl }); 
       }
       
-      // 排序並只保留前 50 名，避免資料庫過大
       lb.sort((a, b) => b.exp - a.exp);
       lb = lb.slice(0, 50);
       await env.IONMASTER_DATA.put('GLOBAL_LEADERBOARD', JSON.stringify(lb));
@@ -47,13 +40,11 @@ export default {
       return new Response(JSON.stringify({ success: true }), { headers });
     }
 
-    // 🏆 API 3: 獲取排行榜
     if (url.pathname === '/api/leaderboard' && request.method === 'GET') {
       let lbRaw = await env.IONMASTER_DATA.get('GLOBAL_LEADERBOARD');
       return new Response(JSON.stringify({ success: true, leaderboard: lbRaw ? JSON.parse(lbRaw) : [] }), { headers });
     }
 
-    // 🎁 API 4: 禮物碼
     if (url.pathname === '/api/redeem' && request.method === 'POST') {
         const { code } = await request.json();
         const validCodes = {
