@@ -1,11 +1,14 @@
 // ==========================================
 // Module 1: 集中式狀態管理 (Centralized State)
 // ==========================================
+// ==========================================
+// Module 1: 集中式狀態管理 (Centralized State)
+// ==========================================
 const State = {
+    username: "", // ☁️ 新增：儲存目前登入的學號/暱稱
     data: {
         coins: 0, exp: 0, inventory: {}, quests: { date: "", list: [] }, 
-        myHistory: [], errorLog: {}, redeemedCodes: [],
-        pityCount: 50 // 新增大保底計數器，預設 50 抽
+        myHistory: [], errorLog: {}, redeemedCodes: [], pityCount: 50
     },
     game: { 
         mode: '', score: 0, combo: 0, startTime: null, timerInterval: null, 
@@ -22,14 +25,42 @@ const State = {
         this.data.myHistory = this.safeParse('myIonHistory', []);
         this.data.errorLog = this.safeParse('aaErrorLog', {});
         this.data.redeemedCodes = this.safeParse('aaRedeemedCodes', []);
-        this.data.pityCount = this.safeParse('aaPityCount', 50);
-        this.checkDailyQuests(); this.save();
+        this.data.pityCount = this.safeParse('aaPityCount', 50); 
+        this.checkDailyQuests(); 
+        this.save();
     },
-    safeParse(key, def) { 
-        try { let v = localStorage.getItem(key); return v ? JSON.parse(v) : def; } 
-        catch(e) { return def; } 
+
+    // ☁️ 新增：雲端登入系統
+    async login() {
+        let user = prompt("🧪 歡迎來到 Ion Master！\n請輸入您的學號或暱稱以登入雲端：");
+        if (!user || user.trim() === "") return this.login(); // 強制輸入
+        this.username = user.trim().toUpperCase();
+
+        try {
+            const res = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: this.username })
+            });
+            const result = await res.json();
+            
+            if (result.data) {
+                this.data = result.data; // 覆蓋為雲端存檔
+                alert(`👋 歡迎回來，${this.username}！雲端存檔已同步。`);
+            } else {
+                alert(`✨ 偵測到新實驗員！已為您建立雲端帳號：${this.username}`);
+            }
+            this.save(); // 初始化 UI 並存檔
+        } catch (e) {
+            alert("❌ 無法連線至雲端伺服器，目前為單機遊玩模式。");
+        }
     },
+
+    safeParse(key, def) { try { let v = localStorage.getItem(key); return v ? JSON.parse(v) : def; } catch(e) { return def; } },
+    
+    // 🔄 修改：儲存時同步到雲端
     save() {
+        // 1. 先存本地備份
         localStorage.setItem('aaCoins', this.data.coins); 
         localStorage.setItem('aaExp', this.data.exp);
         localStorage.setItem('aaInventorySep', JSON.stringify(this.data.inventory));
@@ -37,31 +68,30 @@ const State = {
         localStorage.setItem('myIonHistory', JSON.stringify(this.data.myHistory));
         localStorage.setItem('aaErrorLog', JSON.stringify(this.data.errorLog));
         localStorage.setItem('aaRedeemedCodes', JSON.stringify(this.data.redeemedCodes));
-        localStorage.setItem('aaPityCount', this.data.pityCount);
-       
+        localStorage.setItem('aaPityCount', this.data.pityCount); 
+        
         UI.updateProfile();
         let pityEl = document.getElementById('pityDisplay');
         if(pityEl) pityEl.innerText = `距離必中 SSR 還有 ${this.data.pityCount} 抽`;
-    },
-    addExp(amt) {
-        let oldLvl = this.getLevel().lvl; 
-        this.data.exp += amt; 
-        this.save();
-        if(this.getLevel().lvl > oldLvl) { 
-            AudioEngine.play('ssr'); 
-            if(typeof confetti !== 'undefined') confetti({particleCount: 150, spread: 80, origin: {y: 0.3}}); 
+
+        // 2. ☁️ 同步到 Cloudflare 伺服器
+        if (this.username) {
+            fetch('/api/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: this.username, data: this.data })
+            }).catch(e => console.log('雲端同步失敗', e));
         }
     },
+
+    addExp(amt) {
+        let oldLvl = this.getLevel().lvl; this.data.exp += amt; this.save();
+        if(this.getLevel().lvl > oldLvl) { AudioEngine.play('ssr'); if(typeof confetti !== 'undefined') confetti({particleCount: 150, spread: 80, origin: {y: 0.3}}); }
+    },
     getLevel() {
-        let exp = this.data.exp; 
-        let lvl = Math.floor(Math.sqrt(exp / 15)) + 1; 
-        let title = "Lab Rookie";
-        if(lvl >= 50) title = "A.A. Sir's Top Student"; 
-        else if(lvl >= 30) title = "Precipitation Master"; 
-        else if(lvl >= 10) title = "Ion Catcher";
-        
-        let next = 15 * Math.pow(lvl, 2); 
-        let prev = 15 * Math.pow(lvl - 1, 2);
+        let exp = this.data.exp; let lvl = Math.floor(Math.sqrt(exp / 15)) + 1; 
+        let title = lvl >= 50 ? "A.A. Sir's Top Student" : (lvl >= 30 ? "Precipitation Master" : (lvl >= 10 ? "Ion Catcher" : "Lab Rookie"));
+        let next = 15 * Math.pow(lvl, 2); let prev = 15 * Math.pow(lvl - 1, 2);
         return { lvl, title, progress: Math.min(((exp - prev) / (next - prev)) * 100, 100) };
     },
     checkDailyQuests() {
@@ -69,23 +99,14 @@ const State = {
         if (this.data.quests.date !== today) {
             let shuffled = Database.config.questTemplates.sort(() => 0.5 - Math.random()).slice(0, 3);
             this.data.quests = { date: today, list: shuffled.map(q => ({ ...q, progress: 0, isClaimed: false })) };
-            let login = this.data.quests.list.find(q => q.id === 'q_login'); 
-            if(login) login.progress = 1;
+            let login = this.data.quests.list.find(q => q.id === 'q_login'); if(login) login.progress = 1;
         }
     },
     updateQuest(id, amt=1) {
         let q = this.data.quests.list.find(x => x.id === id);
-        if(q && !q.isClaimed && q.progress < q.target) { 
-            q.progress = Math.min(q.progress + amt, q.target); 
-            this.save(); 
-            UI.renderQuests(); 
-        }
+        if(q && !q.isClaimed && q.progress < q.target) { q.progress = Math.min(q.progress + amt, q.target); this.save(); UI.renderQuests(); }
     },
-    logError(c, a) { 
-        let key = c.formula + "_" + a.formula; 
-        this.data.errorLog[key] = (this.data.errorLog[key] || 0) + 1; 
-        this.save(); 
-    }
+    logError(c, a) { let key = c.formula+"_"+a.formula; this.data.errorLog[key] = (this.data.errorLog[key]||0)+1; this.save(); }
 };
 
 // ==========================================
@@ -643,9 +664,12 @@ const Security = {
 // ==========================================
 // 初始化啟動
 // ==========================================
-window.onload = () => {
+window.onload = async () => {
     Security.init(); 
-    State.init(); 
+    
+    // ☁️ 呼叫雲端登入
+    await State.login(); 
+    
     UI.renderQuests();
     
     const pvpData = new URLSearchParams(window.location.search).get('pvp');
