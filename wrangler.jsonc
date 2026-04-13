@@ -1,6 +1,7 @@
 {
   "name": "ionmaster",
   "compatibility_date": "2026-04-12",
+  "main": "src/index.js", 
   "observability": {
     "enabled": true
   },
