@@ -838,3 +838,37 @@ body.bg-fever .glass-panel {
     border-color: rgba(243, 156, 18, 0.5); 
     box-shadow: 0 8px 32px rgba(243, 156, 18, 0.2);
 }
+
+/* 🌟 修復 1：經驗條重疊與文字樣式 */
+.profile-right { 
+    display: flex; 
+    flex-direction: column; 
+    align-items: flex-end; 
+    width: 50%; 
+    margin-right: 60px; 
+    z-index: 2; 
+}
+.exp-text {
+    font-size: 10px;
+    color: var(--apple-gray);
+    font-weight: 700;
+    margin-bottom: 3px;
+    letter-spacing: 0.5px;
+}
+body.bg-alchemy .exp-text { color: #ddd; }
+
+/* 🏆 排行榜樣式 */
+.lb-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 10px;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    font-weight: bold;
+}
+.lb-rank { width: 30px; font-size: 18px; text-align: center; }
+.lb-name { flex: 1; margin-left: 10px; font-size: 16px; color: var(--dark); }
+.lb-lvl { color: var(--apple-blue); font-size: 14px; }
+.lb-row.top-1 .lb-rank { font-size: 24px; }
+.lb-row.top-2 .lb-rank { font-size: 22px; }
+.lb-row.top-3 .lb-rank { font-size: 20px; }
