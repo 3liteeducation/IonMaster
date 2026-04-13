@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ion Master 8.0 - 3lite Education</title>
+    <title>Ion Master 8.5 - 3lite Education</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#ffffff">
     <link rel="stylesheet" href="3lite-style.css">
@@ -18,10 +18,11 @@
         <header class="glass-panel player-profile">
             <div class="profile-left">
                 <div class="player-title" id="playerTitle">Lab Rookie</div>
-                <div class="player-subtitle">3lite Education</div>
+                <div class="player-subtitle" id="profileName">3lite Education</div>
             </div>
             <div class="profile-right">
                 <div class="player-level">Lv.<span id="playerLevel">1</span></div>
+                <div class="exp-text" id="expText">0 / 15 EXP</div>
                 <div class="exp-bar-container"><div class="exp-bar" id="expBar"></div></div>
             </div>
             <div class="coin-badge glass-panel">🪙 <span id="mainCoinCount">0</span></div>
@@ -34,12 +35,14 @@
                 <button class="ios-btn primary-btn mt-2" onclick="Game.start('pvp')">接受決鬥</button>
             </div>
             
+            <button class="ios-btn epic-btn mb-2" onclick="UI.showLeaderboard()">🏆 全校化學排行榜</button>
+
             <div class="glass-panel quest-board">
                 <h3 class="ios-subtitle">📋 每日委託 (Daily Quests)</h3>
                 <div id="questList" class="quest-list"></div>
             </div>
 
-            <button class="ios-btn secondary-btn mt-3" onclick="UI.toggleModal('saveModal', true)">⚙️ 存檔與數據管理 (Export/Import)</button>
+            <button class="ios-btn secondary-btn mt-3" onclick="UI.toggleModal('saveModal', true)">⚙️ 存檔與數據管理</button>
             <button class="ios-btn warning-btn mt-3" onclick="UI.toggleModal('redeemModal', true)">🎁 兌換禮物碼 (Redeem Code)</button>
         </main>
 
@@ -100,14 +103,34 @@
         <div class="tab-item" onclick="UI.switchView('gallery', this)">📚<br><span>圖鑑</span></div>
     </nav>
 
+    <div id="loginModal" class="modal glass-modal" style="display:flex; z-index:9999; background: rgba(0,0,0,0.85);">
+        <div class="modal-content glass-panel" style="margin: auto;">
+            <h2 class="ios-title">🧪 登入實驗室</h2>
+            <p class="ios-desc" style="margin-bottom:20px;">首次登入時輸入的密碼將成為您的永久密碼。</p>
+            <input type="text" id="loginUsername" class="ios-input" placeholder="學號或暱稱" autocomplete="off">
+            <input type="password" id="loginPasscode" class="ios-input" placeholder="設定/輸入密碼" autocomplete="off">
+            <button class="ios-btn primary-btn mt-3" id="loginBtn" onclick="State.login()">進入系統</button>
+        </div>
+    </div>
+
+    <div id="leaderboardModal" class="modal glass-modal">
+        <div class="modal-content glass-panel">
+            <h2 class="ios-title">🏆 菁英排行榜</h2>
+            <div id="leaderboardContent" style="max-height: 400px; overflow-y: auto; text-align: left; margin: 15px 0;">
+                載入中...
+            </div>
+            <button class="ios-btn cancel-btn mt-2" onclick="UI.toggleModal('leaderboardModal', false)">關閉</button>
+        </div>
+    </div>
+
     <div id="saveModal" class="modal glass-modal">
         <div class="modal-content glass-panel">
             <h2 class="ios-title">⚙️ 數據管理</h2>
-            <p class="ios-desc">您的存檔包含了隱性學習數據(錯誤紀錄)。</p>
+            <p class="ios-desc">您的存檔已受雲端保護。</p>
             <textarea id="saveCodeInput" class="ios-textarea" placeholder="存檔碼..."></textarea>
             <div style="display: flex; gap: 10px; margin-top: 15px;">
-                <button class="ios-btn primary-btn" onclick="StorageManager.export()">📤 匯出</button>
-                <button class="ios-btn danger-btn" onclick="StorageManager.import()">📥 匯入</button>
+                <button class="ios-btn primary-btn" onclick="StorageManager.export()">📤 手動匯出</button>
+                <button class="ios-btn danger-btn" onclick="StorageManager.import()">📥 手動匯入</button>
             </div>
             <button class="ios-btn cancel-btn mt-2" onclick="UI.toggleModal('saveModal', false)">關閉</button>
         </div>
@@ -116,7 +139,6 @@
     <div id="redeemModal" class="modal glass-modal">
         <div class="modal-content glass-panel">
             <h2 class="ios-title">🎁 兌換獎勵</h2>
-            <p class="ios-desc">請輸入 A.A. Sir 發布的專屬限時禮物碼！</p>
             <input type="text" id="redeemInput" class="ios-input" placeholder="輸入禮物碼..." autocomplete="off">
             <button class="ios-btn primary-btn mt-3" onclick="Game.redeemCode()">✅ 確認兌換</button>
             <button class="ios-btn cancel-btn mt-2" onclick="UI.toggleModal('redeemModal', false)">關閉</button>
