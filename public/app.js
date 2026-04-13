@@ -5,9 +5,13 @@ const State = {
     data: {
         coins: 0, exp: 0, inventory: {}, quests: { date: "", list: [] }, 
         myHistory: [], errorLog: {}, redeemedCodes: [],
-        pityCount: 50 // 👈 新增大保底計數器，預設 50 抽
+        pityCount: 50 // 新增大保底計數器，預設 50 抽
     },
-    game: { mode: '', score: 0, combo: 0, startTime: null, timerInterval: null, isAnimating: false, targetCard: null },
+    game: { 
+        mode: '', score: 0, combo: 0, startTime: null, timerInterval: null, 
+        isAnimating: false, targetCard: null, battery: 0, feverCount: 0,
+        alchemyTarget: 3, alchemyTimeLeft: 50
+    },
     pvp: { active: false, targetTime: 0, deck: [], myRecord: [] },
     
     init() {
@@ -18,32 +22,46 @@ const State = {
         this.data.myHistory = this.safeParse('myIonHistory', []);
         this.data.errorLog = this.safeParse('aaErrorLog', {});
         this.data.redeemedCodes = this.safeParse('aaRedeemedCodes', []);
-        this.data.pityCount = this.safeParse('aaPityCount', 50); // 👈 讀取保底紀錄
+        this.data.pityCount = this.safeParse('aaPityCount', 50);
         this.checkDailyQuests(); this.save();
     },
-    safeParse(key, def) { try { let v = localStorage.getItem(key); return v ? JSON.parse(v) : def; } catch(e) { return def; } },
+    safeParse(key, def) { 
+        try { let v = localStorage.getItem(key); return v ? JSON.parse(v) : def; } 
+        catch(e) { return def; } 
+    },
     save() {
-        localStorage.setItem('aaCoins', this.data.coins); localStorage.setItem('aaExp', this.data.exp);
+        localStorage.setItem('aaCoins', this.data.coins); 
+        localStorage.setItem('aaExp', this.data.exp);
         localStorage.setItem('aaInventorySep', JSON.stringify(this.data.inventory));
         localStorage.setItem('aaQuests', JSON.stringify(this.data.quests));
         localStorage.setItem('myIonHistory', JSON.stringify(this.data.myHistory));
         localStorage.setItem('aaErrorLog', JSON.stringify(this.data.errorLog));
         localStorage.setItem('aaRedeemedCodes', JSON.stringify(this.data.redeemedCodes));
-        localStorage.setItem('aaPityCount', this.data.pityCount); // 👈 儲存保底紀錄
+        localStorage.setItem('aaPityCount', this.data.pityCount);
        
         UI.updateProfile();
-        // 🔄 動態更新畫面上的保底文字
         let pityEl = document.getElementById('pityDisplay');
         if(pityEl) pityEl.innerText = `距離必中 SSR 還有 ${this.data.pityCount} 抽`;
     },
     addExp(amt) {
-        let oldLvl = this.getLevel().lvl; this.data.exp += amt; this.save();
-        if(this.getLevel().lvl > oldLvl) { AudioEngine.play('ssr'); if(typeof confetti !== 'undefined') confetti({particleCount: 150, spread: 80, origin: {y: 0.3}}); }
+        let oldLvl = this.getLevel().lvl; 
+        this.data.exp += amt; 
+        this.save();
+        if(this.getLevel().lvl > oldLvl) { 
+            AudioEngine.play('ssr'); 
+            if(typeof confetti !== 'undefined') confetti({particleCount: 150, spread: 80, origin: {y: 0.3}}); 
+        }
     },
     getLevel() {
-        let exp = this.data.exp; let lvl = Math.floor(Math.sqrt(exp / 15)) + 1; let title = "Lab Rookie";
-        if(lvl >= 50) title = "A.A. Sir's Top Student"; else if(lvl >= 30) title = "Precipitation Master"; else if(lvl >= 10) title = "Ion Catcher";
-        let next = 15 * Math.pow(lvl, 2); let prev = 15 * Math.pow(lvl - 1, 2);
+        let exp = this.data.exp; 
+        let lvl = Math.floor(Math.sqrt(exp / 15)) + 1; 
+        let title = "Lab Rookie";
+        if(lvl >= 50) title = "A.A. Sir's Top Student"; 
+        else if(lvl >= 30) title = "Precipitation Master"; 
+        else if(lvl >= 10) title = "Ion Catcher";
+        
+        let next = 15 * Math.pow(lvl, 2); 
+        let prev = 15 * Math.pow(lvl - 1, 2);
         return { lvl, title, progress: Math.min(((exp - prev) / (next - prev)) * 100, 100) };
     },
     checkDailyQuests() {
@@ -51,14 +69,23 @@ const State = {
         if (this.data.quests.date !== today) {
             let shuffled = Database.config.questTemplates.sort(() => 0.5 - Math.random()).slice(0, 3);
             this.data.quests = { date: today, list: shuffled.map(q => ({ ...q, progress: 0, isClaimed: false })) };
-            let login = this.data.quests.list.find(q => q.id === 'q_login'); if(login) login.progress = 1;
+            let login = this.data.quests.list.find(q => q.id === 'q_login'); 
+            if(login) login.progress = 1;
         }
     },
     updateQuest(id, amt=1) {
         let q = this.data.quests.list.find(x => x.id === id);
-        if(q && !q.isClaimed && q.progress < q.target) { q.progress = Math.min(q.progress + amt, q.target); this.save(); UI.renderQuests(); }
+        if(q && !q.isClaimed && q.progress < q.target) { 
+            q.progress = Math.min(q.progress + amt, q.target); 
+            this.save(); 
+            UI.renderQuests(); 
+        }
     },
-    logError(c, a) { let key = c.formula+"_"+a.formula; this.data.errorLog[key] = (this.data.errorLog[key]||0)+1; this.save(); }
+    logError(c, a) { 
+        let key = c.formula + "_" + a.formula; 
+        this.data.errorLog[key] = (this.data.errorLog[key] || 0) + 1; 
+        this.save(); 
+    }
 };
 
 // ==========================================
@@ -66,19 +93,33 @@ const State = {
 // ==========================================
 const AudioEngine = {
     ctx: null,
-    init() { try { if(!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); if(this.ctx.state === 'suspended') this.ctx.resume(); } catch(e){} },
+    init() { 
+        try { 
+            if(!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); 
+            if(this.ctx.state === 'suspended') this.ctx.resume(); 
+        } catch(e){} 
+    },
     tone(freq, type, dur, vol=0.1) {
-        this.init(); if(!this.ctx) return; try {
-            const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
-            osc.type = type; osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-            gain.gain.setValueAtTime(vol, this.ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + dur);
-            osc.connect(gain); gain.connect(this.ctx.destination); osc.start(); osc.stop(this.ctx.currentTime + dur);
+        this.init(); 
+        if(!this.ctx) return; 
+        try {
+            const osc = this.ctx.createOscillator(); 
+            const gain = this.ctx.createGain();
+            osc.type = type; 
+            osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+            gain.gain.setValueAtTime(vol, this.ctx.currentTime); 
+            gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + dur);
+            osc.connect(gain); 
+            gain.connect(this.ctx.destination); 
+            osc.start(); 
+            osc.stop(this.ctx.currentTime + dur);
         } catch(e){}
     },
     play(sound) {
         const s = {
             correct: () => { this.tone(600,'sine',0.1); setTimeout(()=>this.tone(800,'sine',0.2),100); },
-            wrong: () => { this.tone(150,'sawtooth',0.3,0.2); }, click: () => { this.tone(400,'sine',0.05); },
+            wrong: () => { this.tone(150,'sawtooth',0.3,0.2); }, 
+            click: () => { this.tone(400,'sine',0.05); },
             draw: () => { this.tone(800,'square',0.1,0.05); this.tone(1200,'sine',0.3,0.05); },
             ssr: () => { this.tone(400,'sine',0.2); setTimeout(()=>this.tone(600,'sine',0.2),150); setTimeout(()=>this.tone(900,'sine',0.4),300); },
             explode: () => { this.tone(100,'square',0.5,0.3); this.tone(50,'sawtooth',0.6,0.3); }
@@ -101,8 +142,14 @@ const UI = {
         if(viewId === 'gallery') this.filterGallery('all');
         if(viewId === 'lab') this.filterLab('all');
     },
-    toggleModal(id, show) { if(show) AudioEngine.play('click'); document.getElementById(id).style.display = show ? 'flex' : 'none'; },
-    setLock(locked) { State.game.isAnimating = locked; document.getElementById('animLock').style.display = locked ? 'block' : 'none'; },
+    toggleModal(id, show) { 
+        if(show) AudioEngine.play('click'); 
+        document.getElementById(id).style.display = show ? 'flex' : 'none'; 
+    },
+    setLock(locked) { 
+        State.game.isAnimating = locked; 
+        document.getElementById('animLock').style.display = locked ? 'block' : 'none'; 
+    },
     updateProfile() {
         document.getElementById('mainCoinCount').innerText = State.data.coins;
         let info = State.getLevel();
@@ -122,19 +169,16 @@ const UI = {
     },
     getStarStr(n) { return "⭐".repeat(n); },
     
-    // 【核心修復】精準讀取未解鎖卡牌的圖片
     createCardNode(card, stars, isOwned, onClick) {
         const item = document.createElement('div');
         item.className = `card-item ${isOwned ? 'owned ' + card.targetRarity.toLowerCase() : 'locked'} ${stars >= 3 ? 'max-star' : ''}`;
         
-        // 確保不論解鎖與否，都讀取精確的稀有度路徑
         let imgPath = `images/${card.fileKey}_${card.targetRarity.toLowerCase()}.png`;
         
         if (isOwned) {
             item.innerHTML = `<img src="${imgPath}" class="full-card-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"><div class="fallback-content" style="display:none;"><div style="font-size:24px;">${card.html}</div><div style="font-size:12px; margin-top:5px;">${card.targetRarity}</div></div><div class="stars-overlay">${this.getStarStr(stars)}</div>`;
             item.onclick = onClick; 
         } else {
-            // 這裡已經將原本寫死的 _n.png 改成了 ${imgPath}
             item.innerHTML = `<img src="${imgPath}" class="full-card-img locked-blur" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"><div class="fallback-content" style="display:none; background: #eee;"><div style="font-size:18px; color: #7f8c8d;">${card.html}</div><div style="font-size:10px;">${card.targetRarity}</div></div><div class="locked-overlay">🔒</div>`;
             if(onClick) item.onclick = onClick; 
         }
@@ -143,7 +187,8 @@ const UI = {
     
     filterGallery(type) {
         AudioEngine.play('click');
-        document.querySelectorAll('#view-gallery .filter-chip').forEach(el => el.classList.remove('active')); event.target.classList.add('active');
+        document.querySelectorAll('#view-gallery .filter-chip').forEach(el => el.classList.remove('active')); 
+        event.target.classList.add('active');
         const grid = document.getElementById('galleryGrid'); grid.innerHTML = ''; let unlockCount = 0;
         const fragment = document.createDocumentFragment(); 
         Database.expandedPool.forEach(card => {
@@ -157,7 +202,8 @@ const UI = {
     },
     filterLab(type) {
         AudioEngine.play('click');
-        document.querySelectorAll('#view-lab .filter-chip').forEach(el => el.classList.remove('active')); event.target.classList.add('active');
+        document.querySelectorAll('#view-lab .filter-chip').forEach(el => el.classList.remove('active')); 
+        event.target.classList.add('active');
         const grid = document.getElementById('labGrid'); grid.innerHTML = ''; const fragment = document.createDocumentFragment();
         Database.expandedPool.forEach(card => {
             if(card.isSpecial) return; if(type !== 'all' && card.targetRarity.toLowerCase() !== type) return;
@@ -165,10 +211,18 @@ const UI = {
             let item = this.createCardNode(card, stars, stars > 0, null); if(isMaxed) item.className += ' maxed-out';
             if (!isMaxed) {
                 item.onclick = () => {
-                    AudioEngine.play('click'); let cost = Database.config.alchemyCosts[card.targetRarity];
+                    AudioEngine.play('click'); 
+                    let cost = Database.config.alchemyCosts[card.targetRarity];
+                    let targets = { 'N': 3, 'R': 5, 'SR': 7, 'SSR': 10 };
+                    let target = targets[card.targetRarity];
+                    
                     if (State.data.coins < cost) { alert(`🪙 餘額不足！需要 ${cost} 枚代幣。`); return; }
-                    if (confirm(`確定消耗 ${cost} 🪙 來 ${(stars > 0)?"升星":"解鎖"}「${card.targetRarity}級 ${card.name}」？\n(需連答對3題，失敗不退款！)`)) {
-                        State.data.coins -= cost; State.save(); State.game.targetCard = card; Game.start('alchemy');
+                    if (confirm(`確定消耗 ${cost} 🪙 來 ${(stars > 0)?"升星":"解鎖"}「${card.targetRarity}級 ${card.name}」？\n⚠️ 警告：這是一場高壓反應！需連對 ${target} 題，且每題限時 5 秒，只要錯一題或超時就直接爆炸！`)) {
+                        State.data.coins -= cost; 
+                        State.save(); 
+                        State.game.targetCard = card; 
+                        State.game.alchemyTarget = target;
+                        Game.start('alchemy');
                     }
                 };
             }
@@ -192,46 +246,28 @@ const Game = {
         const code = input.value.trim().toUpperCase();
         if (!code) { alert('❌ 請輸入禮物碼！'); return; }
 
-        // 🎁 在這裡自由設定您的禮物碼、獎勵、以及過期時間！
-        // 格式：'禮物碼': { reward: 代幣數量, expires: 'YYYY-MM-DDTHH:mm:ss' 或 null }
         const validCodes = {
             'AASIR-CHEM-PRO': { reward: 10000, expires: '2026-05-01T23:59:59' }, 
             'CHEM-GOD': { reward: 100, expires: '2026-12-31T23:59:59' },
-            'WELCOME-3LITE': { reward: 10, expires: null } // null 代表永久有效
+            'WELCOME-3LITE': { reward: 10, expires: null }
         };
 
-        if (!validCodes.hasOwnProperty(code)) {
-            alert('❌ 無效的禮物碼！請確認是否輸入正確。');
-            return;
-        }
+        if (!validCodes.hasOwnProperty(code)) { alert('❌ 無效的禮物碼！請確認是否輸入正確。'); return; }
 
         const codeData = validCodes[code];
-
-        // ⏳ 檢查時間限制機制
         if (codeData.expires !== null) {
-            const now = new Date(); 
-            const expiryDate = new Date(codeData.expires); 
-            
-            if (now > expiryDate) {
-                AudioEngine.play('wrong');
-                alert('⏳ 哎呀！這個禮物碼已經過期啦！下次請早點來兌換喔。');
-                return;
-            }
+            const now = new Date(); const expiryDate = new Date(codeData.expires); 
+            if (now > expiryDate) { AudioEngine.play('wrong'); alert('⏳ 哎呀！這個禮物碼已經過期啦！下次請早點來兌換喔。'); return; }
         }
 
-        // 檢查是否已經兌換過
-        if (State.data.redeemedCodes.includes(code)) {
-            alert('⚠️ 這個禮物碼您已經兌換過囉！把機會留給別人吧。');
-            return;
-        }
+        if (State.data.redeemedCodes.includes(code)) { alert('⚠️ 這個禮物碼您已經兌換過囉！把機會留給別人吧。'); return; }
 
-        // 兌換成功邏輯
         const reward = codeData.reward;
         State.data.coins += reward;
-        State.data.redeemedCodes.push(code); // 紀錄已使用
+        State.data.redeemedCodes.push(code); 
         State.save();
         
-        input.value = ''; // 清空輸入框
+        input.value = ''; 
         UI.toggleModal('redeemModal', false);
         AudioEngine.play('ssr');
         if(typeof confetti !== 'undefined') confetti({particleCount: 200, spread: 100, origin: {y: 0.3}});
@@ -240,24 +276,26 @@ const Game = {
     start(mode) {
         AudioEngine.play('click'); 
         State.game.mode = mode; State.game.score = 0; State.game.timerInterval = null; State.pvp.myRecord = [];
-        
-        // 🔋 新增電池連擊與狂熱狀態紀錄
-        State.game.battery = 0; 
-        State.game.feverCount = 0;
+        State.game.battery = 0; State.game.feverCount = 0;
 
         document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
         document.getElementById('view-play').classList.add('active'); document.getElementById('activeGameArea').style.display = 'block'; document.querySelector('.game-modes').style.display = 'none';
         document.body.className = (mode === 'alchemy') ? 'bg-alchemy' : (mode === 'speed' || mode === 'pvp' ? 'bg-speed' : 'bg-main');
-        document.getElementById('batteryLevel').style.background = "var(--apple-green)"; // 確保電池顏色正常
+        document.getElementById('batteryLevel').style.background = "var(--apple-green)"; 
         
         let pTxt = document.getElementById('progressText'); let tDisp = document.getElementById('timerDisplay');
         if (mode === 'speed' || mode === 'pvp') {
             pTxt.innerText = "進度: 0/10"; pTxt.style.color = "var(--secondary)"; tDisp.style.display = 'block';
             State.game.startTime = Date.now(); State.game.timerInterval = setInterval(() => { tDisp.innerText = ((Date.now() - State.game.startTime) / 1000).toFixed(1) + "s"; }, 100);
-        } else if (mode === 'practice') {
-            pTxt.innerText = "答對: 0 (連對: 0)"; pTxt.style.color = "var(--secondary)"; tDisp.style.display = 'none';
+        } else if (mode === 'practice' || mode === 'color') {
+            pTxt.innerText = "答對: 0 (連對: 0)"; 
+            pTxt.style.color = mode === 'color' ? "var(--apple-purple)" : "var(--secondary)"; 
+            tDisp.style.display = 'none';
         } else if (mode === 'alchemy') {
-            pTxt.innerText = "煉金進度: 0/3"; pTxt.style.color = "var(--rare)"; tDisp.style.display = 'none';
+            pTxt.innerText = `煉金: 0/${State.game.alchemyTarget}`; 
+            pTxt.style.color = "var(--rare)"; 
+            tDisp.style.display = 'block'; 
+            tDisp.style.color = "var(--apple-red)";
         }
         document.getElementById('batteryLevel').style.width = '0%'; this.nextQuestion();
     },
@@ -268,13 +306,20 @@ const Game = {
         UI.switchView('home');
     },
     nextQuestion() {
-        let m = State.game.mode; if ((m === 'speed' || m === 'pvp') && State.game.score >= 10) { this.finishSpeed(); return; } if (m === 'alchemy' && State.game.score >= 3) { this.finishAlchemy(true); return; }
-        State.game.isAnswered = false; let curC, curA, scenario;
+        let m = State.game.mode; 
+        if ((m === 'speed' || m === 'pvp') && State.game.score >= 10) { this.finishSpeed(); return; } 
+        if (m === 'alchemy' && State.game.score >= State.game.alchemyTarget) { this.finishAlchemy(true); return; }
+        State.game.isAnswered = false; let curC, curA, scenario, colorIdx;
 
         if (m === 'pvp') {
-            let qD = State.pvp.deck[State.game.score]; curC = Database.playableCations.find(c => c.id === qD.c); curA = Database.playableAnions.find(a => a.id === qD.a); scenario = qD.s;
+            let qD = State.pvp.deck[State.game.score]; scenario = qD.s;
+            if (scenario === 3) { colorIdx = qD.c; } 
+            else { curC = Database.playableCations.find(c => c.id === qD.c); curA = Database.playableAnions.find(a => a.id === qD.a); }
+        } else if (m === 'color') {
+            scenario = 3; colorIdx = Math.floor(Math.random() * Database.colorQuestions.length);
         } else {
             const isValid = (c, a) => { const bl = ['NH4_OH','H_NO3','H_NO2','H_Cl','H_Br','H_I','H_SO4','H_SO3','H_OH','H_O','H_CO3','H_PO4','H_CN','H_MnO4','H_ClO3','H_ClO','H_CrO4','H_Cr2O7','H_H','H_HSO4','H_HCO3']; return !bl.includes(c.formula + '_' + a.formula); };
+            scenario = Math.floor(Math.random() * 3); 
             if (m === 'alchemy') {
                 let tc = State.game.targetCard; let isC = Database.playableCations.some(c => c.id === tc.id);
                 let pool = (isC ? Database.playableAnions : Database.playableCations).filter(p => isC ? isValid(tc, p) : isValid(p, tc));
@@ -282,121 +327,123 @@ const Game = {
             } else {
                 do { curC = Database.playableCations[Math.floor(Math.random() * Database.playableCations.length)]; curA = Database.playableAnions[Math.floor(Math.random() * Database.playableAnions.length)]; } while (!isValid(curC, curA));
             }
-            scenario = Math.floor(Math.random() * 3);
         }
         
-        if (m === 'speed') State.pvp.myRecord.push({ c: curC.id, a: curA.id, s: scenario });
+        if (m === 'speed') State.pvp.myRecord.push({ c: (scenario === 3 ? colorIdx : curC.id), a: (curA ? curA.id : 0), s: scenario });
         
-        const getGCD = (a, b) => b ? getGCD(b, a % b) : a; const fSub = t => t.replace(/([0-9]+)/g, '<sub>$1</sub>');
-        const bForm = (c, a, sc, sa) => { let cp = fSub(c.formula); if(sc>1) cp = c.poly?`(${cp})<sub>${sc}</sub>`:`${cp}<sub>${sc}</sub>`; let ap = fSub(a.formula); if(sa>1) ap = a.poly?`(${ap})<sub>${sa}</sub>`:`${ap}<sub>${sa}</sub>`; return cp+ap; };
-        const bName = (c, a) => `<span style="font-size:22px;">${c.name.replace(/ion/i,'').trim()} ${a.name.replace(/ion/i,'').trim().toLowerCase()}</span>`;
-        
-        let cSub = curA.charge, aSub = curC.charge; let com = getGCD(cSub, aSub); cSub /= com; aSub /= com;
-        let opts = [], oSet = new Set(), qEl = document.getElementById('question');
-        qEl.innerHTML = (scenario <= 1) ? `<span>${curC.html} &nbsp;+&nbsp; ${curA.html}</span>` : `<span style="font-size:26px;">${curC.name.replace(/ion/i,'').trim()} ion<br>+<br>${curA.name.replace(/ion/i,'').trim()} ion</span>`;
+        // ⏱️ 煉金死亡倒數計時器
+        if (m === 'alchemy') {
+            clearInterval(State.game.timerInterval);
+            State.game.alchemyTimeLeft = 50; 
+            document.getElementById('timerDisplay').innerText = "05.0s";
+            State.game.timerInterval = setInterval(() => {
+                if (State.game.isAnswered) return;
+                State.game.alchemyTimeLeft--;
+                document.getElementById('timerDisplay').innerText = "0" + (State.game.alchemyTimeLeft / 10).toFixed(1) + "s";
+                if (State.game.alchemyTimeLeft <= 0) { clearInterval(State.game.timerInterval); this.handleAns(null, false, curC, curA, true); }
+            }, 100);
+        }
 
-        if (scenario === 0 || scenario === 2) {
-            let correct = bForm(curC, curA, cSub, aSub); opts.push({h: correct, c: true}); oSet.add(correct);
-            while(opts.length < 4) { let fake = bForm(curC, curA, Math.floor(Math.random()*3)+1, Math.floor(Math.random()*3)+1); if(!oSet.has(fake)) { oSet.add(fake); opts.push({h: fake, c: false}); } }
+        let opts = [], oSet = new Set(), qEl = document.getElementById('question');
+
+        if (scenario === 3) {
+            let cq = Database.colorQuestions[colorIdx];
+            qEl.innerHTML = `<span style="font-size:18px; color:var(--apple-gray);">化學色彩學</span><br><span style="font-size:32px;">${cq.q}</span>`;
+            opts.push({h: cq.a, c: true}); oSet.add(cq.a);
+            while (opts.length < 4) { 
+                let fake = Database.allColors[Math.floor(Math.random() * Database.allColors.length)]; 
+                if (!oSet.has(fake)) { oSet.add(fake); opts.push({h: fake, c: false}); } 
+            }
         } else {
-            let correct = bName(curC, curA); opts.push({h: correct, c: true}); oSet.add(correct);
-            while(opts.length < 4) { let fake = bName(curC, Database.playableAnions[Math.floor(Math.random() * Database.playableAnions.length)]); if(!oSet.has(fake)) { oSet.add(fake); opts.push({h: fake, c: false}); } }
+            const getGCD = (a, b) => b ? getGCD(b, a % b) : a; const fSub = t => t.replace(/([0-9]+)/g, '<sub>$1</sub>');
+            const bForm = (c, a, sc, sa) => { let cp = fSub(c.formula); if(sc>1) cp = c.poly?`(${cp})<sub>${sc}</sub>`:`${cp}<sub>${sc}</sub>`; let ap = fSub(a.formula); if(sa>1) ap = a.poly?`(${ap})<sub>${sa}</sub>`:`${ap}<sub>${sa}</sub>`; return cp+ap; };
+            const bName = (c, a) => `<span style="font-size:22px;">${c.name.replace(/ion/i,'').trim()} ${a.name.replace(/ion/i,'').trim().toLowerCase()}</span>`;
+            let cSub = curA.charge, aSub = curC.charge; let com = getGCD(cSub, aSub); cSub /= com; aSub /= com;
+            
+            qEl.innerHTML = (scenario <= 1) ? `<span>${curC.html} &nbsp;+&nbsp; ${curA.html}</span>` : `<span style="font-size:26px;">${curC.name.replace(/ion/i,'').trim()} ion<br>+<br>${curA.name.replace(/ion/i,'').trim()} ion</span>`;
+            if (scenario === 0 || scenario === 2) {
+                let correct = bForm(curC, curA, cSub, aSub); opts.push({h: correct, c: true}); oSet.add(correct);
+                while(opts.length < 4) { let fake = bForm(curC, curA, Math.floor(Math.random()*3)+1, Math.floor(Math.random()*3)+1); if(!oSet.has(fake)) { oSet.add(fake); opts.push({h: fake, c: false}); } }
+            } else {
+                let correct = bName(curC, curA); opts.push({h: correct, c: true}); oSet.add(correct);
+                while(opts.length < 4) { let fake = bName(curC, Database.playableAnions[Math.floor(Math.random() * Database.playableAnions.length)]); if(!oSet.has(fake)) { oSet.add(fake); opts.push({h: fake, c: false}); } }
+            }
         }
 
         opts.sort(() => 0.5 - Math.random()); let oArea = document.getElementById('optionsArea'); oArea.innerHTML = '';
         opts.forEach(opt => { let b = document.createElement('button'); b.className = 'option-btn'; b.innerHTML = opt.h; b.onclick = () => this.handleAns(b, opt.c, curC, curA); oArea.appendChild(b); });
     },
-    handleAns(btn, isCorrect, c, a) {
+    handleAns(btn, isCorrect, c, a, isTimeout = false) {
         if(State.game.isAnswered) return; State.game.isAnswered = true; let m = State.game.mode;
+        if (m === 'alchemy') clearInterval(State.game.timerInterval);
         
         if(isCorrect) {
-            AudioEngine.play('correct'); btn.classList.add('correct'); State.game.score++;
+            AudioEngine.play('correct'); if(btn) btn.classList.add('correct'); State.game.score++;
             
             if (m === 'speed' || m === 'pvp') { 
                 document.getElementById('progressText').innerText = `進度: ${State.game.score}/10`; document.getElementById('batteryLevel').style.width = (State.game.score * 10) + "%"; 
             } 
             else if (m === 'alchemy') { 
-                document.getElementById('progressText').innerText = `煉金: ${State.game.score}/3`; document.getElementById('batteryLevel').style.width = (State.game.score * 33.3) + "%"; 
+                document.getElementById('progressText').innerText = `煉金: ${State.game.score}/${State.game.alchemyTarget}`; 
+                document.getElementById('batteryLevel').style.width = ((State.game.score / State.game.alchemyTarget) * 100) + "%"; 
             } 
-            else if (m === 'practice') { 
-                // 🔥 練習模式專屬：狂熱電池邏輯
+            else if (m === 'practice' || m === 'color') { 
                 State.updateQuest('q_practice', 1);
                 
                 if (State.game.feverCount > 0) {
-                    // 處於狂熱模式中：雙倍經驗 + 必掉代幣
-                    State.addExp(10); 
-                    State.data.coins += 1; 
-                    State.save();
-                    State.game.feverCount--;
-                    
+                    State.addExp(10); State.data.coins += 1; State.save(); State.game.feverCount--;
                     document.getElementById('progressText').innerText = `🔥 狂熱模式剩餘: ${State.game.feverCount} 題`;
-                    document.getElementById('batteryLevel').style.width = (State.game.feverCount * 20) + "%"; // 5題倒數
+                    document.getElementById('batteryLevel').style.width = (State.game.feverCount * 20) + "%"; 
                     
                     if (State.game.feverCount === 0) {
-                        // 狂熱結束，回歸正常
-                        State.game.battery = 0;
-                        document.body.classList.remove('bg-fever');
+                        State.game.battery = 0; document.body.classList.remove('bg-fever');
                         document.getElementById('progressText').innerText = `答對: ${State.game.score} (連對: 0)`;
-                        document.getElementById('progressText').style.color = "var(--secondary)";
+                        document.getElementById('progressText').style.color = m === 'color' ? "var(--apple-purple)" : "var(--secondary)";
                         document.getElementById('batteryLevel').style.background = "var(--apple-green)";
                     }
                 } else {
-                    // 正常充能中
-                    State.addExp(5);
-                    State.game.battery++;
+                    State.addExp(5); State.game.battery++;
                     document.getElementById('progressText').innerText = `答對: ${State.game.score} (連對: ${State.game.battery})`;
                     document.getElementById('batteryLevel').style.width = (State.game.battery * 10) + "%";
                     
                     if (State.game.battery >= 10) {
-                        // ⚡ 觸發狂熱模式！
-                        State.game.feverCount = 5;
-                        AudioEngine.play('ssr'); // 播放金卡音效震撼一下
-                        document.body.classList.add('bg-fever');
-                        
+                        State.game.feverCount = 5; AudioEngine.play('ssr'); document.body.classList.add('bg-fever');
                         let pTxt = document.getElementById('progressText');
-                        pTxt.innerText = `🔥 狂熱模式: 代幣 100% 掉落！`;
-                        pTxt.style.color = "var(--apple-orange)";
-                        
+                        pTxt.innerText = `🔥 狂熱模式: 代幣 100% 掉落！`; pTxt.style.color = "var(--apple-orange)";
                         let bLvl = document.getElementById('batteryLevel');
-                        bLvl.style.background = "var(--apple-orange)";
-                        bLvl.style.width = "100%";
-                        
+                        bLvl.style.background = "var(--apple-orange)"; bLvl.style.width = "100%";
                         if(typeof confetti !== 'undefined') confetti({particleCount: 150, spread: 80, origin: {y: 0.6}});
                     }
                 }
             }
             setTimeout(()=>this.nextQuestion(), 400); 
         } else {
-            // 💀 答錯懲罰
-            AudioEngine.play('wrong'); btn.classList.add('wrong'); State.logError(c, a);
+            AudioEngine.play('wrong'); if(btn) btn.classList.add('wrong'); 
+            if (!isTimeout && c && a && m !== 'color') State.logError(c, a); 
             
             if (m === 'alchemy') { 
-                setTimeout(()=>this.finishAlchemy(false), 300); 
+                if (isTimeout) document.getElementById('timerDisplay').innerText = "BOOM!";
+                setTimeout(()=>this.finishAlchemy(false), 500); 
             } else { 
-                if (m === 'practice') {
-                    // 電池清空，狂熱中斷
+                if (m === 'practice' || m === 'color') {
                     State.game.battery = 0;
                     if (State.game.feverCount > 0) {
-                        State.game.feverCount = 0;
-                        document.body.classList.remove('bg-fever');
-                        document.getElementById('progressText').style.color = "var(--secondary)";
+                        State.game.feverCount = 0; document.body.classList.remove('bg-fever');
+                        document.getElementById('progressText').style.color = m === 'color' ? "var(--apple-purple)" : "var(--secondary)";
                         document.getElementById('batteryLevel').style.background = "var(--apple-green)";
                     }
                     document.getElementById('batteryLevel').style.width = "0%";
                     document.getElementById('progressText').innerText = `答對: ${State.game.score} 💀 (連對中斷)`;
                 }
-                setTimeout(() => { btn.classList.remove('wrong'); State.game.isAnswered = false; }, 1000); 
+                setTimeout(() => { if(btn) btn.classList.remove('wrong'); State.game.isAnswered = false; }, 1000); 
             }
         }
     },
     finishSpeed() {
         clearInterval(State.game.timerInterval); let fTime = (Date.now() - State.game.startTime) / 1000; State.updateQuest('q_speed', 1);
-        let content = document.getElementById('resultContent');
-        let best = State.data.myHistory.length > 0 ? Math.min(...State.data.myHistory.map(x => x.time)) : Infinity; State.addExp(50);
+        let content = document.getElementById('resultContent'); let best = State.data.myHistory.length > 0 ? Math.min(...State.data.myHistory.map(x => x.time)) : Infinity; State.addExp(50);
         
-        let html = `<h2 class="ios-title">${State.pvp.active ? "⚔️ 決鬥結束" : "🎯 挑戰完成"}</h2>`;
-        html += `<p class="ios-desc">${State.pvp.active ? `目標時間：${State.pvp.targetTime}s<br>你的時間：` : "本次時間："}</p>`;
-        html += `<div style="font-size:36px; color:var(--legend); font-weight:bold; margin-bottom: 10px;">${fTime.toFixed(2)}s</div>`;
+        let html = `<h2 class="ios-title">${State.pvp.active ? "⚔️ 決鬥結束" : "🎯 挑戰完成"}</h2><p class="ios-desc">${State.pvp.active ? `目標時間：${State.pvp.targetTime}s<br>你的時間：` : "本次時間："}</p><div style="font-size:36px; color:var(--legend); font-weight:bold; margin-bottom: 10px;">${fTime.toFixed(2)}s</div>`;
         
         if(State.pvp.active) {
             if(fTime < State.pvp.targetTime) { html += `<div class="reward-badge" style="display:block;">🎉 踢館成功！+5🪙 +150EXP</div>`; State.data.coins += 5; State.addExp(150); AudioEngine.play('ssr'); if(typeof confetti !== 'undefined') confetti({particleCount: 150, spread: 80}); } 
@@ -419,75 +466,38 @@ const Game = {
         UI.setLock(true); document.body.className = 'bg-main'; document.getElementById('gachaAnimText').innerText = "煉金大成功！"; UI.toggleModal('gachaAnimModal', true); AudioEngine.play('draw');
         setTimeout(() => { document.getElementById('whiteFlash').classList.add('active'); setTimeout(() => { UI.toggleModal('gachaAnimModal', false); document.getElementById('gachaAnimText').innerText = "高能反應合成中..."; this.showGachaResult(c, c.targetRarity, State.data.inventory[c.uniqueId], isNew, 0, true); this.quit(); setTimeout(() => { document.getElementById('whiteFlash').classList.remove('active'); UI.setLock(false);}, 100); }, 400); }, 1500); 
     },
-   drawCard(times) {
-        if(State.game.isAnimating) return; 
-        AudioEngine.play('click'); 
-        
-        // 💰 1. 十連抽九折優惠 (45 代幣)
+    drawCard(times) {
+        if(State.game.isAnimating) return; AudioEngine.play('click'); 
         let cost = (times === 10) ? 45 : times * 5; 
         if (State.data.coins < cost) { alert(`🪙 代幣不足！需要 ${cost} 枚。`); return; }
         
-        State.data.coins -= cost; 
-        State.updateQuest('q_gacha', times); 
-        UI.setLock(true);
-        
-        let res = []; let refund = 0;
-        let hasGoldOrPurple = false; // 紀錄本次十連抽是否已經有出好卡
+        State.data.coins -= cost; State.updateQuest('q_gacha', times); UI.setLock(true);
+        let res = []; let refund = 0; let hasGoldOrPurple = false; 
 
         for(let i = 0; i < times; i++) {
-            let r = 'N'; 
-            let rand = Math.random() * 100; 
-            
-            // 🎯 2. 扣除大保底次數
+            let r = 'N'; let rand = Math.random() * 100; 
             State.data.pityCount--;
-
-            if (State.data.pityCount <= 0) {
-                // 觸發大保底：強制給 SSR
-                r = 'SSR';
-            } else {
-                // 正常機率抽卡
-                if(rand < 1.5) r = 'SSR'; 
-                else if(rand < 10) r = 'SR'; 
-                else if(rand < 30) r = 'R';
-            }
-
-            // 🎯 3. 十連抽小保底機制：如果抽到第10張，且前面都沒出過 SR 或 SSR，強制保底一張 SR
-            if (times === 10 && i === 9 && !hasGoldOrPurple && r !== 'SSR') {
-                r = 'SR';
-            }
-
-            // 紀錄這 10 抽裡面是否出了 SR 或 SSR
+            if (State.data.pityCount <= 0) { r = 'SSR'; } 
+            else { if(rand < 1.5) r = 'SSR'; else if(rand < 10) r = 'SR'; else if(rand < 30) r = 'R'; }
+            if (times === 10 && i === 9 && !hasGoldOrPurple && r !== 'SSR') { r = 'SR'; }
             if (r === 'SSR' || r === 'SR') hasGoldOrPurple = true;
+            if (r === 'SSR') { State.data.pityCount = 50; }
 
-            // 🎯 4. 如果出了 SSR (不管是運氣好還是保底)，立刻重置大保底計數器
-            if (r === 'SSR') {
-                State.data.pityCount = 50;
-            }
-
-            // 根據決定的稀有度去卡池撈卡
             let pool = Database.expandedPool.filter(x => x.targetRarity === r); 
-            if(r === 'SSR') pool = pool.filter(x => (Math.random() < 0.1) ? x.isSpecial : !x.isSpecial); 
-            else pool = pool.filter(x => !x.isSpecial);
+            if(r === 'SSR') pool = pool.filter(x => (Math.random() < 0.1) ? x.isSpecial : !x.isSpecial); else pool = pool.filter(x => !x.isSpecial);
+            let c = pool[Math.floor(Math.random() * pool.length)]; let stars = State.data.inventory[c.uniqueId] || 0; let isNew = stars === 0; let ref = 0;
             
-            let c = pool[Math.floor(Math.random() * pool.length)]; 
-            let stars = State.data.inventory[c.uniqueId] || 0; 
-            let isNew = stars === 0; let ref = 0;
-            
-            // 結算與碎片退款
             if(isNew) { State.data.inventory[c.uniqueId] = 1; State.addExp(10); } 
             else if(stars < 3) { State.data.inventory[c.uniqueId]++; State.addExp(5); } 
             else { ref = Database.config.refunds[r]; refund += ref; }
-            
             res.push({ c, isNew, stars: State.data.inventory[c.uniqueId] || 3, ref });
         }
         
-        State.data.coins += refund; 
-        State.save(); // 儲存所有狀態 (包含新的保底計數)
-        
+        State.data.coins += refund; State.save(); 
         UI.toggleModal('gachaAnimModal', true); AudioEngine.play('draw');
         setTimeout(() => { document.getElementById('whiteFlash').classList.add('active'); setTimeout(() => { UI.toggleModal('gachaAnimModal', false); if(times===1) this.showGachaResult(res[0].c, res[0].c.targetRarity, res[0].stars, res[0].isNew, res[0].ref, false); else this.showTenDraw(res, refund); setTimeout(() => { document.getElementById('whiteFlash').classList.remove('active'); UI.setLock(false);}, 100); }, 400); }, 2000); 
     },
-showGachaResult(card, rarity, stars, isNew, refundAmt, isAlchemy) {
+    showGachaResult(card, rarity, stars, isNew, refundAmt, isAlchemy) {
         State.game.currentDrawnCard = { ...card, currentRarity: rarity, currentStars: stars }; 
         let color = rarity==='SSR' ? 'var(--rare)' : (rarity==='SR' ? 'var(--apple-purple)' : 'var(--secondary)');
         if(rarity==='SSR') { if(isNew||isAlchemy) AudioEngine.play('ssr'); else if(!refundAmt) AudioEngine.play('correct'); }
@@ -507,16 +517,7 @@ showGachaResult(card, rarity, stars, isNew, refundAmt, isAlchemy) {
         cardDiv.innerHTML = UI.createCardNode(card, stars, true, null).innerHTML;
         
         let wrapper = document.createElement('div'); wrapper.innerHTML = html; wrapper.appendChild(cardDiv);
-        
-        // 📋 升級：加入並排的「分享」與「複製」按鈕
-        wrapper.innerHTML += `
-            <div style="display: flex; gap: 10px; margin-top: 15px;">
-                <button class="ios-btn primary-btn" onclick="Game.shareCard()">📤 分享</button>
-                <button class="ios-btn info-btn" onclick="Game.copyShareText()">📋 複製文字</button>
-            </div>
-            <button class="ios-btn cancel-btn mt-2" onclick="UI.toggleModal('gachaModal', false); UI.filterGallery('all');">關閉</button>
-        `;
-        
+        wrapper.innerHTML += `<div style="display: flex; gap: 10px; margin-top: 15px;"><button class="ios-btn primary-btn" onclick="Game.shareCard()">📤 分享</button><button class="ios-btn info-btn" onclick="Game.copyShareText()">📋 複製文字</button></div><button class="ios-btn cancel-btn mt-2" onclick="UI.toggleModal('gachaModal', false); UI.filterGallery('all');">關閉</button>`;
         document.getElementById('gachaContent').innerHTML = ''; document.getElementById('gachaContent').appendChild(wrapper); UI.toggleModal('gachaModal', true);
     },
     showTenDraw(results, totalRefund) {
@@ -537,47 +538,30 @@ showGachaResult(card, rarity, stars, isNew, refundAmt, isAlchemy) {
         });
         if(hasSSR) setTimeout(() => { AudioEngine.play('ssr'); if(typeof confetti !== 'undefined') confetti({particleCount: 200, spread: 100, origin: {y: 0.5}}); }, 1500);
     },
-   // 原本的分享機制 (叫出手機原生分享選單)
     shareCard() {
         if (!State.game.currentDrawnCard) return; AudioEngine.play('click');
         const s = State.game.currentDrawnCard; const starStr = "⭐".repeat(s.currentStars || 1); const title = State.getLevel().title;
-        const text = `🧪「${title}」收集到了 [${s.currentRarity}] 級別的 ${starStr}「${s.name}」！\n你能超越我嗎？來 3lite Education 挑戰：\nhttps://ionmaster.threeliteeducation.workers.dev/`;
-        
-        if (navigator.share) {
-            navigator.share({ title: 'Ion Master', text: text, url: 'https://ionmaster.threeliteeducation.workers.dev/' }).catch(e=>{}); 
-        } else {
-            this.copyShareText(); // 不支援原生分享的電腦，自動轉為複製
-        }
+        const text = `🧪「${title}」在 Ion Master 收集到了 [${s.currentRarity}] 級別的 ${starStr}「${s.name}」！\n來 3lite Education 挑戰：\nhttps://ionmaster.threeliteeducation.workers.dev/`;
+        if (navigator.share) { navigator.share({ title: 'Ion Master', text: text, url: 'https://ionmaster.threeliteeducation.workers.dev/' }).catch(e=>{}); } 
+        else { this.copyShareText(); }
     },
-   // 📋 新增：專屬的一鍵複製函數
     copyShareText() {
         if (!State.game.currentDrawnCard) return; AudioEngine.play('click');
         const s = State.game.currentDrawnCard; const starStr = "⭐".repeat(s.currentStars || 1); const title = State.getLevel().title;
-        const text = `🧪「${title}」收集到了 [${s.currentRarity}] 級別的 ${starStr}「${s.name}」！\n你能超越我嗎？來 3lite Education 挑戰：\nhttps://ionmaster.threeliteeducation.workers.dev/`;
-        
-        navigator.clipboard.writeText(text).then(() => {
-            alert('📋 已成功複製到剪貼簿！快去貼給同學吧！');
-        }).catch(err => {
-            alert('❌ 複製失敗，請手動框選文字複製。');
-        });
+        const text = `🧪「${title}」在 Ion Master 收集到了 [${s.currentRarity}] 級別的 ${starStr}「${s.name}」！\nhttps://ionmaster.threeliteeducation.workers.dev/`;
+        navigator.clipboard.writeText(text).then(() => { alert('📋 已成功複製到剪貼簿！快去貼給同學吧！'); }).catch(err => { alert('❌ 複製失敗，請手動框選文字複製。'); });
     },
-
-    // PvP 挑戰也加上一鍵複製
     sharePvP(time) {
         AudioEngine.play('click');
         let encoded = btoa(JSON.stringify({ t: parseFloat(time), d: State.pvp.myRecord }));
         let url = window.location.origin + window.location.pathname + "?pvp=" + encoded;
-        const text = `⚔️「${State.getLevel().title}」向你發起合成決鬥！\n🎯 目標時間：${time} 秒\n點擊接受挑戰：\n${url}`;
-        
-        navigator.clipboard.writeText(text).then(() => {
-            alert('📋 挑戰連結已成功複製到剪貼簿！快去貼給同學吧！');
-        }).catch(err => {
-            alert('❌ 複製失敗，請手動框選文字複製。');
-        });
+        const text = `⚔️「${State.getLevel().title}」在 Ion Master 向你發起挑戰！\n🎯 目標時間：${time} 秒\n點擊接受挑戰：\n${url}`;
+        navigator.clipboard.writeText(text).then(() => { alert('📋 挑戰連結已成功複製到剪貼簿！快去貼給同學吧！'); }).catch(err => { alert('❌ 複製失敗，請手動框選文字複製。'); });
     }
 };
+
 // ==========================================
-// Module 5: 數據存檔模組
+// Module 5: 數據存檔模組 (100% 完整)
 // ==========================================
 const StorageManager = {
     export() {
@@ -590,45 +574,51 @@ const StorageManager = {
                 myIonHistory: localStorage.getItem('myIonHistory'), 
                 aaQuests: localStorage.getItem('aaQuests'), 
                 aaErrorLog: localStorage.getItem('aaErrorLog'),
-                aaRedeemedCodes: localStorage.getItem('aaRedeemedCodes'), // 👈 加上逗號了！
+                aaRedeemedCodes: localStorage.getItem('aaRedeemedCodes'),
                 aaPityCount: localStorage.getItem('aaPityCount')
             };
             document.getElementById('saveCodeInput').value = btoa(encodeURIComponent(JSON.stringify(data)));
-            document.getElementById('saveCodeInput').select(); document.execCommand('copy'); alert('✅ 存檔碼已複製！');
-        } catch(e) { alert('❌ 匯出失敗。'); }
+            document.getElementById('saveCodeInput').select(); 
+            document.execCommand('copy'); 
+            alert('✅ 存檔碼已複製！');
+        } catch(e) { 
+            alert('❌ 匯出失敗。'); 
+        }
     },
     import() {
-        AudioEngine.play('click'); const input = document.getElementById('saveCodeInput').value.trim();
-        if(!input) return alert('❌ 請貼上存檔碼！'); if(!confirm('⚠️ 警告：這將覆蓋現有進度！')) return;
+        AudioEngine.play('click'); 
+        const input = document.getElementById('saveCodeInput').value.trim();
+        if(!input) return alert('❌ 請貼上存檔碼！'); 
+        if(!confirm('⚠️ 警告：這將覆蓋現有進度！')) return;
         try {
             const data = JSON.parse(decodeURIComponent(atob(input)));
-            for(let key in data) { if(data[key] !== undefined) localStorage.setItem(key, data[key]); }
-            State.init(); UI.toggleModal('saveModal', false); alert('✅ 讀取成功！');
-        } catch(e) { alert('❌ 讀取失敗！存檔碼損毀。'); }
+            for(let key in data) { 
+                if(data[key] !== undefined) localStorage.setItem(key, data[key]); 
+            }
+            State.init(); 
+            UI.toggleModal('saveModal', false); 
+            alert('✅ 讀取成功！');
+        } catch(e) { 
+            alert('❌ 讀取失敗！存檔碼損毀。'); 
+        }
     }
 };
 
 // ==========================================
-// Module 6: 最高級前端防護盾 (Security & Anti-Cheat)
+// Module 6: 最高級前端防護盾 (100% 完整)
 // ==========================================
 const Security = {
     init() {
-        // 1. 禁用右鍵選單 (防止另存圖片 / 檢查元素)
         document.addEventListener('contextmenu', e => e.preventDefault());
-        
-        // 2. 禁用文字與元素選取 (防止反白複製)
         document.addEventListener('selectstart', e => e.preventDefault());
-        
-        // 3. 禁用圖片與元素拖曳 (防止學生把圖片直接拖拉到桌面)
         document.addEventListener('dragstart', e => e.preventDefault());
         
-        // 4. 嚴格攔截開發者工具快捷鍵 (覆蓋 Windows 與 Mac)
         document.addEventListener('keydown', e => {
             if (
-                e.key === 'F12' || // 攔截 F12
-                (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c')) || // Win: Ctrl+Shift+I/J/C
-                (e.ctrlKey && (e.key === 'U' || e.key === 'u')) || // Win: Ctrl+U (檢視原始碼)
-                (e.metaKey && e.altKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'U' || e.key === 'u')) // Mac: Cmd+Option+I/J/U
+                e.key === 'F12' || 
+                (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c')) || 
+                (e.ctrlKey && (e.key === 'U' || e.key === 'u')) || 
+                (e.metaKey && e.altKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'U' || e.key === 'u')) 
             ) {
                 e.preventDefault();
                 return false;
@@ -638,10 +628,10 @@ const Security = {
 };
 
 // ==========================================
-// 初始化啟動 (加入防護盾)
+// 初始化啟動
 // ==========================================
 window.onload = () => {
-    Security.init(); // 啟動最高防護
+    Security.init(); 
     State.init(); 
     UI.renderQuests();
     
@@ -650,8 +640,11 @@ window.onload = () => {
         try {
             const parsed = JSON.parse(atob(pvpData));
             if(parsed.t && parsed.d && parsed.d.length === 10) {
-                State.pvp.active = true; State.pvp.deck = parsed.d; State.pvp.targetTime = parsed.t;
-                document.getElementById('pvpBanner').style.display = 'block'; document.getElementById('pvpTargetTime').innerText = parsed.t;
+                State.pvp.active = true; 
+                State.pvp.deck = parsed.d; 
+                State.pvp.targetTime = parsed.t;
+                document.getElementById('pvpBanner').style.display = 'block'; 
+                document.getElementById('pvpTargetTime').innerText = parsed.t;
             }
         } catch(e) {}
     }
