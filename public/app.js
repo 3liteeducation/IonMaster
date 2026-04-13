@@ -240,38 +240,51 @@ const Game = {
         let q = State.data.quests.list[idx];
         if(q.progress >= q.target && !q.isClaimed) { AudioEngine.play('ssr'); q.isClaimed = true; State.data.coins += q.reward; State.save(); UI.renderQuests(); if(typeof confetti !== 'undefined') confetti({particleCount: 50, spread: 60, origin: {y: 0.8}});}
     },
-    redeemCode() {
+   async redeemCode() {
         AudioEngine.play('click');
         const input = document.getElementById('redeemInput');
         const code = input.value.trim().toUpperCase();
         if (!code) { alert('❌ 請輸入禮物碼！'); return; }
 
-        const validCodes = {
-            'AASIR-CHEM-PRO': { reward: 10000, expires: '2026-05-01T23:59:59' }, 
-            'CHEM-GOD': { reward: 100, expires: '2026-12-31T23:59:59' },
-            'WELCOME-3LITE': { reward: 10, expires: null }
-        };
-
-        if (!validCodes.hasOwnProperty(code)) { alert('❌ 無效的禮物碼！請確認是否輸入正確。'); return; }
-
-        const codeData = validCodes[code];
-        if (codeData.expires !== null) {
-            const now = new Date(); const expiryDate = new Date(codeData.expires); 
-            if (now > expiryDate) { AudioEngine.play('wrong'); alert('⏳ 哎呀！這個禮物碼已經過期啦！下次請早點來兌換喔。'); return; }
+        // 先檢查是不是已經兌換過了 (存在本地端)
+        if (State.data.redeemedCodes.includes(code)) {
+            alert('⚠️ 這個禮物碼您已經兌換過囉！把機會留給別人吧。');
+            return;
         }
 
-        if (State.data.redeemedCodes.includes(code)) { alert('⚠️ 這個禮物碼您已經兌換過囉！把機會留給別人吧。'); return; }
+        try {
+            // 🚀 核心升級：派跑腿小弟去敲後端 API 的門
+            const response = await fetch('/api/redeem', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code: code }) // 把學生輸入的字傳給伺服器
+            });
+            
+            // 聽取伺服器回答
+            const result = await response.json();
 
-        const reward = codeData.reward;
-        State.data.coins += reward;
-        State.data.redeemedCodes.push(code); 
-        State.save();
-        
-        input.value = ''; 
-        UI.toggleModal('redeemModal', false);
-        AudioEngine.play('ssr');
-        if(typeof confetti !== 'undefined') confetti({particleCount: 200, spread: 100, origin: {y: 0.3}});
-        alert(`🎉 兌換成功！獲得 ${reward} 🪙 AA 代幣！`);
+            // 如果伺服器說錯了
+            if (!result.success) {
+                AudioEngine.play('wrong');
+                alert(`❌ ${result.message}`);
+                return;
+            }
+
+            // 🛡️ 伺服器核對正確！發放伺服器計算好的獎勵
+            const reward = result.reward;
+            State.data.coins += reward;
+            State.data.redeemedCodes.push(code); 
+            State.save();
+            
+            input.value = ''; 
+            UI.toggleModal('redeemModal', false);
+            AudioEngine.play('ssr');
+            if(typeof confetti !== 'undefined') confetti({particleCount: 200, spread: 100, origin: {y: 0.3}});
+            alert(`🎉 兌換成功！獲得 ${reward} 🪙 AA 代幣！`);
+
+        } catch (error) {
+            alert('❌ 無法連線到教員室(伺服器)，請確認網路或稍後再試。');
+        }
     },
     start(mode) {
         AudioEngine.play('click'); 
