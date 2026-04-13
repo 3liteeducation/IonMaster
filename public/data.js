@@ -1,4 +1,4 @@
-// 3lite Ecosystem - Chemical Database
+// 3lite Ecosystem - Chemical Database: Ion Master 8.0
 const Database = {
     cations: [
         { id: 1, name: "Sodium", formula: "Na", charge: 1, html: "Na<sup>+</sup>", fileKey: 'na' }, 
@@ -53,22 +53,31 @@ const Database = {
     config: {
         rarities: ['N', 'R', 'SR', 'SSR'],
         refunds: { 'N': 2, 'R': 4, 'SR': 6, 'SSR': 10 },
-        alchemyCosts: { 'N': 15, 'R': 25, 'SR': 40, 'SSR': 60 },
+        alchemyCosts: { 'N': 15, 'R': 30, 'SR': 80, 'SSR': 150 }, // 💰 通膨價格
         questTemplates: [
             { id: 'q_speed', title: "極速狂飆", desc: "完成 1 次速度模式", target: 1, reward: 15 },
             { id: 'q_practice', title: "勤能補拙", desc: "在練習模式答對 10 題", target: 10, reward: 10 },
             { id: 'q_gacha', title: "試煉手氣", desc: "進行 1 次抽卡", target: 1, reward: 5 },
             { id: 'q_login', title: "實驗室報到", desc: "每日登入", target: 1, reward: 5 }
         ]
-    }
+    },
+    // 🎨 獨立化學色彩學題庫
+    colorQuestions: [
+        { q: "Cu<sup>2+</sup> (aq)", a: "藍色 🔵" }, { q: "Fe<sup>2+</sup> (aq)", a: "淺綠色 🟢" },
+        { q: "Fe<sup>3+</sup> (aq)", a: "黃/棕色 🟤" }, { q: "MnO<sub>4</sub><sup>-</sup> (aq)", a: "紫色 🟣" },
+        { q: "Cr<sub>2</sub>O<sub>7</sub><sup>2-</sup> (aq)", a: "橙色 🟠" }, { q: "CrO<sub>4</sub><sup>2-</sup> (aq)", a: "黃色 🟡" },
+        { q: "CuO (s)", a: "黑色 ⚫" }, { q: "CuCO<sub>3</sub> (s)", a: "綠色 🟩" },
+        { q: "Cu(OH)<sub>2</sub> (s)", a: "淺藍色 💧" }, { q: "AgCl (s)", a: "白色 ⚪" },
+        { q: "AgBr (s)", a: "淡黃色 🌕" }, { q: "AgI (s)", a: "黃色 🟡" },
+        { q: "PbI<sub>2</sub> (s)", a: "黃色 🟡" }, { q: "Fe(OH)<sub>2</sub> (s)", a: "暗綠色 🌿" },
+        { q: "Fe(OH)<sub>3</sub> (s)", a: "紅棕色 🟫" }, { q: "多數 Group 1/2 離子", a: "無色 🧊" }
+    ],
+    allColors: ["藍色 🔵", "淺綠色 🟢", "黃/棕色 🟤", "紫色 🟣", "橙色 🟠", "黃色 🟡", "黑色 ⚫", "綠色 🟩", "淺藍色 💧", "白色 ⚪", "淡黃色 🌕", "暗綠色 🌿", "紅棕色 🟫", "無色 🧊"]
 };
 
-// 自動生成 184 張獨立擴充卡池
 Database.playableCations = Database.cations.filter(c => !c.isSpecial); 
 Database.playableAnions = Database.anions.filter(a => !a.isSpecial);
 Database.expandedPool = [];
 [...Database.cations, ...Database.anions].forEach(card => { 
-    Database.config.rarities.forEach(r => { 
-        Database.expandedPool.push({ ...card, uniqueId: card.id + '_' + r, targetRarity: r }); 
-    }); 
+    Database.config.rarities.forEach(r => { Database.expandedPool.push({ ...card, uniqueId: card.id + '_' + r, targetRarity: r }); }); 
 });
