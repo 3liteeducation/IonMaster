@@ -1,14 +1,14 @@
 {
   "name": "ionmaster",
   "compatibility_date": "2026-04-12",
-  "main": "src/index.js", 
-  "observability": {
-    "enabled": true
-  },
-  "assets": {
-    "directory": "public"
-  },
-  "compatibility_flags": [
-    "nodejs_compat"
-  ]
+  "main": "src/index.js",
+  "observability": { "enabled": true },
+  "assets": { "directory": "public" },
+  "kv_namespaces": [
+    {
+      "binding": "IONMASTER_DATA",
+      "id": "這裡請貼上您剛才在網頁看到的ID" 
+    }
+  ],
+  "compatibility_flags": [ "nodejs_compat" ]
 }
