@@ -345,17 +345,22 @@ export const Game = {
         });
         if(hasSSR) setTimeout(() => { AudioEngine.play('ssr'); if(typeof confetti !== 'undefined') confetti({particleCount: 200, spread: 100, origin: {y: 0.5}}); }, 1500);
     },
-    shareCard() {
+   shareCard() {
         if (!State.game.currentDrawnCard) return; AudioEngine.play('click');
         const s = State.game.currentDrawnCard; const starStr = "⭐".repeat(s.currentStars || 1); const title = State.getLevel().title;
-        const text = `🧪「${title}」在 Ion Master 收集到了 [${s.currentRarity}] 級別的 ${starStr}「${s.name}」！\n來 3lite Education 挑戰：\nhttps://ionmaster.threeliteeducation.workers.dev/`;
-        if (navigator.share) { navigator.share({ title: 'Ion Master', text: text, url: 'https://ionmaster.threeliteeducation.workers.dev/' }).catch(e=>{}); } 
+        // 🚀 更新這裡的網址
+        const text = `🧪「${title}」在 Ion Master 收集到了 [${s.currentRarity}] 級別的 ${starStr}「${s.name}」！\n來 3lite Education 挑戰：\nhttps://ionmaster.3lite.io/`;
+        if (navigator.share) { 
+            // 🚀 更新這裡的 url
+            navigator.share({ title: 'Ion Master', text: text, url: 'https://ionmaster.3lite.io/' }).catch(e=>{}); 
+        } 
         else { this.copyShareText(); }
     },
     copyShareText() {
         if (!State.game.currentDrawnCard) return; AudioEngine.play('click');
         const s = State.game.currentDrawnCard; const starStr = "⭐".repeat(s.currentStars || 1); const title = State.getLevel().title;
-        const text = `🧪「${title}」在 Ion Master 收集到了 [${s.currentRarity}] 級別的 ${starStr}「${s.name}」！\nhttps://ionmaster.threeliteeducation.workers.dev/`;
+        // 🚀 更新這裡的網址
+        const text = `🧪「${title}」在 Ion Master 收集到了 [${s.currentRarity}] 級別的 ${starStr}「${s.name}」！\nhttps://ionmaster.3lite.io/`;
         navigator.clipboard.writeText(text).then(() => { alert('📋 已成功複製到剪貼簿！快去貼給同學吧！'); }).catch(err => { alert('❌ 複製失敗，請手動框選文字複製。'); });
     },
     sharePvP(time) {
