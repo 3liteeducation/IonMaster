@@ -1,3 +1,14 @@
+const url = new URL(request.url);
+
+// 如果請求的是 .js 檔案
+if (url.pathname.endsWith('.js')) {
+  const referer = request.headers.get('Referer');
+  // 如果沒有 Referer，或者 Referer 不是來自您的網域，就直接阻擋
+  if (!referer || !referer.includes('ionmaster.threeliteeducation.workers.dev')) {
+    return new Response("A.A. Sir 說：非請勿入！請乖乖從首頁進入實驗室 🧪", { status: 403 });
+  }
+}
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
