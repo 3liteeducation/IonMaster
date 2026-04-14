@@ -45,7 +45,23 @@ export const State = {
         let pass = pInput.value.trim();
 
         if (!user || !pass) { alert("⚠️ 帳號與密碼不得為空！"); return; }
-        
+
+        // 🚀 新增：LSSU 禁用詞彙審查 (Word Censorship)
+        const isBanished = Database.banishedWords.some(word => {
+            // 為了避免誤殺包含正常字母的短單字 (例如 G-era-ld 包含了 ERA)
+            // 4 個字母以下的詞彙，我們要求帳號名稱必須「完全等於」或是「以空白分隔的單字包含它」
+            if (word.length <= 4) {
+                return user === word || user.split(/\s+/).includes(word);
+            }
+            // 長字眼則只要有包含就阻擋 (例如 SKIBIDI)
+            return user.includes(word);
+        });
+
+        if (isBanished) {
+            alert("🛑 實驗室警告：您的名稱包含了被 LSSU 列為「過度使用/煩人」的禁用詞彙 (Banished Word)！請發揮創意換一個正常的名稱。");
+            return; // 阻擋登入流程
+        }
+
         btn.innerText = "驗證中..."; btn.disabled = true;
 
         try {
