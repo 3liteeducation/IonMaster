@@ -9,7 +9,7 @@ export const State = {
     data: {
         coins: 0, exp: 0, inventory: {}, quests: { date: "", list: [] }, 
         myHistory: [], errorLog: {}, redeemedCodes: [], pityCount: 50,
-        isPendingSync: false // 🚀 新增：記錄是否有未上傳的離線存檔
+        isPendingSync: false
     },
     game: { 
         mode: '', score: 0, combo: 0, startTime: null, timerInterval: null, 
@@ -27,9 +27,8 @@ export const State = {
         this.data.errorLog = this.safeParse('aaErrorLog', {});
         this.data.redeemedCodes = this.safeParse('aaRedeemedCodes', []);
         this.data.pityCount = this.safeParse('aaPityCount', 50); 
-        this.data.isPendingSync = this.safeParse('aaPendingSync', false); // 🚀 讀取離線狀態
+        this.data.isPendingSync = this.safeParse('aaPendingSync', false);
 
-        // 🚀 離線同步：如果開機時發現有上次沒存到的檔，且目前有網路，就自動補傳
         if (this.data.isPendingSync && navigator.onLine) {
             console.log("📡 偵測到未同步的離線存檔，正在背景補傳...");
             this.uploadToServer();
@@ -45,23 +44,7 @@ export const State = {
         let pass = pInput.value.trim();
 
         if (!user || !pass) { alert("⚠️ 帳號與密碼不得為空！"); return; }
-
-        // 🚀 新增：LSSU 禁用詞彙審查 (Word Censorship)
-        const isBanished = Database.banishedWords.some(word => {
-            // 為了避免誤殺包含正常字母的短單字 (例如 G-era-ld 包含了 ERA)
-            // 4 個字母以下的詞彙，我們要求帳號名稱必須「完全等於」或是「以空白分隔的單字包含它」
-            if (word.length <= 4) {
-                return user === word || user.split(/\s+/).includes(word);
-            }
-            // 長字眼則只要有包含就阻擋 (例如 SKIBIDI)
-            return user.includes(word);
-        });
-
-        if (isBanished) {
-            alert("🛑 實驗室警告：您的名稱包含了被 LSSU 列為「過度使用/煩人」的禁用詞彙 (Banished Word)！請發揮創意換一個正常的名稱。");
-            return; // 阻擋登入流程
-        }
-
+        
         btn.innerText = "驗證中..."; btn.disabled = true;
 
         try {
@@ -100,7 +83,6 @@ export const State = {
     safeParse(key, def) { try { let v = localStorage.getItem(key); return v ? JSON.parse(v) : def; } catch(e) { return def; } },
     
     save() {
-        // 1. 先存到瀏覽器本地 (保證本地永遠是最新的，離線也能玩)
         localStorage.setItem('aaCoins', this.data.coins); 
         localStorage.setItem('aaExp', this.data.exp);
         localStorage.setItem('aaInventorySep', JSON.stringify(this.data.inventory));
@@ -114,7 +96,6 @@ export const State = {
         let pityEl = document.getElementById('pityDisplay');
         if(pityEl) pityEl.innerText = `距離必中 SSR 還有 ${this.data.pityCount} 抽`;
 
-        // 2. 🚀 判斷網路狀態進行雲端同步
         if (this.username) {
             if (navigator.onLine) {
                 this.uploadToServer();
@@ -126,7 +107,6 @@ export const State = {
         }
     },
 
-    // 🚀 新增：專門處理上傳邏輯的函數
     async uploadToServer() {
         try {
             const res = await fetch('/api/save', {
@@ -140,12 +120,10 @@ export const State = {
                 })
             });
             if (res.ok) {
-                // 上傳成功，解除未同步警告
                 localStorage.setItem('aaPendingSync', 'false');
                 this.data.isPendingSync = false;
             }
         } catch (e) {
-            // 上傳失敗（可能網路突然斷掉），標記為未同步
             localStorage.setItem('aaPendingSync', 'true');
             this.data.isPendingSync = true;
         }
