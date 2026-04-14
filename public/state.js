@@ -1,5 +1,9 @@
 // state.js - 專門處理玩家資料、登入與存檔邏輯
-const State = {
+import { Database } from './data.js';
+import { AudioEngine } from './audio.js';
+import { UI } from './ui.js';
+
+export const State = {
     username: "", 
     passcode: "", 
     data: {
