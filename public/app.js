@@ -597,32 +597,6 @@ const Game = {
     }
 };
 
-const StorageManager = {
-    export() {
-        AudioEngine.play('click');
-        try {
-            const data = { 
-                aaCoins: localStorage.getItem('aaCoins'), aaExp: localStorage.getItem('aaExp'), 
-                aaInventorySep: localStorage.getItem('aaInventorySep'), myIonHistory: localStorage.getItem('myIonHistory'), 
-                aaQuests: localStorage.getItem('aaQuests'), aaErrorLog: localStorage.getItem('aaErrorLog'),
-                aaRedeemedCodes: localStorage.getItem('aaRedeemedCodes'), aaPityCount: localStorage.getItem('aaPityCount')
-            };
-            document.getElementById('saveCodeInput').value = btoa(encodeURIComponent(JSON.stringify(data)));
-            document.getElementById('saveCodeInput').select(); document.execCommand('copy'); alert('✅ 存檔碼已複製！');
-        } catch(e) { alert('❌ 匯出失敗。'); }
-    },
-    import() {
-        AudioEngine.play('click'); const input = document.getElementById('saveCodeInput').value.trim();
-        if(!input) return alert('❌ 請貼上存檔碼！'); if(!confirm('⚠️ 警告：這將覆蓋現有進度！')) return;
-        try {
-            const data = JSON.parse(decodeURIComponent(atob(input)));
-            for(let key in data) { if(data[key] !== undefined) localStorage.setItem(key, data[key]); }
-            State.init(); UI.toggleModal('saveModal', false); alert('✅ 讀取成功！');
-            State.save(); 
-        } catch(e) { alert('❌ 讀取失敗！存檔碼損毀。'); }
-    }
-};
-
 const Security = {
     init() {
         document.addEventListener('contextmenu', e => e.preventDefault());
