@@ -8,7 +8,8 @@ export const State = {
     passcode: "", 
     data: {
         coins: 0, exp: 0, inventory: {}, quests: { date: "", list: [] }, 
-        myHistory: [], errorLog: {}, redeemedCodes: [], pityCount: 50
+        myHistory: [], errorLog: {}, redeemedCodes: [], pityCount: 50,
+        isPendingSync: false // 🚀 新增：記錄是否有未上傳的離線存檔
     },
     game: { 
         mode: '', score: 0, combo: 0, startTime: null, timerInterval: null, 
@@ -26,6 +27,13 @@ export const State = {
         this.data.errorLog = this.safeParse('aaErrorLog', {});
         this.data.redeemedCodes = this.safeParse('aaRedeemedCodes', []);
         this.data.pityCount = this.safeParse('aaPityCount', 50); 
+        this.data.isPendingSync = this.safeParse('aaPendingSync', false); // 🚀 讀取離線狀態
+
+        // 🚀 離線同步：如果開機時發現有上次沒存到的檔，且目前有網路，就自動補傳
+        if (this.data.isPendingSync && navigator.onLine) {
+            console.log("📡 偵測到未同步的離線存檔，正在背景補傳...");
+            this.uploadToServer();
+        }
     },
 
     async login() {
@@ -76,6 +84,7 @@ export const State = {
     safeParse(key, def) { try { let v = localStorage.getItem(key); return v ? JSON.parse(v) : def; } catch(e) { return def; } },
     
     save() {
+        // 1. 先存到瀏覽器本地 (保證本地永遠是最新的，離線也能玩)
         localStorage.setItem('aaCoins', this.data.coins); 
         localStorage.setItem('aaExp', this.data.exp);
         localStorage.setItem('aaInventorySep', JSON.stringify(this.data.inventory));
@@ -89,8 +98,22 @@ export const State = {
         let pityEl = document.getElementById('pityDisplay');
         if(pityEl) pityEl.innerText = `距離必中 SSR 還有 ${this.data.pityCount} 抽`;
 
+        // 2. 🚀 判斷網路狀態進行雲端同步
         if (this.username) {
-            fetch('/api/save', {
+            if (navigator.onLine) {
+                this.uploadToServer();
+            } else {
+                console.warn("⚠️ 網路斷線，存檔已存入本地，待連線後自動同步。");
+                localStorage.setItem('aaPendingSync', 'true');
+                this.data.isPendingSync = true;
+            }
+        }
+    },
+
+    // 🚀 新增：專門處理上傳邏輯的函數
+    async uploadToServer() {
+        try {
+            const res = await fetch('/api/save', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
@@ -99,7 +122,16 @@ export const State = {
                     data: this.data,
                     lvl: this.getLevel().lvl 
                 })
-            }).catch(e => console.log('雲端同步失敗', e));
+            });
+            if (res.ok) {
+                // 上傳成功，解除未同步警告
+                localStorage.setItem('aaPendingSync', 'false');
+                this.data.isPendingSync = false;
+            }
+        } catch (e) {
+            // 上傳失敗（可能網路突然斷掉），標記為未同步
+            localStorage.setItem('aaPendingSync', 'true');
+            this.data.isPendingSync = true;
         }
     },
 
