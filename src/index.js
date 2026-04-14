@@ -2,17 +2,14 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     
-    // 🛡️ 防盜鏈邏輯：搬移到 fetch 內部
-    // 如果請求的是 .js 檔案
+    // 如果請求的是 .js 檔案 (防盜鏈邏輯保持不變)
     if (url.pathname.endsWith('.js')) {
       const referer = request.headers.get('Referer');
-      // 如果沒有 Referer，或者 Referer 不是來自您的網域，就直接阻擋
       if (!referer || !referer.includes('ionmaster.threeliteeducation.workers.dev')) {
         return new Response("A.A. Sir 說：非請勿入！請乖乖從首頁進入實驗室 🧪", { status: 403 });
       }
     }
 
-    // API 共用的 Headers
     const headers = { 'Content-Type': 'application/json' };
 
     // --- 登入 API ---
@@ -35,29 +32,43 @@ export default {
     if (url.pathname === '/api/save' && request.method === 'POST') {
       const { username, passcode, data, lvl } = await request.json();
       
-      await env.IONMASTER_DATA.put(`user_${username}`, JSON.stringify({ passcode, data }));
+      // 🚀 關鍵修改：存檔時，把排行榜需要的資訊當作「標籤 (metadata)」貼在檔案外！
+      await env.IONMASTER_DATA.put(
+        `user_${username}`, 
+        JSON.stringify({ passcode, data }),
+        {
+          metadata: { username: username, exp: data.exp, lvl: lvl }
+        }
+      );
       
-      let lbRaw = await env.IONMASTER_DATA.get('GLOBAL_LEADERBOARD');
-      let lb = lbRaw ? JSON.parse(lbRaw) : [];
-      
-      let idx = lb.findIndex(x => x.username === username);
-      if (idx > -1) { 
-          lb[idx].exp = data.exp; lb[idx].lvl = lvl; 
-      } else { 
-          lb.push({ username, exp: data.exp, lvl }); 
-      }
-      
-      lb.sort((a, b) => b.exp - a.exp);
-      lb = lb.slice(0, 50);
-      await env.IONMASTER_DATA.put('GLOBAL_LEADERBOARD', JSON.stringify(lb));
-
+      // 注意：我們把原本容易發生衝突的 GLOBAL_LEADERBOARD 讀寫邏輯刪除了！
       return new Response(JSON.stringify({ success: true }), { headers });
     }
 
     // --- 排行榜 API ---
     if (url.pathname === '/api/leaderboard' && request.method === 'GET') {
-      let lbRaw = await env.IONMASTER_DATA.get('GLOBAL_LEADERBOARD');
-      return new Response(JSON.stringify({ success: true, leaderboard: lbRaw ? JSON.parse(lbRaw) : [] }), { headers });
+      // 🚀 關鍵修改：不再讀取容易出錯的單一排行榜檔案
+      // 而是請資料庫列出所有開頭是 "user_" 的檔案，並收集它們的標籤！
+      let listed = await env.IONMASTER_DATA.list({ prefix: 'user_' });
+      let lb = [];
+      
+      for (let key of listed.keys) {
+        // 如果這個玩家有分數標籤，就把他加入名單
+        if (key.metadata) {
+          lb.push({
+            username: key.metadata.username,
+            exp: key.metadata.exp,
+            lvl: key.metadata.lvl
+          });
+        }
+      }
+      
+      // 根據經驗值 (exp) 由大到小排序
+      lb.sort((a, b) => b.exp - a.exp);
+      // 只取前 50 名
+      lb = lb.slice(0, 50);
+
+      return new Response(JSON.stringify({ success: true, leaderboard: lb }), { headers });
     }
 
     // --- 兌換碼 API ---
@@ -74,7 +85,6 @@ export default {
         return new Response(JSON.stringify({ success: true, reward: codeData.reward }), { headers });
     }
 
-    // 如果都不是以上的路徑，回傳 404
     return new Response("Not found", { status: 404 });
   },
 };
