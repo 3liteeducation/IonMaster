@@ -42,7 +42,6 @@
                 <div id="questList" class="quest-list"></div>
             </div>
 
-            <button class="ios-btn secondary-btn mt-3" onclick="UI.toggleModal('saveModal', true)">⚙️ 存檔與數據管理</button>
             <button class="ios-btn warning-btn mt-3" onclick="UI.toggleModal('redeemModal', true)">🎁 兌換禮物碼 (Redeem Code)</button>
         </main>
 
@@ -120,19 +119,6 @@
                 載入中...
             </div>
             <button class="ios-btn cancel-btn mt-2" onclick="UI.toggleModal('leaderboardModal', false)">關閉</button>
-        </div>
-    </div>
-
-    <div id="saveModal" class="modal glass-modal">
-        <div class="modal-content glass-panel">
-            <h2 class="ios-title">⚙️ 數據管理</h2>
-            <p class="ios-desc">您的存檔已受雲端保護。</p>
-            <textarea id="saveCodeInput" class="ios-textarea" placeholder="存檔碼..."></textarea>
-            <div style="display: flex; gap: 10px; margin-top: 15px;">
-                <button class="ios-btn primary-btn" onclick="StorageManager.export()">📤 手動匯出</button>
-                <button class="ios-btn danger-btn" onclick="StorageManager.import()">📥 手動匯入</button>
-            </div>
-            <button class="ios-btn cancel-btn mt-2" onclick="UI.toggleModal('saveModal', false)">關閉</button>
         </div>
     </div>
 
