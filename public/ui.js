@@ -1,5 +1,10 @@
 // ui.js - 專門處理畫面渲染、彈出視窗與介面切換
-const UI = {
+import { Database } from './data.js';
+import { AudioEngine } from './audio.js';
+import { State } from './state.js';
+import { Game } from './game.js';
+
+export const UI = {
     switchView(viewId, btnElem) {
         AudioEngine.play('click');
         document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
