@@ -96,7 +96,28 @@ export const Game = {
                 let pool = (isC ? Database.playableAnions : Database.playableCations).filter(p => isC ? isValid(tc, p) : isValid(p, tc));
                 if(isC) { curC = tc; curA = pool[Math.floor(Math.random() * pool.length)]; } else { curA = tc; curC = pool[Math.floor(Math.random() * pool.length)]; }
             } else {
-                do { curC = Database.playableCations[Math.floor(Math.random() * Database.playableCations.length)]; curA = Database.playableAnions[Math.floor(Math.random() * Database.playableAnions.length)]; } while (!isValid(curC, curA));
+                // 🚀 弱點突破機制：如果是在練習或速度模式，有 30% 機率考以前錯過的題目
+                const errorKeys = Object.keys(State.data.errorLog);
+                let useErrorLog = (Math.random() < 0.3 && errorKeys.length > 0);
+                
+                if (useErrorLog) {
+                    const randomError = errorKeys[Math.floor(Math.random() * errorKeys.length)];
+                    const [cForm, aForm] = randomError.split('_');
+                    curC = Database.playableCations.find(c => c.formula === cForm);
+                    curA = Database.playableAnions.find(a => a.formula === aForm);
+                    
+                    // 確保讀出來的資料是有效的
+                    if (!curC || !curA || !isValid(curC, curA)) {
+                        useErrorLog = false; 
+                    } else {
+                        console.log(`🧠 觸發弱點突破：再次挑戰易錯題 ${cForm} + ${aForm}`);
+                    }
+                }
+
+                // 如果沒觸發弱點突破，就走原本的完全隨機邏輯
+                if (!useErrorLog) {
+                    do { curC = Database.playableCations[Math.floor(Math.random() * Database.playableCations.length)]; curA = Database.playableAnions[Math.floor(Math.random() * Database.playableAnions.length)]; } while (!isValid(curC, curA));
+                }
             }
         }
         
@@ -151,6 +172,15 @@ export const Game = {
             AudioEngine.play('correct'); if(btn) btn.classList.add('correct'); 
             State.game.score++; State.game.combo++; 
             
+            // 🚀 如果答對了，檢查是不是把以前的錯題答對了，如果是，可以把它從弱點清單中稍微扣除次數（減輕弱點）
+            if (c && a) {
+                let key = c.formula + "_" + a.formula;
+                if (State.data.errorLog[key]) {
+                    State.data.errorLog[key]--;
+                    if (State.data.errorLog[key] <= 0) delete State.data.errorLog[key];
+                }
+            }
+
             if (m === 'speed' || m === 'pvp') { 
                 document.getElementById('progressText').innerText = `進度: ${State.game.score}/10`; document.getElementById('batteryLevel').style.width = (State.game.score * 10) + "%"; 
             } 
