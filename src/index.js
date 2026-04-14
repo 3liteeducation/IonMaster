@@ -1,4 +1,29 @@
 export default {
+  // 🚀 新增：定時任務 (Cron Trigger)，負責在背景自動整理全校排行榜
+  async scheduled(event, env, ctx) {
+    console.log("🏗️ 正在背景生成排行榜快取...");
+    
+    // 取出所有玩家的標籤
+    let listed = await env.IONMASTER_DATA.list({ prefix: 'user_' });
+    let lb = [];
+    for (let key of listed.keys) {
+      if (key.metadata) {
+        lb.push({
+          username: key.metadata.username,
+          exp: key.metadata.exp,
+          lvl: key.metadata.lvl
+        });
+      }
+    }
+    
+    // 根據經驗值排序，只取前 50 名
+    lb.sort((a, b) => b.exp - a.exp);
+    lb = lb.slice(0, 50);
+    
+    // 儲存到一個叫做 CACHE_LEADERBOARD_TOP50 的快取檔案裡
+    await env.IONMASTER_DATA.put('CACHE_LEADERBOARD_TOP50', JSON.stringify(lb));
+  },
+
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     
@@ -28,15 +53,14 @@ export default {
       }
     }
 
-    // --- 🚀 關鍵修改：具備防作弊驗證的存檔 API ---
+    // --- 防作弊驗證的存檔 API ---
     if (url.pathname === '/api/save' && request.method === 'POST') {
       const { username, passcode, data, lvl } = await request.json();
 
-      // 1. 🔍 後端公式驗證：重新計算等級
-      // 根據公式：lvl = floor(sqrt(exp / 15)) + 1
+      // 後端公式驗證：重新計算等級
       const calculatedLvl = Math.floor(Math.sqrt(data.exp / 15)) + 1;
 
-      // 2. 🛡️ 守衛判斷：如果前端傳來的等級與計算結果不符，判定為竄改
+      // 守衛判斷：如果前端傳來的等級與計算結果不符，判定為竄改
       if (lvl !== calculatedLvl) {
         console.error(`偵測到竄改！玩家：${username}, 宣稱等級：${lvl}, 實際等級：${calculatedLvl}`);
         return new Response(JSON.stringify({ 
@@ -45,38 +69,25 @@ export default {
         }), { status: 400, headers });
       }
 
-      // 3. 限制最高等級（可選，例如設定 Lv.100 為上限）
       if (calculatedLvl > 100) {
         return new Response(JSON.stringify({ success: false, message: '超出實驗室等級上限！' }), { status: 400, headers });
       }
 
-      // 通過驗證，執行存檔與 Metadata 標籤更新
+      // 執行存檔與 Metadata 標籤更新
       await env.IONMASTER_DATA.put(
         `user_${username}`, 
         JSON.stringify({ passcode, data }),
-        {
-          metadata: { username: username, exp: data.exp, lvl: calculatedLvl }
-        }
+        { metadata: { username: username, exp: data.exp, lvl: calculatedLvl } }
       );
       
       return new Response(JSON.stringify({ success: true }), { headers });
     }
 
-    // --- 排行榜 API ---
+    // --- 🚀 效能大升級的排行榜 API ---
     if (url.pathname === '/api/leaderboard' && request.method === 'GET') {
-      let listed = await env.IONMASTER_DATA.list({ prefix: 'user_' });
-      let lb = [];
-      for (let key of listed.keys) {
-        if (key.metadata) {
-          lb.push({
-            username: key.metadata.username,
-            exp: key.metadata.exp,
-            lvl: key.metadata.lvl
-          });
-        }
-      }
-      lb.sort((a, b) => b.exp - a.exp);
-      lb = lb.slice(0, 50);
+      // 學生點擊排行榜時，不再遍歷資料庫，而是直接秒速拿取快取檔案！
+      let cacheRaw = await env.IONMASTER_DATA.get('CACHE_LEADERBOARD_TOP50');
+      let lb = cacheRaw ? JSON.parse(cacheRaw) : [];
       return new Response(JSON.stringify({ success: true, leaderboard: lb }), { headers });
     }
 
