@@ -165,3 +165,68 @@ body.bg-alchemy .exp-text { color: #ddd; }
 
 .fallback-content { display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; height: 100%; position: absolute; top: 0; left: 0; text-align: center; padding: 5px; box-sizing: border-box; }
 .fallback-content div:first-child { font-family: 'Times New Roman', serif; font-weight: bold; }
+
+/* =========================================
+   🖥️ 電腦與平板版專用佈局 (Responsive Web Design)
+   ========================================= */
+@media (min-width: 768px) {
+    /* 1. 放寬主要內容區塊，並靠右對齊留出左側導覽列空間 */
+    .app-container {
+        max-width: 900px;
+        padding: 20px 20px 20px 120px; 
+    }
+
+    /* 2. 將底部導覽列改為「左側固定側邊欄」 */
+    .bottom-tab-bar {
+        top: 50%;
+        left: 20px;
+        bottom: auto;
+        transform: translateY(-50%);
+        width: 80px;
+        flex-direction: column;
+        padding: 20px 5px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+
+    .tab-item {
+        margin: 15px 0;
+    }
+
+    /* 3. 測驗模式按鈕改為並排顯示 */
+    .game-modes {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+    }
+    .game-modes .mt-3 {
+        margin-top: 0; /* 移除手機版的垂直間距 */
+    }
+
+    /* 4. 放寬圖鑑與實驗室的網格顯示數量 (一排 6 個) */
+    .gallery-grid {
+        grid-template-columns: repeat(6, 1fr);
+        gap: 15px;
+    }
+
+    /* 5. 調整抽卡動畫顯示的卡片大小 */
+    .reveal-card {
+        width: 260px;
+        height: 364px;
+    }
+}
+
+/* 針對更大螢幕（如桌上型螢幕）的進階微調 */
+@media (min-width: 1024px) {
+    .app-container {
+        max-width: 1100px;
+        padding-left: 150px;
+    }
+    
+    .bottom-tab-bar {
+        width: 100px;
+    }
+
+    .gallery-grid {
+        grid-template-columns: repeat(8, 1fr); /* 一排 8 個 */
+    }
+}
