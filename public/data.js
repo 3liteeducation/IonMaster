@@ -1,4 +1,4 @@
-const Database = {
+export const Database = {
     cations: [
         { id: 1, name: "Sodium", formula: "Na", charge: 1, html: "Na<sup>+</sup>", fileKey: 'na' }, 
         { id: 2, name: "Potassium", formula: "K", charge: 1, html: "K<sup>+</sup>", fileKey: 'k' },
