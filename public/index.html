@@ -146,12 +146,7 @@
     <div id="gachaAnimModal" class="modal glass-modal" style="z-index: 150;"><div class="gacha-anim-container">🧪</div><h3 id="gachaAnimText" style="color: white; margin-top: 40px; letter-spacing: 3px; text-shadow: 0 2px 5px rgba(0,0,0,0.5);">高能反應合成中...</h3></div>
     <div id="explosionModal" class="modal glass-modal" style="z-index: 200;"><div class="modal-content glass-panel" style="background: rgba(30, 20, 20, 0.9); border: 2px solid var(--legend);"><div class="explosion-anim">💥</div><h2 style="color: var(--legend); margin-top: 10px;">煉金爐爆炸！</h2><p style="color: #ccc; margin-bottom: 25px;">合成失敗... 代幣已化為灰燼。</p><button onclick="UI.toggleModal('explosionModal', false); Game.quit()" class="ios-btn danger-btn">收拾殘局</button></div></div>
 
-    <script src="data.js"></script>
-    <script src="audio.js"></script>
-    <script src="state.js"></script>
-    <script src="ui.js"></script>
-    <script src="game.js"></script>
-    <script src="app.js"></script>
+ <script type="module" src="app.js"></script>
 
     <script>
       if ('serviceWorker' in navigator) {
