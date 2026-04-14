@@ -2,7 +2,7 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     
-    // 如果請求的是 .js 檔案 (防盜鏈邏輯保持不變)
+    // 🛡️ 防盜鏈邏輯
     if (url.pathname.endsWith('.js')) {
       const referer = request.headers.get('Referer');
       if (!referer || !referer.includes('ionmaster.threeliteeducation.workers.dev')) {
@@ -20,7 +20,7 @@ export default {
       if (rawData) {
         let userObj = JSON.parse(rawData);
         if (userObj.passcode !== passcode) {
-          return new Response(JSON.stringify({ success: false, message: '❌ 密碼錯誤！請確認您的身份。' }), { headers });
+          return new Response(JSON.stringify({ success: false, message: '❌ 密碼錯誤！' }), { headers });
         }
         return new Response(JSON.stringify({ success: true, data: userObj.data }), { headers });
       } else {
@@ -28,32 +28,45 @@ export default {
       }
     }
 
-    // --- 存檔 API ---
+    // --- 🚀 關鍵修改：具備防作弊驗證的存檔 API ---
     if (url.pathname === '/api/save' && request.method === 'POST') {
       const { username, passcode, data, lvl } = await request.json();
-      
-      // 🚀 關鍵修改：存檔時，把排行榜需要的資訊當作「標籤 (metadata)」貼在檔案外！
+
+      // 1. 🔍 後端公式驗證：重新計算等級
+      // 根據公式：lvl = floor(sqrt(exp / 15)) + 1
+      const calculatedLvl = Math.floor(Math.sqrt(data.exp / 15)) + 1;
+
+      // 2. 🛡️ 守衛判斷：如果前端傳來的等級與計算結果不符，判定為竄改
+      if (lvl !== calculatedLvl) {
+        console.error(`偵測到竄改！玩家：${username}, 宣稱等級：${lvl}, 實際等級：${calculatedLvl}`);
+        return new Response(JSON.stringify({ 
+          success: false, 
+          message: '🧪 實驗室警告：偵測到數據異常！存檔已被系統攔截。' 
+        }), { status: 400, headers });
+      }
+
+      // 3. 限制最高等級（可選，例如設定 Lv.100 為上限）
+      if (calculatedLvl > 100) {
+        return new Response(JSON.stringify({ success: false, message: '超出實驗室等級上限！' }), { status: 400, headers });
+      }
+
+      // 通過驗證，執行存檔與 Metadata 標籤更新
       await env.IONMASTER_DATA.put(
         `user_${username}`, 
         JSON.stringify({ passcode, data }),
         {
-          metadata: { username: username, exp: data.exp, lvl: lvl }
+          metadata: { username: username, exp: data.exp, lvl: calculatedLvl }
         }
       );
       
-      // 注意：我們把原本容易發生衝突的 GLOBAL_LEADERBOARD 讀寫邏輯刪除了！
       return new Response(JSON.stringify({ success: true }), { headers });
     }
 
     // --- 排行榜 API ---
     if (url.pathname === '/api/leaderboard' && request.method === 'GET') {
-      // 🚀 關鍵修改：不再讀取容易出錯的單一排行榜檔案
-      // 而是請資料庫列出所有開頭是 "user_" 的檔案，並收集它們的標籤！
       let listed = await env.IONMASTER_DATA.list({ prefix: 'user_' });
       let lb = [];
-      
       for (let key of listed.keys) {
-        // 如果這個玩家有分數標籤，就把他加入名單
         if (key.metadata) {
           lb.push({
             username: key.metadata.username,
@@ -62,12 +75,8 @@ export default {
           });
         }
       }
-      
-      // 根據經驗值 (exp) 由大到小排序
       lb.sort((a, b) => b.exp - a.exp);
-      // 只取前 50 名
       lb = lb.slice(0, 50);
-
       return new Response(JSON.stringify({ success: true, leaderboard: lb }), { headers });
     }
 
