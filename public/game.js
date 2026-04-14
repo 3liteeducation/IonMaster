@@ -1,5 +1,10 @@
 // game.js - 專門處理遊戲模式、計分、抽卡與判定邏輯
-const Game = {
+import { Database } from './data.js';
+import { AudioEngine } from './audio.js';
+import { State } from './state.js';
+import { UI } from './ui.js';
+
+export const Game = {
     claimQuest(idx) {
         let q = State.data.quests.list[idx];
         if(q.progress >= q.target && !q.isClaimed) { AudioEngine.play('ssr'); q.isClaimed = true; State.data.coins += q.reward; State.save(); UI.renderQuests(); if(typeof confetti !== 'undefined') confetti({particleCount: 50, spread: 60, origin: {y: 0.8}});}
