@@ -10,9 +10,8 @@
       "id": "554699b988f447dab0f5cbb8b75b31bc" 
     }
   ],
-  "compatibility_flags": [ "nodejs_compat" ]
-}
-
-"triggers": {
+  "compatibility_flags": [ "nodejs_compat" ],
+  "triggers": {
     "crons": ["* * * * *"] 
   }
+}
