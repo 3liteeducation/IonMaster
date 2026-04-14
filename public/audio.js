@@ -1,5 +1,5 @@
 // audio.js - 專門處理遊戲內的所有聲音
-const AudioEngine = {
+export const AudioEngine = {
     ctx: null,
     init() { try { if(!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); if(this.ctx.state === 'suspended') this.ctx.resume(); } catch(e){} },
     tone(freq, type, dur, vol=0.1) {
