@@ -1,19 +1,21 @@
-const url = new URL(request.url);
-
-// 如果請求的是 .js 檔案
-if (url.pathname.endsWith('.js')) {
-  const referer = request.headers.get('Referer');
-  // 如果沒有 Referer，或者 Referer 不是來自您的網域，就直接阻擋
-  if (!referer || !referer.includes('ionmaster.threeliteeducation.workers.dev')) {
-    return new Response("A.A. Sir 說：非請勿入！請乖乖從首頁進入實驗室 🧪", { status: 403 });
-  }
-}
-
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    
+    // 🛡️ 防盜鏈邏輯：搬移到 fetch 內部
+    // 如果請求的是 .js 檔案
+    if (url.pathname.endsWith('.js')) {
+      const referer = request.headers.get('Referer');
+      // 如果沒有 Referer，或者 Referer 不是來自您的網域，就直接阻擋
+      if (!referer || !referer.includes('ionmaster.threeliteeducation.workers.dev')) {
+        return new Response("A.A. Sir 說：非請勿入！請乖乖從首頁進入實驗室 🧪", { status: 403 });
+      }
+    }
+
+    // API 共用的 Headers
     const headers = { 'Content-Type': 'application/json' };
 
+    // --- 登入 API ---
     if (url.pathname === '/api/login' && request.method === 'POST') {
       const { username, passcode } = await request.json();
       let rawData = await env.IONMASTER_DATA.get(`user_${username}`);
@@ -29,6 +31,7 @@ export default {
       }
     }
 
+    // --- 存檔 API ---
     if (url.pathname === '/api/save' && request.method === 'POST') {
       const { username, passcode, data, lvl } = await request.json();
       
@@ -51,11 +54,13 @@ export default {
       return new Response(JSON.stringify({ success: true }), { headers });
     }
 
+    // --- 排行榜 API ---
     if (url.pathname === '/api/leaderboard' && request.method === 'GET') {
       let lbRaw = await env.IONMASTER_DATA.get('GLOBAL_LEADERBOARD');
       return new Response(JSON.stringify({ success: true, leaderboard: lbRaw ? JSON.parse(lbRaw) : [] }), { headers });
     }
 
+    // --- 兌換碼 API ---
     if (url.pathname === '/api/redeem' && request.method === 'POST') {
         const { code } = await request.json();
         const validCodes = {
@@ -69,6 +74,7 @@ export default {
         return new Response(JSON.stringify({ success: true, reward: codeData.reward }), { headers });
     }
 
+    // 如果都不是以上的路徑，回傳 404
     return new Response("Not found", { status: 404 });
   },
 };
