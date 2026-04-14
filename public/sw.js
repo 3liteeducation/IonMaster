@@ -7,7 +7,6 @@ const urlsToCache = [
   '/3lite-style.css',
   '/data.js',
   '/app.js',
-  '/manifest.json'
 ];
 
 // 1. 安裝階段：將核心檔案存入快取
