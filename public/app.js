@@ -1,4 +1,6 @@
 // app.js - 主程式入口與安全防護
+import './censorship.js'; // 🚀 只要加上這一行，載入我們的敏感詞外掛！
+
 import { State } from './state.js';
 import { UI } from './ui.js';
 import { Game } from './game.js';
