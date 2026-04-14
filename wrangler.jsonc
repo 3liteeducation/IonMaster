@@ -12,3 +12,7 @@
   ],
   "compatibility_flags": [ "nodejs_compat" ]
 }
+
+"triggers": {
+    "crons": ["* * * * *"] 
+  }
