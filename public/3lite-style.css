@@ -18,10 +18,16 @@ body {
 
 img { -webkit-user-drag: none; pointer-events: none; }
 
+/* 效能優化：開啟硬體加速並優化動畫屬性 */
 .fluid-bg {
-    position: fixed; top: -50%; left: -50%; width: 200vw; height: 200vh; z-index: -1;
-    background: radial-gradient(circle at 50% 50%, #e0eafc, #cfdef3, #fdfbfb); background-size: 100% 100%;
-    animation: flow 20s linear infinite; transition: background 1s ease; will-change: transform; 
+    position: fixed; 
+    top: -50%; left: -50%; width: 200vw; height: 200vh; z-index: -1;
+    background: radial-gradient(circle at 50% 50%, #e0eafc, #cfdef3, #fdfbfb); 
+    background-size: 100% 100%;
+    animation: flow 20s linear infinite; 
+    transition: background 1s ease; 
+    will-change: transform; 
+    transform: translateZ(0); /* 🚀 新增：強制開啟 GPU 硬體加速 */
 }
 @keyframes flow { 0% { transform: rotate(0deg) scale(1); } 50% { transform: rotate(180deg) scale(1.05); } 100% { transform: rotate(360deg) scale(1); } }
 
