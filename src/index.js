@@ -27,10 +27,11 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     
-    // 🛡️ 防盜鏈邏輯
+   // 🛡️ 防盜鏈邏輯
     if (url.pathname.endsWith('.js')) {
       const referer = request.headers.get('Referer');
-      if (!referer || !referer.includes('ionmaster.threeliteeducation.workers.dev')) {
+      // 🚀 將這裡的網址替換為全新的 ionmaster.3lite.io
+      if (!referer || !referer.includes('ionmaster.3lite.io')) {
         return new Response("A.A. Sir 說：非請勿入！請乖乖從首頁進入實驗室 🧪", { status: 403 });
       }
     }
