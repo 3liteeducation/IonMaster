@@ -70,25 +70,7 @@ export const Database = {
         { q: "PbI<sub>2</sub> (s)", a: "黃色 🟡" }, { q: "Fe(OH)<sub>2</sub> (s)", a: "暗綠色 🌿" },
         { q: "Fe(OH)<sub>3</sub> (s)", a: "紅棕色 🟫" }, { q: "多數 Group 1/2 離子", a: "無色 🧊" }
     ],
-  allColors: ["藍色 🔵", "淺綠色 🟢", "黃/棕色 🟤", "紫色 🟣", "橙色 🟠", "黃色 🟡", "黑色 ⚫", "綠色 🟩", "淺藍色 💧", "白色 ⚪", "淡黃色 🌕", "暗綠色 🌿", "紅棕色 🟫", "無色 🧊"],
-    
-    // 🚀 新增：LSSU 禁用詞彙清單 (已轉換為大寫方便比對)
-    banishedWords: [
-        // 2026 年
-        "6-7", "DEMURE", "COOKED", "MASSIVE", "INCENTIVIZE", "FULL STOP", "PERFECT", "GIFTED",
-        // 2025 年
-        "CRINGE", "GAME CHANGER", "ERA", "DROPPED", "IYKYK", "SORRY NOT SORRY", "SKIBIDI", "100%",
-        // 2024 年
-        "AT THE END OF THE DAY", "CRINGE-WORTHY", "HACK", "ICONIC", "IMPACT", "OBSESSED", "RIZZ", "SIDE HUSTLE",
-        // 2023 年
-        "GOAT", "INFLECTION POINT", "QUIET QUITTING", "GASLIGHTING", "AMAZING", "DOES THAT MAKE SENSE", "IRREGARDLESS", "ABSOLUTELY",
-        // 2022 年
-        "WAIT WHAT", "NO WORRIES", "THAT BEING SAID", "ASKING FOR A FRIEND", "CIRCLE BACK", "DEEP DIVE", "NEW NORMAL", "YOU'RE ON MUTE", "SUPPLY CHAIN",
-        // 經典回顧
-        "COVFEFE", "FAKE NEWS", "GIG ECONOMY", "BIGLY", "DADBOD", "ECHO CHAMBER", "BROMANCE", "CHILLAXIN"
-    ]
-};
-// 下面是原本的 Database.playableCations = ... (保持不變)
+    allColors: ["藍色 🔵", "淺綠色 🟢", "黃/棕色 🟤", "紫色 🟣", "橙色 🟠", "黃色 🟡", "黑色 ⚫", "綠色 🟩", "淺藍色 💧", "白色 ⚪", "淡黃色 🌕", "暗綠色 🌿", "紅棕色 🟫", "無色 🧊"]
 };
 
 Database.playableCations = Database.cations.filter(c => !c.isSpecial); 
