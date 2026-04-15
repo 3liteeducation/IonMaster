@@ -1,38 +1,50 @@
+// src/index.js - Ion Master 終極後端守衛
+
+// 🚀 核心安全：將禁用詞與髒話鎖在後端 (學生看不到)
+const BANISHED_WORDS = [
+  // LSSU 煩人詞彙
+  "SKIBIDI", "RIZZ", "DEMURE", "COOKED", "GOAT", "GASLIGHTING", "CIRCLE BACK", "GYATT",
+  // 核心髒話與敏感詞 (由 en.json 萃取)
+  "FUCK", "SHIT", "BITCH", "ASS", "CUNT", "DICK", "COCK", "PORN", "XXX", "ANUS", "VAGINA", "PENIS",
+  "NIGGER", "NIGGA", "RETARD", "BASTARD", "SLUT", "WHORE", "WANK", "PISS"
+];
+
+const BANISHED_EMOJIS = ["🍆", "💦", "🍑", "👅", "🖕", "🤬", "👉👌"];
+
+function isNameForbidden(name) {
+  const upperName = name.toUpperCase();
+  // 檢查 Emoji
+  if (BANISHED_EMOJIS.some(e => upperName.includes(e))) return true;
+  // 檢查詞彙
+  return BANISHED_WORDS.some(word => {
+    if (word.length <= 4) {
+      // 短單字採嚴格匹配或邊界匹配
+      return upperName === word || upperName.split(/\s+/).includes(word);
+    }
+    return upperName.includes(word); // 長單字有包含就擋
+  });
+}
+
 export default {
-  // 🚀 新增：定時任務 (Cron Trigger)，負責在背景自動整理全校排行榜
+  // 定時任務：每分鐘整理一次排行榜快取
   async scheduled(event, env, ctx) {
-    console.log("🏗️ 正在背景生成排行榜快取...");
-    
-    // 取出所有玩家的標籤
     let listed = await env.IONMASTER_DATA.list({ prefix: 'user_' });
     let lb = [];
     for (let key of listed.keys) {
-      if (key.metadata) {
-        lb.push({
-          username: key.metadata.username,
-          exp: key.metadata.exp,
-          lvl: key.metadata.lvl
-        });
-      }
+      if (key.metadata) lb.push({ username: key.metadata.username, exp: key.metadata.exp, lvl: key.metadata.lvl });
     }
-    
-    // 根據經驗值排序，只取前 50 名
     lb.sort((a, b) => b.exp - a.exp);
-    lb = lb.slice(0, 50);
-    
-    // 儲存到一個叫做 CACHE_LEADERBOARD_TOP50 的快取檔案裡
-    await env.IONMASTER_DATA.put('CACHE_LEADERBOARD_TOP50', JSON.stringify(lb));
+    await env.IONMASTER_DATA.put('CACHE_LEADERBOARD_TOP50', JSON.stringify(lb.slice(0, 50)));
   },
 
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     
-   // 🛡️ 防盜鏈邏輯
+    // 🛡️ 防盜鏈：更新為你的新網域 ionmaster.3lite.io
     if (url.pathname.endsWith('.js')) {
       const referer = request.headers.get('Referer');
-      // 🚀 將這裡的網址替換為全新的 ionmaster.3lite.io
-      if (!referer || !referer.includes('ionmaster.3lite.io')) {
-        return new Response("A.A. Sir 說：非請勿入！請乖乖從首頁進入實驗室 🧪", { status: 403 });
+      if (!referer || (!referer.includes('ionmaster.3lite.io') && !referer.includes('ionmaster.threeliteeducation.workers.dev'))) {
+        return new Response("A.A. Sir 說：非請勿入！🧪", { status: 403 });
       }
     }
 
@@ -41,68 +53,53 @@ export default {
     // --- 登入 API ---
     if (url.pathname === '/api/login' && request.method === 'POST') {
       const { username, passcode } = await request.json();
-      let rawData = await env.IONMASTER_DATA.get(`user_${username}`);
       
+      // 🚀 新增：後端名字審查
+      if (isNameForbidden(username)) {
+        return new Response(JSON.stringify({ success: false, message: '🛑 系統警告：您的名稱包含不適當的內容，請換一個！' }), { headers });
+      }
+
+      let rawData = await env.IONMASTER_DATA.get(`user_${username}`);
       if (rawData) {
         let userObj = JSON.parse(rawData);
-        if (userObj.passcode !== passcode) {
-          return new Response(JSON.stringify({ success: false, message: '❌ 密碼錯誤！' }), { headers });
-        }
+        if (userObj.passcode !== passcode) return new Response(JSON.stringify({ success: false, message: '❌ 密碼錯誤！' }), { headers });
         return new Response(JSON.stringify({ success: true, data: userObj.data }), { headers });
       } else {
         return new Response(JSON.stringify({ success: true, isNew: true }), { headers });
       }
     }
 
-    // --- 防作弊驗證的存檔 API ---
+    // --- 存檔 API (含防作弊驗證) ---
     if (url.pathname === '/api/save' && request.method === 'POST') {
       const { username, passcode, data, lvl } = await request.json();
 
-      // 後端公式驗證：重新計算等級
+      // 1. 等級公式驗證 (防作弊)
       const calculatedLvl = Math.floor(Math.sqrt(data.exp / 15)) + 1;
-
-      // 守衛判斷：如果前端傳來的等級與計算結果不符，判定為竄改
       if (lvl !== calculatedLvl) {
-        console.error(`偵測到竄改！玩家：${username}, 宣稱等級：${lvl}, 實際等級：${calculatedLvl}`);
-        return new Response(JSON.stringify({ 
-          success: false, 
-          message: '🧪 實驗室警告：偵測到數據異常！存檔已被系統攔截。' 
-        }), { status: 400, headers });
+        return new Response(JSON.stringify({ success: false, message: '🧪 偵測到數據異常！存檔已被系統攔截。' }), { status: 400, headers });
       }
 
-      if (calculatedLvl > 100) {
-        return new Response(JSON.stringify({ success: false, message: '超出實驗室等級上限！' }), { status: 400, headers });
-      }
-
-      // 執行存檔與 Metadata 標籤更新
+      // 2. 存檔與標籤更新
       await env.IONMASTER_DATA.put(
         `user_${username}`, 
         JSON.stringify({ passcode, data }),
         { metadata: { username: username, exp: data.exp, lvl: calculatedLvl } }
       );
-      
       return new Response(JSON.stringify({ success: true }), { headers });
     }
 
-    // --- 🚀 效能大升級的排行榜 API ---
+    // --- 排行榜 API (讀取快取) ---
     if (url.pathname === '/api/leaderboard' && request.method === 'GET') {
-      // 學生點擊排行榜時，不再遍歷資料庫，而是直接秒速拿取快取檔案！
-      let cacheRaw = await env.IONMASTER_DATA.get('CACHE_LEADERBOARD_TOP50');
-      let lb = cacheRaw ? JSON.parse(cacheRaw) : [];
-      return new Response(JSON.stringify({ success: true, leaderboard: lb }), { headers });
+      let cache = await env.IONMASTER_DATA.get('CACHE_LEADERBOARD_TOP50');
+      return new Response(cache || JSON.stringify([]), { headers });
     }
 
     // --- 兌換碼 API ---
     if (url.pathname === '/api/redeem' && request.method === 'POST') {
         const { code } = await request.json();
-        const validCodes = {
-            'AASIR-CHEM-PRO': { reward: 10000, expires: '2026-05-01T23:59:59' }, 
-            'CHEM-GOD': { reward: 100, expires: '2026-12-31T23:59:59' },
-            'WELCOME-3LITE': { reward: 10, expires: null }
-        };
+        const validCodes = { 'AASIR-CHEM-PRO': { reward: 10000 }, 'WELCOME-3LITE': { reward: 10 } };
         const codeData = validCodes[code];
         if (!codeData) return new Response(JSON.stringify({ success: false, message: '無效代碼' }), { headers });
-        if (codeData.expires && new Date() > new Date(codeData.expires)) return new Response(JSON.stringify({ success: false, message: '代碼已過期' }), { headers });
         return new Response(JSON.stringify({ success: true, reward: codeData.reward }), { headers });
     }
 
