@@ -273,36 +273,81 @@ export const Game = {
         UI.setLock(true); document.body.className = 'bg-main'; document.getElementById('gachaAnimText').innerText = "煉金大成功！"; UI.toggleModal('gachaAnimModal', true); AudioEngine.play('draw');
         setTimeout(() => { document.getElementById('whiteFlash').classList.add('active'); setTimeout(() => { UI.toggleModal('gachaAnimModal', false); document.getElementById('gachaAnimText').innerText = "高能反應合成中..."; this.showGachaResult(c, c.targetRarity, State.data.inventory[c.uniqueId], isNew, 0, true); this.quit(); setTimeout(() => { document.getElementById('whiteFlash').classList.remove('active'); UI.setLock(false);}, 100); }, 400); }, 1500); 
     },
-    drawCard(times) {
-        if(State.game.isAnimating) return; AudioEngine.play('click'); 
+async drawCard(times) {
+        if(State.game.isAnimating) return; 
+        AudioEngine.play('click'); 
+        
         let cost = (times === 10) ? 45 : times * 5; 
         if (State.data.coins < cost) { alert(`🪙 代幣不足！需要 ${cost} 枚。`); return; }
-        
-        State.data.coins -= cost; State.updateQuest('q_gacha', times); UI.setLock(true);
-        let res = []; let refund = 0; let hasGoldOrPurple = false; 
 
-        for(let i = 0; i < times; i++) {
-            let r = 'N'; let rand = Math.random() * 100; 
-            State.data.pityCount--;
-            if (State.data.pityCount <= 0) { r = 'SSR'; } 
-            else { if(rand < 1.5) r = 'SSR'; else if(rand < 10) r = 'SR'; else if(rand < 30) r = 'R'; }
-            if (times === 10 && i === 9 && !hasGoldOrPurple && r !== 'SSR') { r = 'SR'; }
-            if (r === 'SSR' || r === 'SR') hasGoldOrPurple = true;
-            if (r === 'SSR') { State.data.pityCount = 50; }
+        UI.setLock(true);
+        // 變更按鈕文字，讓玩家知道正在與伺服器連線
+        const btn = document.querySelector('.draw-actions').children[times === 1 ? 0 : 1];
+        let originalText = btn.innerText;
+        btn.innerText = "📡 雲端煉金中...";
 
-            let pool = Database.expandedPool.filter(x => x.targetRarity === r); 
-            if(r === 'SSR') pool = pool.filter(x => (Math.random() < 0.1) ? x.isSpecial : !x.isSpecial); else pool = pool.filter(x => !x.isSpecial);
-            let c = pool[Math.floor(Math.random() * pool.length)]; let stars = State.data.inventory[c.uniqueId] || 0; let isNew = stars === 0; let ref = 0;
-            
-            if(isNew) { State.data.inventory[c.uniqueId] = 1; State.addExp(10); } 
-            else if(stars < 3) { State.data.inventory[c.uniqueId]++; State.addExp(5); } 
-            else { ref = Database.config.refunds[r]; refund += ref; }
-            res.push({ c, isNew, stars: State.data.inventory[c.uniqueId] || 3, ref });
+        try {
+            // 🚀 向伺服器發送抽卡請求！
+            const res = await fetch('/api/gacha', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    username: State.username, 
+                    passcode: State.passcode,
+                    times: times
+                })
+            });
+            const result = await res.json();
+            btn.innerText = originalText;
+
+            if (!result.success) {
+                alert(result.message);
+                UI.setLock(false);
+                return;
+            }
+
+            // 🌟 接收伺服器的旨意，強制同步本地端資料
+            State.data.coins = result.newCoins;
+            State.data.exp = result.newExp;
+            State.data.pityCount = result.newPity;
+            State.updateQuest('q_gacha', times);
+
+            // 將伺服器傳回的簡化 ID，對應回本地完整的卡片圖片與資訊
+            let mappedResults = result.results.map(r => {
+                let card = Database.expandedPool.find(c => c.uniqueId === r.uniqueId);
+                // 同步本地庫存
+                if (r.isNew) State.data.inventory[r.uniqueId] = 1;
+                else if (r.stars <= 3) State.data.inventory[r.uniqueId] = r.stars;
+                
+                return { c: card, isNew: r.isNew, stars: r.stars, ref: r.ref };
+            });
+
+            // 存檔更新 UI 顯示 (右上角代幣與等級)
+            State.save(); 
+
+            // 🎬 資料處理完畢，開始播放華麗動畫！
+            UI.toggleModal('gachaAnimModal', true); 
+            AudioEngine.play('draw');
+
+            setTimeout(() => { 
+                document.getElementById('whiteFlash').classList.add('active'); 
+                setTimeout(() => { 
+                    UI.toggleModal('gachaAnimModal', false); 
+                    if(times === 1) this.showGachaResult(mappedResults[0].c, mappedResults[0].c.targetRarity, mappedResults[0].stars, mappedResults[0].isNew, mappedResults[0].ref, false); 
+                    else this.showTenDraw(mappedResults, result.refund); 
+                    
+                    setTimeout(() => { 
+                        document.getElementById('whiteFlash').classList.remove('active'); 
+                        UI.setLock(false);
+                    }, 100); 
+                }, 400); 
+            }, 2000); 
+
+        } catch(e) {
+            alert("❌ 網路連線異常，抽卡失敗！");
+            btn.innerText = originalText;
+            UI.setLock(false);
         }
-        
-        State.data.coins += refund; State.save(); 
-        UI.toggleModal('gachaAnimModal', true); AudioEngine.play('draw');
-        setTimeout(() => { document.getElementById('whiteFlash').classList.add('active'); setTimeout(() => { UI.toggleModal('gachaAnimModal', false); if(times===1) this.showGachaResult(res[0].c, res[0].c.targetRarity, res[0].stars, res[0].isNew, res[0].ref, false); else this.showTenDraw(res, refund); setTimeout(() => { document.getElementById('whiteFlash').classList.remove('active'); UI.setLock(false);}, 100); }, 400); }, 2000); 
     },
     showGachaResult(card, rarity, stars, isNew, refundAmt, isAlchemy) {
         State.game.currentDrawnCard = { ...card, currentRarity: rarity, currentStars: stars }; 
