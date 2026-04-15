@@ -323,13 +323,79 @@ export const Game = {
             content.innerHTML += `<button class="ios-btn cancel-btn mt-2" onclick="Game.quit()">返回首頁</button>`;
         }
     },
-    finishAlchemy(success) {
-        if(!success) { AudioEngine.play('explode'); document.body.classList.add('screen-shake'); UI.toggleModal('explosionModal', true); return; }
-        let c = State.game.targetCard; let stars = State.data.inventory[c.uniqueId] || 0; let isNew = stars === 0;
-        State.data.inventory[c.uniqueId] = stars + 1; State.addExp(30); State.save();
-        
-        UI.setLock(true); document.body.className = 'bg-main'; document.getElementById('gachaAnimText').innerText = "煉金大成功！"; UI.toggleModal('gachaAnimModal', true); AudioEngine.play('draw');
-        setTimeout(() => { document.getElementById('whiteFlash').classList.add('active'); setTimeout(() => { UI.toggleModal('gachaAnimModal', false); document.getElementById('gachaAnimText').innerText = "高能反應合成中..."; this.showGachaResult(c, c.targetRarity, State.data.inventory[c.uniqueId], isNew, 0, true); this.quit(); setTimeout(() => { document.getElementById('whiteFlash').classList.remove('active'); UI.setLock(false);}, 100); }, 400); }, 1500); 
+   async finishAlchemy(success) {
+        UI.setLock(true); // 鎖定畫面，防止玩家亂點
+
+        try {
+            let c = State.game.targetCard;
+            
+            // 1. 向伺服器回報煉金結果，等待伺服器結算
+            const res = await fetch('/api/alchemy', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username: State.username,
+                    passcode: State.passcode,
+                    cardId: c.uniqueId,
+                    rarity: c.targetRarity,
+                    success: success
+                })
+            });
+            const result = await res.json();
+
+            if (!result.success) {
+                alert(result.message);
+                UI.setLock(false);
+                this.quit();
+                return;
+            }
+
+            // 🌟 2. 接收伺服器的旨意，強制同步本地端資料
+            let oldLvl = State.getLevel().lvl;
+            State.data.coins = result.newCoins;
+            State.data.exp = result.newExp;
+            State.data.inventory = result.newInventory;
+            State.save(); // 更新右上角 UI
+
+            // 3. 失敗的爆炸動畫
+            if (!success) {
+                UI.setLock(false);
+                AudioEngine.play('explode');
+                document.body.classList.add('screen-shake');
+                UI.toggleModal('explosionModal', true);
+                return;
+            }
+
+            // 4. 成功的華麗動畫
+            let stars = State.data.inventory[c.uniqueId];
+            let isNew = stars === 1; // 伺服器剛加了 1，所以如果現在是 1，代表是新解鎖的
+            let newLvl = State.getLevel().lvl;
+
+            document.body.className = 'bg-main';
+            document.getElementById('gachaAnimText').innerText = "煉金大成功！";
+            UI.toggleModal('gachaAnimModal', true);
+            AudioEngine.play('draw');
+
+            setTimeout(() => {
+                document.getElementById('whiteFlash').classList.add('active');
+                setTimeout(() => {
+                    UI.toggleModal('gachaAnimModal', false);
+                    document.getElementById('gachaAnimText').innerText = "高能反應合成中...";
+                    this.showGachaResult(c, c.targetRarity, stars, isNew, 0, true);
+                    this.quit();
+                    if (newLvl > oldLvl) setTimeout(() => alert(`🎉 恭喜升級至 Lv.${newLvl}！`), 500);
+                    setTimeout(() => {
+                        document.getElementById('whiteFlash').classList.remove('active');
+                        UI.setLock(false);
+                    }, 100);
+                }, 400);
+            }, 1500);
+
+        } catch (e) {
+            alert("❌ 網路連線異常，煉金結算失敗！");
+            UI.setLock(false);
+            this.quit();
+        }
     },
 async drawCard(times) {
         if(State.game.isAnimating) return; 
