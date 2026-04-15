@@ -69,6 +69,90 @@ export default {
       }
     }
 
+    // --- 🚀 新增：絕對公平的雲端抽卡 API ---
+    if (url.pathname === '/api/gacha' && request.method === 'POST') {
+      const { username, passcode, times } = await request.json();
+      
+      // 1. 驗證身分
+      let rawData = await env.IONMASTER_DATA.get(`user_${username}`);
+      if (!rawData) return new Response(JSON.stringify({ success: false, message: '找不到玩家資料' }), { headers });
+      let userObj = JSON.parse(rawData);
+      if (userObj.passcode !== passcode) return new Response(JSON.stringify({ success: false, message: '身分驗證失敗' }), { headers });
+
+      let data = userObj.data;
+      let cost = (times === 10) ? 45 : times * 5;
+      
+      // 2. 檢查餘額
+      if (data.coins < cost) return new Response(JSON.stringify({ success: false, message: '代幣不足，伺服器拒絕請求！' }), { headers });
+
+      // 3. 扣除代幣
+      data.coins -= cost;
+
+      let results = [];
+      let refund = 0;
+      let hasGoldOrPurple = false;
+      const PLAYABLE_IDS = Array.from({length: 45}, (_, i) => i + 1); // 1 到 45 號是普通卡片
+
+      // 4. 雲端擲骰子邏輯 (駭客絕對摸不到這裡)
+      for (let i = 0; i < times; i++) {
+          let r = 'N'; 
+          let rand = Math.random() * 100;
+          
+          data.pityCount = (data.pityCount || 50) - 1; // 保底計數器減 1
+          
+          if (data.pityCount <= 0) { r = 'SSR'; } 
+          else { 
+              if (rand < 1.5) r = 'SSR'; 
+              else if (rand < 10) r = 'SR'; 
+              else if (rand < 30) r = 'R'; 
+          }
+          
+          // 十連抽保底 SR
+          if (times === 10 && i === 9 && !hasGoldOrPurple && r !== 'SSR') { r = 'SR'; }
+          if (r === 'SSR' || r === 'SR') hasGoldOrPurple = true;
+          if (r === 'SSR') { data.pityCount = 50; } // 抽到 SSR 重置保底
+
+          // 隨機選一張卡片
+          let randomId = PLAYABLE_IDS[Math.floor(Math.random() * PLAYABLE_IDS.length)];
+          let uniqueId = `${randomId}_${r}`;
+
+          // 計算是否為新卡、升星或退款
+          let stars = data.inventory[uniqueId] || 0;
+          let isNew = stars === 0;
+          let ref = 0;
+
+          if (isNew) { 
+              data.inventory[uniqueId] = 1; 
+              data.exp += 10; 
+          } else if (stars < 3) { 
+              data.inventory[uniqueId]++; 
+              data.exp += 5; 
+          } else { 
+              const REFUNDS = { 'N': 2, 'R': 4, 'SR': 6, 'SSR': 10 };
+              ref = REFUNDS[r]; 
+              refund += ref; 
+          }
+
+          results.push({ uniqueId, isNew, stars: data.inventory[uniqueId] || 3, ref });
+      }
+
+      data.coins += refund;
+      
+      // 5. 重新計算等級並存檔
+      const calculatedLvl = Math.floor(Math.sqrt(data.exp / 15)) + 1;
+      await env.IONMASTER_DATA.put(
+          `user_${username}`, 
+          JSON.stringify({ passcode, data }),
+          { metadata: { username: username, exp: data.exp, lvl: calculatedLvl } }
+      );
+
+      // 6. 將結果傳回給前端
+      return new Response(JSON.stringify({ 
+          success: true, results, refund, newCoins: data.coins, newExp: data.exp, newPity: data.pityCount 
+      }), { headers });
+    }
+    // --- API 結束 ---
+    
     // --- 存檔 API (含防作弊驗證) ---
     if (url.pathname === '/api/save' && request.method === 'POST') {
       const { username, passcode, data, lvl } = await request.json();
