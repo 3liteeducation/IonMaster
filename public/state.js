@@ -59,8 +59,6 @@ export const State = {
                 this.username = user;
                 this.passcode = pass;
                 if (result.data) this.data = result.data; 
-
-                this.checkDailyQuests(); 
                 
                 document.getElementById('loginModal').style.display = 'none';
                 document.getElementById('profileName').innerText = this.username;
@@ -144,15 +142,6 @@ export const State = {
             currExp: exp - prev, 
             reqExp: next - prev 
         };
-    },
-    checkDailyQuests() {
-        const today = new Date().toDateString();
-        if (this.data.quests.date !== today) {
-            let shuffled = Database.config.questTemplates.sort(() => 0.5 - Math.random()).slice(0, 3);
-            this.data.quests = { date: today, list: shuffled.map(q => ({ ...q, progress: 0, isClaimed: false })) };
-            let login = this.data.quests.list.find(q => q.id === 'q_login'); if(login) login.progress = 1;
-            this.save();
-        }
     },
     updateQuest(id, amt=1) {
         let q = this.data.quests.list.find(x => x.id === id);
