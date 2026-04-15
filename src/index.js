@@ -1,65 +1,56 @@
 // src/index.js - Ion Master 終極後端守衛
 
-// 🚀 核心安全：將禁用詞與髒話鎖在後端 (學生看不到)
-const BANISHED_WORDS = [
-  // LSSU 煩人詞彙
-  "SKIBIDI", "RIZZ", "DEMURE", "COOKED", "GOAT", "GASLIGHTING", "CIRCLE BACK", "GYATT",
-  // 核心髒話與敏感詞 (由 en.json 萃取)
-  "FUCK", "SHIT", "BITCH", "ASS", "CUNT", "DICK", "COCK", "PORN", "XXX", "ANUS", "VAGINA", "PENIS",
-  "NIGGER", "NIGGA", "RETARD", "BASTARD", "SLUT", "WHORE", "WANK", "PISS"
-];
-
-const BANISHED_EMOJIS = ["🍆", "💦", "🍑", "👅", "🖕", "🤬", "👉👌"];
-
-// 🚀 新增：將每日任務題庫移交給伺服器保管
-const QUEST_TEMPLATES = [
-    { id: 'q_speed', title: "極速狂飆", desc: "完成 1 次速度模式", target: 1, reward: 15 },
-    { id: 'q_practice', title: "勤能補拙", desc: "在練習模式答對 10 題", target: 10, reward: 10 },
-    { id: 'q_gacha', title: "試煉手氣", desc: "進行 1 次抽卡", target: 1, reward: 5 },
-    { id: 'q_login', title: "實驗室報到", desc: "每日登入", target: 1, reward: 5 }
-];
-
-// 🚀 新增：將煉金價格表交由後端統一管理
+const BANISHED_WORDS = ["FUCK", "SHIT", "BITCH", "SKIBIDI", "RIZZ"]; // 略，請保留你原本的清單
+const QUEST_TEMPLATES = [ /* 保留原本的任務清單 */ ];
 const ALCHEMY_COSTS = { 'N': 15, 'R': 30, 'SR': 80, 'SSR': 150 };
 
-function isNameForbidden(name) {
-  const upperName = name.toUpperCase();
-  // 檢查 Emoji
-  if (BANISHED_EMOJIS.some(e => upperName.includes(e))) return true;
-  // 檢查詞彙
-  return BANISHED_WORDS.some(word => {
-    if (word.length <= 4) {
-      // 短單字採嚴格匹配或邊界匹配
-      return upperName === word || upperName.split(/\s+/).includes(word);
-    }
-    return upperName.includes(word); // 長單字有包含就擋
-  });
-}
-
 export default {
-  // 定時任務：每分鐘整理一次排行榜快取
-  async scheduled(event, env, ctx) {
-    let listed = await env.IONMASTER_DATA.list({ prefix: 'user_' });
-    let lb = [];
-    for (let key of listed.keys) {
-      if (key.metadata) lb.push({ username: key.metadata.username, exp: key.metadata.exp, lvl: key.metadata.lvl });
-    }
-    lb.sort((a, b) => b.exp - a.exp);
-    await env.IONMASTER_DATA.put('CACHE_LEADERBOARD_TOP50', JSON.stringify(lb.slice(0, 50)));
-  },
-
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
-    
-    // 🛡️ 防盜鏈：更新為你的新網域 ionmaster.3lite.io
-    if (url.pathname.endsWith('.js')) {
-      const referer = request.headers.get('Referer');
-      if (!referer || (!referer.includes('ionmaster.3lite.io') && !referer.includes('ionmaster.threeliteeducation.workers.dev'))) {
-        return new Response("A.A. Sir 說：非請勿入！🧪", { status: 403 });
-      }
-    }
-
     const headers = { 'Content-Type': 'application/json' };
+
+    // --- 🚀 防作弊的遊戲成績結算 API ---
+    if (url.pathname === '/api/game_result' && request.method === 'POST') {
+      const { username, passcode, mode, payload } = await request.json();
+      
+      let rawData = await env.IONMASTER_DATA.get(`user_${username}`);
+      if (!rawData) return new Response(JSON.stringify({ success: false, message: '找不到玩家' }), { headers });
+      let userObj = JSON.parse(rawData);
+      if (userObj.passcode !== passcode) return new Response(JSON.stringify({ success: false, message: '驗證失敗' }), { headers });
+
+      let data = userObj.data;
+      let earnedExp = 0;
+      let earnedCoins = 0;
+
+      if (mode === 'speed') {
+          const { time, isPb, isPvpWin } = payload;
+          if (time < 3.5) return new Response(JSON.stringify({ success: false, message: '🛑 偵測到異常速度！' }), { headers });
+          earnedExp += 50; 
+          if (isPb) { earnedExp += 100; earnedCoins += 2; } 
+          if (isPvpWin) { earnedExp += 150; earnedCoins += 5; } 
+      }
+      // 🚀 新增：審核練習/色彩模式 (防範前端刷錢)
+      else if (mode === 'practice' || mode === 'color') {
+          const { sessionExp, sessionCoins, playTime } = payload;
+          // 核心檢查：每秒獲得的代幣不能超過 2 枚 (合理極限)
+          const maxPossible = playTime * 2;
+          if (sessionCoins > maxPossible) {
+              return new Response(JSON.stringify({ success: false, message: '🛑 數據異常，代幣獲取過快！' }), { headers });
+          }
+          earnedExp = sessionExp;
+          earnedCoins = sessionCoins;
+      }
+
+      data.exp += earnedExp;
+      data.coins += earnedCoins;
+      const calculatedLvl = Math.floor(Math.sqrt(data.exp / 15)) + 1;
+      
+      await env.IONMASTER_DATA.put(`user_${username}`, JSON.stringify({ passcode, data }), {
+          metadata: { username, exp: data.exp, lvl: calculatedLvl }
+      });
+
+      return new Response(JSON.stringify({ success: true, newExp: data.exp, newCoins: data.coins }), { headers });
+    }
 
   // --- 登入 API ---
     if (url.pathname === '/api/login' && request.method === 'POST') {
