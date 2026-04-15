@@ -1,5 +1,5 @@
 // game.js - 專門處理遊戲模式、計分、抽卡與判定邏輯
-import { Database } from './data.js';
+import { Database, Security } from './data.js';
 import { AudioEngine } from './audio.js';
 import { State } from './state.js';
 import { UI } from './ui.js';
@@ -47,6 +47,8 @@ export const Game = {
         AudioEngine.play('click'); 
         State.game.mode = mode; State.game.score = 0; State.game.timerInterval = null; State.pvp.myRecord = [];
         State.game.combo = 0; State.game.battery = 0; State.game.feverCount = 0;
+        State.game.sessionExp = 0;    // 🚀 初始化本地記帳本
+        State.game.sessionCoins = 0;  // 🚀 初始化本地記帳本
 
         document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
         document.getElementById('view-play').classList.add('active'); document.getElementById('activeGameArea').style.display = 'block'; document.querySelector('.game-modes').style.display = 'none';
@@ -61,6 +63,7 @@ export const Game = {
             pTxt.innerText = "答對: 0 (連擊: 0)"; 
             pTxt.style.color = mode === 'color' ? "var(--apple-purple)" : "var(--secondary)"; 
             tDisp.style.display = 'none';
+            State.game.startTime = Date.now(); // 記錄開始時間，供後端防作弊檢查使用
         } else if (mode === 'alchemy') {
             pTxt.innerText = `煉金: 0/${State.game.alchemyTarget}`; 
             pTxt.style.color = "var(--rare)"; 
@@ -69,8 +72,36 @@ export const Game = {
         }
         document.getElementById('batteryLevel').style.width = '0%'; this.nextQuestion();
     },
-    quit() {
-        AudioEngine.play('click'); clearInterval(State.game.timerInterval); document.body.className = 'bg-main'; document.body.classList.remove('screen-shake');
+    async quit() {
+        AudioEngine.play('click'); clearInterval(State.game.timerInterval); 
+        let m = State.game.mode;
+
+        // 🚀 練習/色彩模式退出時，向後端請款結算
+        if ((m === 'practice' || m === 'color') && (State.game.sessionExp > 0 || State.game.sessionCoins > 0)) {
+            UI.setLock(true);
+            let playTime = (Date.now() - State.game.startTime) / 1000;
+            document.getElementById('question').innerHTML = "<span style='font-size:18px;'>📡 伺服器結算中...</span>";
+            try {
+                const res = await fetch('/api/game_result', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        username: State.username, passcode: State.passcode, mode: m,
+                        payload: { sessionExp: State.game.sessionExp, sessionCoins: State.game.sessionCoins, playTime: playTime }
+                    })
+                });
+                const result = await res.json();
+                if(result.success) {
+                    let oldLvl = State.getLevel().lvl;
+                    State.data.exp = result.newExp; 
+                    State.data.coins = result.newCoins;
+                    State.save(); 
+                    if (State.getLevel().lvl > oldLvl) setTimeout(() => alert(`🎉 恭喜升級至 Lv.${State.getLevel().lvl}！`), 500);
+                } else { alert(result.message); }
+            } catch(e) { console.error("結算連線異常"); }
+            UI.setLock(false);
+        }
+
+        document.body.className = 'bg-main'; document.body.classList.remove('screen-shake');
         document.getElementById('activeGameArea').style.display = 'none'; document.querySelector('.game-modes').style.display = 'block';
         document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); 
         if(State.pvp.active) { window.history.pushState({}, '', window.location.pathname); State.pvp.active = false; document.getElementById('pvpBanner').style.display = 'none'; }
@@ -96,7 +127,6 @@ export const Game = {
                 let pool = (isC ? Database.playableAnions : Database.playableCations).filter(p => isC ? isValid(tc, p) : isValid(p, tc));
                 if(isC) { curC = tc; curA = pool[Math.floor(Math.random() * pool.length)]; } else { curA = tc; curC = pool[Math.floor(Math.random() * pool.length)]; }
             } else {
-                // 🚀 弱點突破機制：如果是在練習或速度模式，有 30% 機率考以前錯過的題目
                 const errorKeys = Object.keys(State.data.errorLog);
                 let useErrorLog = (Math.random() < 0.3 && errorKeys.length > 0);
                 
@@ -106,7 +136,6 @@ export const Game = {
                     curC = Database.playableCations.find(c => c.formula === cForm);
                     curA = Database.playableAnions.find(a => a.formula === aForm);
                     
-                    // 確保讀出來的資料是有效的
                     if (!curC || !curA || !isValid(curC, curA)) {
                         useErrorLog = false; 
                     } else {
@@ -114,7 +143,6 @@ export const Game = {
                     }
                 }
 
-                // 如果沒觸發弱點突破，就走原本的完全隨機邏輯
                 if (!useErrorLog) {
                     do { curC = Database.playableCations[Math.floor(Math.random() * Database.playableCations.length)]; curA = Database.playableAnions[Math.floor(Math.random() * Database.playableAnions.length)]; } while (!isValid(curC, curA));
                 }
@@ -140,7 +168,12 @@ export const Game = {
         if (scenario === 3) {
             let cq = Database.colorQuestions[colorIdx];
             qEl.innerHTML = `<span style="font-size:18px; color:var(--apple-gray);">化學色彩學</span><br><span style="font-size:32px;">${cq.q}</span>`;
-            opts.push({h: cq.a, c: true}); oSet.add(cq.a);
+            
+            // 🚀 改為配合 aHash 的指紋邏輯
+            let correctColorName = Database.allColors.find(c => Security.hash(c) === cq.aHash);
+            if (!correctColorName) correctColorName = cq.a; // 如果還沒換到 aHash 版的備用保護
+            opts.push({h: correctColorName, c: true}); oSet.add(correctColorName);
+            
             while (opts.length < 4) { 
                 let fake = Database.allColors[Math.floor(Math.random() * Database.allColors.length)]; 
                 if (!oSet.has(fake)) { oSet.add(fake); opts.push({h: fake, c: false}); } 
@@ -172,7 +205,6 @@ export const Game = {
             AudioEngine.play('correct'); if(btn) btn.classList.add('correct'); 
             State.game.score++; State.game.combo++; 
             
-            // 🚀 如果答對了，檢查是不是把以前的錯題答對了，如果是，可以把它從弱點清單中稍微扣除次數（減輕弱點）
             if (c && a) {
                 let key = c.formula + "_" + a.formula;
                 if (State.data.errorLog[key]) {
@@ -191,9 +223,10 @@ export const Game = {
             else if (m === 'practice' || m === 'color') { 
                 State.updateQuest('q_practice', 1);
                 
+                // 🚀 核心防護改動：練習模式改為記帳，離開時才存檔
                 if (State.game.feverCount > 0) {
-                    State.addExp(m === 'color' ? 20 : 10); 
-                    State.data.coins += (m === 'color' ? 3 : 1); 
+                    State.game.sessionExp += (m === 'color' ? 20 : 10);
+                    State.game.sessionCoins += (m === 'color' ? 3 : 1);
                     State.game.feverCount--;
                     
                     document.getElementById('progressText').innerText = `🔥 狂熱剩餘: ${State.game.feverCount} 題`;
@@ -206,8 +239,8 @@ export const Game = {
                         document.getElementById('batteryLevel').style.background = "var(--apple-green)";
                     }
                 } else {
-                    State.addExp(m === 'color' ? 10 : 5); 
-                    if (m === 'color') State.data.coins += 1; 
+                    State.game.sessionExp += (m === 'color' ? 10 : 5);
+                    if (m === 'color') State.game.sessionCoins += 1;
                     State.game.battery++; 
                     
                     document.getElementById('progressText').innerText = `答對: ${State.game.score} (連擊: ${State.game.combo})`;
@@ -220,7 +253,6 @@ export const Game = {
                         if(typeof confetti !== 'undefined') confetti({particleCount: 150, spread: 80, origin: {y: 0.6}});
                     }
                 }
-                State.save();
             }
             setTimeout(()=>this.nextQuestion(), 400); 
         } else {
@@ -254,11 +286,9 @@ export const Game = {
         let content = document.getElementById('resultContent'); 
         let best = State.data.myHistory.length > 0 ? Math.min(...State.data.myHistory.map(x => x.time)) : Infinity; 
         
-        // 準備回報給伺服器的資料 (不再自己加 EXP)
         let isPb = !State.pvp.active && (State.data.myHistory.length > 0 && fTime < best);
         let isPvpWin = State.pvp.active && (fTime < State.pvp.targetTime);
 
-        // 1. 先顯示結算中畫面
         let html = `<h2 class="ios-title">${State.pvp.active ? "⚔️ 決鬥結束" : "🎯 挑戰完成"}</h2>
                     <p class="ios-desc">${State.pvp.active ? `目標時間：${State.pvp.targetTime}s<br>你的時間：` : "本次時間："}</p>
                     <div style="font-size:36px; color:var(--legend); font-weight:bold; margin-bottom: 10px;">${fTime.toFixed(2)}s</div>
@@ -267,7 +297,6 @@ export const Game = {
         UI.toggleModal('resultModal', true);
 
         try {
-            // 2. 🚀 將成績提交給伺服器審核
             const res = await fetch('/api/game_result', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -280,24 +309,19 @@ export const Game = {
             });
             const result = await res.json();
 
-            // 移除 Loading 訊息
             document.getElementById('serverSyncMsg').style.display = 'none';
 
-            // 3. 處理伺服器回傳結果
             if (!result.success) {
-                // 如果作弊被抓到，顯示警告並中斷
                 content.innerHTML += `<div style="color:var(--apple-red); font-weight:bold; margin-bottom: 15px;">${result.message}</div>
                                       <button class="ios-btn cancel-btn mt-2" onclick="Game.quit()">返回首頁</button>`;
                 return;
             }
 
-            // 💰 伺服器審核通過！同步最新餘額
             let oldLvl = State.getLevel().lvl;
             State.data.exp = result.newExp;
             State.data.coins = result.newCoins;
             let newLvl = State.getLevel().lvl;
 
-            // 4. 繼續渲染原本的徽章與按鈕 (這部分邏輯不變)
             if(State.pvp.active) {
                 if(isPvpWin) { html += `<div class="reward-badge" style="display:block;">🎉 踢館成功！+5🪙 +150EXP</div>`; AudioEngine.play('ssr'); if(typeof confetti !== 'undefined') confetti({particleCount: 150, spread: 80}); } 
                 else { html += `<div class="reward-badge" style="display:block; background:#8e8e93;">💀 挑戰失敗...</div>`; }
@@ -310,13 +334,11 @@ export const Game = {
             }
             html += `<button class="ios-btn cancel-btn mt-2" onclick="Game.quit()">返回首頁</button>`;
             
-            // 隱藏原本的 Loading，顯示最終畫面
             content.innerHTML = html.replace('<div id="serverSyncMsg" style="color:var(--apple-orange); font-weight:bold; margin-bottom: 15px;">📡 伺服器成績審核中...</div>', ''); 
 
-            // 升級特效判定
             if(newLvl > oldLvl) { setTimeout(() => { alert(`🎉 恭喜升級至 Lv.${newLvl}！`); }, 500); }
             
-            State.save(); // 將最新資料更新到本地與 UI
+            State.save(); 
 
         } catch(e) {
             document.getElementById('serverSyncMsg').innerHTML = `<span style="color:var(--apple-red);">❌ 網路異常，成績上傳失敗</span>`;
@@ -324,12 +346,11 @@ export const Game = {
         }
     },
    async finishAlchemy(success) {
-        UI.setLock(true); // 鎖定畫面，防止玩家亂點
+        UI.setLock(true); 
 
         try {
             let c = State.game.targetCard;
             
-            // 1. 向伺服器回報煉金結果，等待伺服器結算
             const res = await fetch('/api/alchemy', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -350,14 +371,12 @@ export const Game = {
                 return;
             }
 
-            // 🌟 2. 接收伺服器的旨意，強制同步本地端資料
             let oldLvl = State.getLevel().lvl;
             State.data.coins = result.newCoins;
             State.data.exp = result.newExp;
             State.data.inventory = result.newInventory;
-            State.save(); // 更新右上角 UI
+            State.save(); 
 
-            // 3. 失敗的爆炸動畫
             if (!success) {
                 UI.setLock(false);
                 AudioEngine.play('explode');
@@ -366,9 +385,8 @@ export const Game = {
                 return;
             }
 
-            // 4. 成功的華麗動畫
             let stars = State.data.inventory[c.uniqueId];
-            let isNew = stars === 1; // 伺服器剛加了 1，所以如果現在是 1，代表是新解鎖的
+            let isNew = stars === 1; 
             let newLvl = State.getLevel().lvl;
 
             document.body.className = 'bg-main';
@@ -397,7 +415,7 @@ export const Game = {
             this.quit();
         }
     },
-async drawCard(times) {
+    async drawCard(times) {
         if(State.game.isAnimating) return; 
         AudioEngine.play('click'); 
         
@@ -405,13 +423,11 @@ async drawCard(times) {
         if (State.data.coins < cost) { alert(`🪙 代幣不足！需要 ${cost} 枚。`); return; }
 
         UI.setLock(true);
-        // 變更按鈕文字，讓玩家知道正在與伺服器連線
         const btn = document.querySelector('.draw-actions').children[times === 1 ? 0 : 1];
         let originalText = btn.innerText;
         btn.innerText = "📡 雲端煉金中...";
 
         try {
-            // 🚀 向伺服器發送抽卡請求！
             const res = await fetch('/api/gacha', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -430,26 +446,21 @@ async drawCard(times) {
                 return;
             }
 
-            // 🌟 接收伺服器的旨意，強制同步本地端資料
             State.data.coins = result.newCoins;
             State.data.exp = result.newExp;
             State.data.pityCount = result.newPity;
             State.updateQuest('q_gacha', times);
 
-            // 將伺服器傳回的簡化 ID，對應回本地完整的卡片圖片與資訊
             let mappedResults = result.results.map(r => {
                 let card = Database.expandedPool.find(c => c.uniqueId === r.uniqueId);
-                // 同步本地庫存
                 if (r.isNew) State.data.inventory[r.uniqueId] = 1;
                 else if (r.stars <= 3) State.data.inventory[r.uniqueId] = r.stars;
                 
                 return { c: card, isNew: r.isNew, stars: r.stars, ref: r.ref };
             });
 
-            // 存檔更新 UI 顯示 (右上角代幣與等級)
             State.save(); 
 
-            // 🎬 資料處理完畢，開始播放華麗動畫！
             UI.toggleModal('gachaAnimModal', true); 
             AudioEngine.play('draw');
 
@@ -514,13 +525,11 @@ async drawCard(times) {
         });
         if(hasSSR) setTimeout(() => { AudioEngine.play('ssr'); if(typeof confetti !== 'undefined') confetti({particleCount: 200, spread: 100, origin: {y: 0.5}}); }, 1500);
     },
-   shareCard() {
+    shareCard() {
         if (!State.game.currentDrawnCard) return; AudioEngine.play('click');
         const s = State.game.currentDrawnCard; const starStr = "⭐".repeat(s.currentStars || 1); const title = State.getLevel().title;
-        // 🚀 更新這裡的網址
         const text = `🧪「${title}」在 Ion Master 收集到了 [${s.currentRarity}] 級別的 ${starStr}「${s.name}」！\n來 3lite Education 挑戰：\nhttps://ionmaster.3lite.io/`;
         if (navigator.share) { 
-            // 🚀 更新這裡的 url
             navigator.share({ title: 'Ion Master', text: text, url: 'https://ionmaster.3lite.io/' }).catch(e=>{}); 
         } 
         else { this.copyShareText(); }
@@ -528,7 +537,6 @@ async drawCard(times) {
     copyShareText() {
         if (!State.game.currentDrawnCard) return; AudioEngine.play('click');
         const s = State.game.currentDrawnCard; const starStr = "⭐".repeat(s.currentStars || 1); const title = State.getLevel().title;
-        // 🚀 更新這裡的網址
         const text = `🧪「${title}」在 Ion Master 收集到了 [${s.currentRarity}] 級別的 ${starStr}「${s.name}」！\nhttps://ionmaster.3lite.io/`;
         navigator.clipboard.writeText(text).then(() => { alert('📋 已成功複製到剪貼簿！快去貼給同學吧！'); }).catch(err => { alert('❌ 複製失敗，請手動框選文字複製。'); });
     },
