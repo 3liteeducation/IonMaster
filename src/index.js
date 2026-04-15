@@ -152,6 +152,56 @@ export default {
       }), { headers });
     }
     // --- API 結束 ---
+
+// --- 🚀 新增：防作弊的遊戲成績結算 API ---
+    if (url.pathname === '/api/game_result' && request.method === 'POST') {
+      const { username, passcode, mode, payload } = await request.json();
+      
+      // 1. 驗證身分
+      let rawData = await env.IONMASTER_DATA.get(`user_${username}`);
+      if (!rawData) return new Response(JSON.stringify({ success: false, message: '找不到玩家資料' }), { headers });
+      let userObj = JSON.parse(rawData);
+      if (userObj.passcode !== passcode) return new Response(JSON.stringify({ success: false, message: '身分驗證失敗' }), { headers });
+
+      let data = userObj.data;
+      let earnedExp = 0;
+      let earnedCoins = 0;
+
+      // 2. 審核「速度模式」成績
+      if (mode === 'speed') {
+          const { time, isPb, isPvpWin } = payload;
+          
+          // 🛑 防作弊核心：人類不可能在 3.5 秒內看完並點擊 10 題
+          if (time < 3.5) { 
+              console.error(`偵測到異常通關時間！玩家：${username}, 時間：${time}s`);
+              return new Response(JSON.stringify({ success: false, message: '🛑 實驗室警告：偵測到異常的高速通關，成績不予採計！' }), { headers });
+          }
+          
+          // 伺服器親自計算應得獎勵
+          earnedExp += 50; // 基礎通關獎勵
+          if (isPb) { earnedExp += 100; earnedCoins += 2; } // 破紀錄獎勵
+          if (isPvpWin) { earnedExp += 150; earnedCoins += 5; } // PvP 獲勝獎勵
+      }
+
+      // 3. 將伺服器算好的獎勵加入資料庫
+      data.exp += earnedExp;
+      data.coins += earnedCoins;
+
+      // 4. 重新計算等級並存檔
+      const calculatedLvl = Math.floor(Math.sqrt(data.exp / 15)) + 1;
+      await env.IONMASTER_DATA.put(
+          `user_${username}`, 
+          JSON.stringify({ passcode, data }),
+          { metadata: { username: username, exp: data.exp, lvl: calculatedLvl } }
+      );
+
+      // 5. 回傳最新餘額給前端
+      return new Response(JSON.stringify({ 
+          success: true, 
+          newExp: data.exp, 
+          newCoins: data.coins
+      }), { headers });
+    }
     
     // --- 存檔 API (含防作弊驗證) ---
     if (url.pathname === '/api/save' && request.method === 'POST') {
