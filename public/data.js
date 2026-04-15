@@ -1,3 +1,14 @@
+// 🚀 新增：輕量級字串指紋加密器 (DJB2)
+export const Security = {
+    hash: function(str) {
+        let h = 5381;
+        for (let i = 0; i < str.length; i++) {
+            h = ((h * 33) & 0xFFFFFFFF) ^ str.charCodeAt(i);
+        }
+        return h >>> 0; // 轉換為無號 32 位元整數
+    }
+};
+
 export const Database = {
     cations: [
         { id: 1, name: "Sodium", formula: "Na", charge: 1, html: "Na<sup>+</sup>", fileKey: 'na' }, 
@@ -60,15 +71,24 @@ export const Database = {
             { id: 'q_login', title: "實驗室報到", desc: "每日登入", target: 1, reward: 5 }
         ]
     },
+    // 🚀 更新：將明文答案 'a' 替換成加密指紋 'aHash'
     colorQuestions: [
-        { q: "Cu<sup>2+</sup> (aq)", a: "藍色 🔵" }, { q: "Fe<sup>2+</sup> (aq)", a: "淺綠色 🟢" },
-        { q: "Fe<sup>3+</sup> (aq)", a: "黃/棕色 🟤" }, { q: "MnO<sub>4</sub><sup>-</sup> (aq)", a: "紫色 🟣" },
-        { q: "Cr<sub>2</sub>O<sub>7</sub><sup>2-</sup> (aq)", a: "橙色 🟠" }, { q: "CrO<sub>4</sub><sup>2-</sup> (aq)", a: "黃色 🟡" },
-        { q: "CuO (s)", a: "黑色 ⚫" }, { q: "CuCO<sub>3</sub> (s)", a: "綠色 🟩" },
-        { q: "Cu(OH)<sub>2</sub> (s)", a: "淺藍色 💧" }, { q: "AgCl (s)", a: "白色 ⚪" },
-        { q: "AgBr (s)", a: "淡黃色 🌕" }, { q: "AgI (s)", a: "黃色 🟡" },
-        { q: "PbI<sub>2</sub> (s)", a: "黃色 🟡" }, { q: "Fe(OH)<sub>2</sub> (s)", a: "暗綠色 🌿" },
-        { q: "Fe(OH)<sub>3</sub> (s)", a: "紅棕色 🟫" }, { q: "多數 Group 1/2 離子", a: "無色 🧊" }
+        { q: "Cu<sup>2+</sup> (aq)", aHash: 896861327 }, 
+        { q: "Fe<sup>2+</sup> (aq)", aHash: 1365358031 },
+        { q: "Fe<sup>3+</sup> (aq)", aHash: 3184739658 }, 
+        { q: "MnO<sub>4</sub><sup>-</sup> (aq)", aHash: 2224268543 },
+        { q: "Cr<sub>2</sub>O<sub>7</sub><sup>2-</sup> (aq)", aHash: 2439523150 }, 
+        { q: "CrO<sub>4</sub><sup>2-</sup> (aq)", aHash: 779547797 },
+        { q: "CuO (s)", aHash: 779894669 }, 
+        { q: "CuCO<sub>3</sub> (s)", aHash: 2220404638 },
+        { q: "Cu(OH)<sub>2</sub> (s)", aHash: 853230279 }, 
+        { q: "AgCl (s)", aHash: 2252189088 },
+        { q: "AgBr (s)", aHash: 1181663904 }, 
+        { q: "AgI (s)", aHash: 779547797 },
+        { q: "PbI<sub>2</sub> (s)", aHash: 779547797 }, 
+        { q: "Fe(OH)<sub>2</sub> (s)", aHash: 584303231 },
+        { q: "Fe(OH)<sub>3</sub> (s)", aHash: 1267289260 }, 
+        { q: "多數 Group 1/2 離子", aHash: 2259579164 }
     ],
     allColors: ["藍色 🔵", "淺綠色 🟢", "黃/棕色 🟤", "紫色 🟣", "橙色 🟠", "黃色 🟡", "黑色 ⚫", "綠色 🟩", "淺藍色 💧", "白色 ⚪", "淡黃色 🌕", "暗綠色 🌿", "紅棕色 🟫", "無色 🧊"]
 };
