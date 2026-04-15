@@ -101,8 +101,6 @@ export const UI = {
                     
                     if (State.data.coins < cost) { alert(`🪙 餘額不足！需要 ${cost} 枚代幣。`); return; }
                     if (confirm(`確定消耗 ${cost} 🪙 來 ${(stars > 0)?"升星":"解鎖"}「${card.targetRarity}級 ${card.name}」？\n⚠️ 警告：這是一場高壓反應！需連對 ${target} 題，且每題限時 5 秒！`)) {
-                        State.data.coins -= cost; 
-                        State.save(); 
                         State.game.targetCard = card; 
                         State.game.alchemyTarget = target;
                         Game.start('alchemy');
