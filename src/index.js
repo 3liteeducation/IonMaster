@@ -11,6 +11,14 @@ const BANISHED_WORDS = [
 
 const BANISHED_EMOJIS = ["🍆", "💦", "🍑", "👅", "🖕", "🤬", "👉👌"];
 
+// 🚀 新增：將每日任務題庫移交給伺服器保管
+const QUEST_TEMPLATES = [
+    { id: 'q_speed', title: "極速狂飆", desc: "完成 1 次速度模式", target: 1, reward: 15 },
+    { id: 'q_practice', title: "勤能補拙", desc: "在練習模式答對 10 題", target: 10, reward: 10 },
+    { id: 'q_gacha', title: "試煉手氣", desc: "進行 1 次抽卡", target: 1, reward: 5 },
+    { id: 'q_login', title: "實驗室報到", desc: "每日登入", target: 1, reward: 5 }
+];
+
 function isNameForbidden(name) {
   const upperName = name.toUpperCase();
   // 檢查 Emoji
@@ -50,11 +58,10 @@ export default {
 
     const headers = { 'Content-Type': 'application/json' };
 
-    // --- 登入 API ---
+  // --- 登入 API ---
     if (url.pathname === '/api/login' && request.method === 'POST') {
       const { username, passcode } = await request.json();
       
-      // 🚀 新增：後端名字審查
       if (isNameForbidden(username)) {
         return new Response(JSON.stringify({ success: false, message: '🛑 系統警告：您的名稱包含不適當的內容，請換一個！' }), { headers });
       }
@@ -63,7 +70,37 @@ export default {
       if (rawData) {
         let userObj = JSON.parse(rawData);
         if (userObj.passcode !== passcode) return new Response(JSON.stringify({ success: false, message: '❌ 密碼錯誤！' }), { headers });
-        return new Response(JSON.stringify({ success: true, data: userObj.data }), { headers });
+        
+        let data = userObj.data;
+        
+        // 🚀 新增：伺服器端的時間與任務判定
+        // 使用亞洲/台北(香港)時區作為標準時間，防止跨時區漏洞
+        const serverToday = new Date().toLocaleDateString('zh-TW', { timeZone: 'Asia/Taipei' });
+        
+        if (!data.quests) data.quests = { date: "", list: [] }; // 防呆機制
+        
+        // 如果伺服器發現玩家的任務日期不是今天，強制刷新！
+        if (data.quests.date !== serverToday) {
+            // 伺服器親自洗牌抽出 3 個任務
+            let shuffled = QUEST_TEMPLATES.sort(() => 0.5 - Math.random()).slice(0, 3);
+            data.quests = { 
+                date: serverToday, 
+                list: shuffled.map(q => ({ ...q, progress: 0, isClaimed: false })) 
+            };
+            
+            // 自動完成「每日登入」任務
+            let loginQ = data.quests.list.find(q => q.id === 'q_login'); 
+            if(loginQ) loginQ.progress = 1;
+            
+            // 將刷新的任務立刻存回資料庫
+            await env.IONMASTER_DATA.put(
+                `user_${username}`, 
+                JSON.stringify({ passcode: userObj.passcode, data }),
+                { metadata: { username: username, exp: data.exp, lvl: Math.floor(Math.sqrt(data.exp / 15)) + 1 } }
+            );
+        }
+
+        return new Response(JSON.stringify({ success: true, data: data }), { headers });
       } else {
         return new Response(JSON.stringify({ success: true, isNew: true }), { headers });
       }
