@@ -1,0 +1,23 @@
+name: Deploy IonMaster
+on:
+  push:
+    branches: [ main ] # 當你更新 main 分支時觸發
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install & Minify
+        run: |
+          npm install -g terser
+          mkdir -p dist
+          # 🚀 自動將所有 JS 混淆並壓縮到 dist 資料夾
+          for f in public/*.js; do
+            terser "$f" --compress --mangle -o "dist/${f#public/}"
+          done
+          cp public/*.html dist/
+          cp public/*.css dist/
+      - name: Publish to Cloudflare Workers
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
