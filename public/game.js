@@ -246,24 +246,82 @@ export const Game = {
             }
         }
     },
-    finishSpeed() {
-        clearInterval(State.game.timerInterval); let fTime = (Date.now() - State.game.startTime) / 1000; State.updateQuest('q_speed', 1);
-        let content = document.getElementById('resultContent'); let best = State.data.myHistory.length > 0 ? Math.min(...State.data.myHistory.map(x => x.time)) : Infinity; State.addExp(50);
+   async finishSpeed() {
+        clearInterval(State.game.timerInterval); 
+        let fTime = (Date.now() - State.game.startTime) / 1000; 
+        State.updateQuest('q_speed', 1);
         
-        let html = `<h2 class="ios-title">${State.pvp.active ? "⚔️ 決鬥結束" : "🎯 挑戰完成"}</h2><p class="ios-desc">${State.pvp.active ? `目標時間：${State.pvp.targetTime}s<br>你的時間：` : "本次時間："}</p><div style="font-size:36px; color:var(--legend); font-weight:bold; margin-bottom: 10px;">${fTime.toFixed(2)}s</div>`;
+        let content = document.getElementById('resultContent'); 
+        let best = State.data.myHistory.length > 0 ? Math.min(...State.data.myHistory.map(x => x.time)) : Infinity; 
         
-        if(State.pvp.active) {
-            if(fTime < State.pvp.targetTime) { html += `<div class="reward-badge" style="display:block;">🎉 踢館成功！+5🪙 +150EXP</div>`; State.data.coins += 5; State.addExp(150); AudioEngine.play('ssr'); if(typeof confetti !== 'undefined') confetti({particleCount: 150, spread: 80}); } 
-            else { html += `<div class="reward-badge" style="display:block; background:#8e8e93;">💀 挑戰失敗...</div>`; }
-            window.history.pushState({}, '', window.location.pathname); State.pvp.active = false; document.getElementById('pvpBanner').style.display = 'none';
-        } else {
-            html += `<div class="glass-panel" style="padding:10px; margin:15px 0;"><div style="color:var(--apple-orange); font-weight:bold; font-size:12px;">👑 歷史最佳 (PB)</div><div style="font-size:24px; font-weight:bold;">${Math.min(best, fTime).toFixed(2)}s</div></div>`;
-            if (State.data.myHistory.length > 0 && fTime < best) { html += `<div class="reward-badge" style="display:block;">🎉 破紀錄！+2🪙 +100EXP</div>`; State.data.coins += 2; State.addExp(100); AudioEngine.play('ssr'); if(typeof confetti !== 'undefined') confetti({particleCount: 100, spread: 70, origin: {y: 0.6}}); }
-            html += `<button class="ios-btn warning-btn mb-2" onclick="Game.sharePvP(${fTime})">⚔️ 邀請同學挑戰此紀錄！</button>`;
-            State.data.myHistory.unshift({ time: fTime }); localStorage.setItem('myIonHistory', JSON.stringify(State.data.myHistory.slice(0, 5)));
+        // 準備回報給伺服器的資料 (不再自己加 EXP)
+        let isPb = !State.pvp.active && (State.data.myHistory.length > 0 && fTime < best);
+        let isPvpWin = State.pvp.active && (fTime < State.pvp.targetTime);
+
+        // 1. 先顯示結算中畫面
+        let html = `<h2 class="ios-title">${State.pvp.active ? "⚔️ 決鬥結束" : "🎯 挑戰完成"}</h2>
+                    <p class="ios-desc">${State.pvp.active ? `目標時間：${State.pvp.targetTime}s<br>你的時間：` : "本次時間："}</p>
+                    <div style="font-size:36px; color:var(--legend); font-weight:bold; margin-bottom: 10px;">${fTime.toFixed(2)}s</div>
+                    <div id="serverSyncMsg" style="color:var(--apple-orange); font-weight:bold; margin-bottom: 15px;">📡 伺服器成績審核中...</div>`;
+        content.innerHTML = html; 
+        UI.toggleModal('resultModal', true);
+
+        try {
+            // 2. 🚀 將成績提交給伺服器審核
+            const res = await fetch('/api/game_result', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    username: State.username, 
+                    passcode: State.passcode,
+                    mode: 'speed',
+                    payload: { time: fTime, isPb: isPb, isPvpWin: isPvpWin }
+                })
+            });
+            const result = await res.json();
+
+            // 移除 Loading 訊息
+            document.getElementById('serverSyncMsg').style.display = 'none';
+
+            // 3. 處理伺服器回傳結果
+            if (!result.success) {
+                // 如果作弊被抓到，顯示警告並中斷
+                content.innerHTML += `<div style="color:var(--apple-red); font-weight:bold; margin-bottom: 15px;">${result.message}</div>
+                                      <button class="ios-btn cancel-btn mt-2" onclick="Game.quit()">返回首頁</button>`;
+                return;
+            }
+
+            // 💰 伺服器審核通過！同步最新餘額
+            let oldLvl = State.getLevel().lvl;
+            State.data.exp = result.newExp;
+            State.data.coins = result.newCoins;
+            let newLvl = State.getLevel().lvl;
+
+            // 4. 繼續渲染原本的徽章與按鈕 (這部分邏輯不變)
+            if(State.pvp.active) {
+                if(isPvpWin) { html += `<div class="reward-badge" style="display:block;">🎉 踢館成功！+5🪙 +150EXP</div>`; AudioEngine.play('ssr'); if(typeof confetti !== 'undefined') confetti({particleCount: 150, spread: 80}); } 
+                else { html += `<div class="reward-badge" style="display:block; background:#8e8e93;">💀 挑戰失敗...</div>`; }
+                window.history.pushState({}, '', window.location.pathname); State.pvp.active = false; document.getElementById('pvpBanner').style.display = 'none';
+            } else {
+                html += `<div class="glass-panel" style="padding:10px; margin:15px 0;"><div style="color:var(--apple-orange); font-weight:bold; font-size:12px;">👑 歷史最佳 (PB)</div><div style="font-size:24px; font-weight:bold;">${Math.min(best, fTime).toFixed(2)}s</div></div>`;
+                if (isPb) { html += `<div class="reward-badge" style="display:block;">🎉 破紀錄！+2🪙 +100EXP</div>`; AudioEngine.play('ssr'); if(typeof confetti !== 'undefined') confetti({particleCount: 100, spread: 70, origin: {y: 0.6}}); }
+                html += `<button class="ios-btn warning-btn mb-2" onclick="Game.sharePvP(${fTime})">⚔️ 邀請同學挑戰此紀錄！</button>`;
+                State.data.myHistory.unshift({ time: fTime }); localStorage.setItem('myIonHistory', JSON.stringify(State.data.myHistory.slice(0, 5)));
+            }
+            html += `<button class="ios-btn cancel-btn mt-2" onclick="Game.quit()">返回首頁</button>`;
+            
+            // 隱藏原本的 Loading，顯示最終畫面
+            content.innerHTML = html.replace('<div id="serverSyncMsg" style="color:var(--apple-orange); font-weight:bold; margin-bottom: 15px;">📡 伺服器成績審核中...</div>', ''); 
+
+            // 升級特效判定
+            if(newLvl > oldLvl) { setTimeout(() => { alert(`🎉 恭喜升級至 Lv.${newLvl}！`); }, 500); }
+            
+            State.save(); // 將最新資料更新到本地與 UI
+
+        } catch(e) {
+            document.getElementById('serverSyncMsg').innerHTML = `<span style="color:var(--apple-red);">❌ 網路異常，成績上傳失敗</span>`;
+            content.innerHTML += `<button class="ios-btn cancel-btn mt-2" onclick="Game.quit()">返回首頁</button>`;
         }
-        html += `<button class="ios-btn cancel-btn mt-2" onclick="Game.quit()">返回首頁</button>`;
-        content.innerHTML = html; UI.toggleModal('resultModal', true); State.save();
     },
     finishAlchemy(success) {
         if(!success) { AudioEngine.play('explode'); document.body.classList.add('screen-shake'); UI.toggleModal('explosionModal', true); return; }
