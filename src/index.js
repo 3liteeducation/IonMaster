@@ -19,6 +19,9 @@ const QUEST_TEMPLATES = [
     { id: 'q_login', title: "實驗室報到", desc: "每日登入", target: 1, reward: 5 }
 ];
 
+// 🚀 新增：將煉金價格表交由後端統一管理
+const ALCHEMY_COSTS = { 'N': 15, 'R': 30, 'SR': 80, 'SSR': 150 };
+
 function isNameForbidden(name) {
   const upperName = name.toUpperCase();
   // 檢查 Emoji
@@ -237,6 +240,50 @@ export default {
           success: true, 
           newExp: data.exp, 
           newCoins: data.coins
+      }), { headers });
+    }
+
+    // --- 🚀 新增：絕對公平的雲端煉金 API ---
+    if (url.pathname === '/api/alchemy' && request.method === 'POST') {
+      const { username, passcode, cardId, rarity, success } = await request.json();
+      
+      // 1. 驗證身分
+      let rawData = await env.IONMASTER_DATA.get(`user_${username}`);
+      if (!rawData) return new Response(JSON.stringify({ success: false, message: '找不到玩家資料' }), { headers });
+      let userObj = JSON.parse(rawData);
+      if (userObj.passcode !== passcode) return new Response(JSON.stringify({ success: false, message: '身分驗證失敗' }), { headers });
+
+      let data = userObj.data;
+      let cost = ALCHEMY_COSTS[rarity];
+
+      // 2. 檢查餘額
+      if (data.coins < cost) {
+          return new Response(JSON.stringify({ success: false, message: '代幣不足，伺服器拒絕請求！' }), { headers });
+      }
+
+      // 3. 伺服器親自扣款
+      data.coins -= cost;
+
+      // 4. 根據挑戰結果發放獎勵
+      if (success) {
+          data.inventory[cardId] = (data.inventory[cardId] || 0) + 1;
+          data.exp += 30;
+      }
+
+      // 5. 重新計算等級並存檔
+      const calculatedLvl = Math.floor(Math.sqrt(data.exp / 15)) + 1;
+      await env.IONMASTER_DATA.put(
+          `user_${username}`, 
+          JSON.stringify({ passcode, data }),
+          { metadata: { username: username, exp: data.exp, lvl: calculatedLvl } }
+      );
+
+      // 6. 將最新的資產狀態傳回給前端
+      return new Response(JSON.stringify({ 
+          success: true, 
+          newCoins: data.coins, 
+          newExp: data.exp, 
+          newInventory: data.inventory 
       }), { headers });
     }
     
