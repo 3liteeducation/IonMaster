@@ -7,11 +7,15 @@
   "kv_namespaces": [
     {
       "binding": "IONMASTER_DATA",
-      "id": "554699b988f447dab0f5cbb8b75b31bc" 
+      "id": "554699b988f447dab0f5cbb8b75b31bc"
     }
   ],
-  "compatibility_flags": [ "nodejs_compat" ],
+  "compatibility_flags": ["nodejs_compat"],
   "triggers": {
-    "crons": ["* * * * *"] 
+    // ⚠️  Was "* * * * *" (every minute) — extremely wasteful.
+    // Changed to hourly: saves ~1,400 KV list() calls per day.
+    // list() scans ALL user_ keys each run — most expensive KV op.
+    // If near-realtime leaderboard is needed, use "*/5 * * * *" (every 5 min).
+    "crons": ["0 * * * *"]
   }
 }

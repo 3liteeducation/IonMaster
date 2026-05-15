@@ -1,0 +1,35 @@
+name: Deploy IonMaster
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install minifier
+        run: npm install -g terser
+
+      - name: Minify JS
+        run: |
+          mkdir -p dist/js
+          # Minify all JS modules in public/js/
+          for f in public/js/*.js; do
+            terser "$f" --compress --mangle \
+              --module \
+              -o "dist/js/$(basename "$f")"
+          done
+          # Copy static assets
+          cp public/index.html dist/
+          cp public/3lite-style.css dist/
+          cp public/sw.js dist/
+          # Copy image folder if present
+          if [ -d public/images ]; then cp -r public/images dist/; fi
+
+      - name: Deploy to Cloudflare Workers
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
