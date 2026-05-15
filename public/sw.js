@@ -1,51 +1,62 @@
-const CACHE_NAME = 'ionmaster-cache-v1';
+// public/sw.js  —  Service Worker
+// ─────────────────────────────────────────────────────────────────────────────
+// Strategy: Cache-First for static assets, Network-Only for /api/ routes.
+// Bump CACHE_VERSION whenever you deploy new JS/CSS to bust stale caches.
+// ─────────────────────────────────────────────────────────────────────────────
 
-// 這裡列出我們希望第一次載入就先快取起來的核心檔案
-const urlsToCache = [
-  '/',
-  '/index.html',
-  '/3lite-style.css',
-  '/data.js',
-  '/app.js',
+const CACHE_VERSION = 'ionmaster-v2';
+
+const PRECACHE = [
+    '/',
+    '/index.html',
+    '/3lite-style.css',
+    '/js/data.js',
+    '/js/app.js',
+    '/js/audio.js',
+    '/js/state.js',
+    '/js/ui.js',
+    '/js/game.js',
+    '/js/api.js',
 ];
 
-// 1. 安裝階段：將核心檔案存入快取
+// ── Install: pre-cache core assets ────────────────────────────────────────────
 self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log('快取核心檔案成功！');
-        return cache.addAll(urlsToCache);
-      })
-  );
+    event.waitUntil(
+        caches.open(CACHE_VERSION)
+            .then(cache => cache.addAll(PRECACHE))
+            .then(() => self.skipWaiting())   // activate immediately
+    );
 });
 
-// 2. 攔截請求階段：優先使用快取檔案
+// ── Activate: remove old caches ───────────────────────────────────────────────
+self.addEventListener('activate', event => {
+    event.waitUntil(
+        caches.keys().then(keys =>
+            Promise.all(keys
+                .filter(k => k !== CACHE_VERSION)
+                .map(k => caches.delete(k))
+            )
+        ).then(() => self.clients.claim())    // take control without reload
+    );
+});
+
+// ── Fetch: cache-first for assets, network-only for API ──────────────────────
 self.addEventListener('fetch', event => {
-  // 注意：我們不要快取 /api/ 開頭的後端請求（例如登入、存檔），確保資料是最新狀態
-  if (event.request.url.includes('/api/')) {
-    return;
-  }
+    // Never cache API calls — always go to network
+    if (event.request.url.includes('/api/')) return;
 
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        // 如果快取裡有這個檔案，就直接回傳（秒開！）
-        if (response) {
-          return response;
-        }
+    event.respondWith(
+        caches.match(event.request).then(cached => {
+            if (cached) return cached;
 
-        // 如果快取沒有（例如新的圖片），就去網路抓取，並偷偷存進快取裡留給下次用
-        return fetch(event.request).then(networkResponse => {
-          // 只快取圖片資源 (png, jpg, etc.)
-          if (event.request.url.match(/\.(png|jpg|jpeg|gif|svg)$/)) {
-            let clone = networkResponse.clone();
-            caches.open(CACHE_NAME).then(cache => {
-              cache.put(event.request, clone);
+            return fetch(event.request).then(response => {
+                // Cache images on first fetch
+                if (/\.(png|jpg|jpeg|gif|svg|webp)$/.test(event.request.url)) {
+                    const clone = response.clone();
+                    caches.open(CACHE_VERSION).then(cache => cache.put(event.request, clone));
+                }
+                return response;
             });
-          }
-          return networkResponse;
-        });
-      })
-  );
+        })
+    );
 });
